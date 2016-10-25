@@ -1,0 +1,21 @@
+package nhb.common.predicate.numeric;
+
+import nhb.common.predicate.value.ObjectDependence;
+import nhb.common.predicate.value.Value;
+
+public class GreaterEqual extends GreaterThan {
+
+	private static final long serialVersionUID = -715457138661262264L;
+
+	public GreaterEqual(Value<? extends Number> value, Value<? extends Number> lowerBound) {
+		super(value, lowerBound);
+	}
+
+	@Override
+	public boolean apply(Object object) {
+		if (this.getValue() instanceof ObjectDependence) {
+			((ObjectDependence) this.getValue()).fill(object);
+		}
+		return getComparator().compare(this.getValue().get(), this.getAnchorValue().get()) >= 0;
+	}
+}

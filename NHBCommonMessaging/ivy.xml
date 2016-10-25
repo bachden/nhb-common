@@ -1,0 +1,27 @@
+<ivy-module version="2.0">
+	<info organisation="org.apache" module="nhb-common" />
+	<configurations defaultconfmapping="default">
+		<conf name="default" />
+		<conf name="java7" extends="default" description="Java 7 dependencies" />
+		<conf name="eclipse" description="Special dependencies in Eclipse" />
+		<conf name="utest" extends="eclipse" description="Unit testing dependencies" />
+	</configurations>
+
+	<dependencies>
+		<dependency org="org.slf4j" name="slf4j-api" rev="1.7.12" />
+
+		<dependency org="com.rabbitmq" name="amqp-client" rev="3.6.0" />
+		<dependency org="net.jodah" name="lyra" rev="0.5.2" />
+
+		<dependency org="org.msgpack" name="msgpack" rev="0.6.12" />
+
+		<dependency org="io.netty" name="netty-all" rev="4.1.0.CR4" />
+		<dependency org="io.netty" name="netty-tcnative" rev="1.1.30.Fork1" />
+		<dependency org="com.barchart.udt" name="barchart-udt-bundle" rev="2.3.0" />
+
+		<dependency org="org.apache.httpcomponents" name="httpclient" rev="4.5.1" />
+		<dependency org="org.apache.httpcomponents" name="httpasyncclient" rev="4.1.1" />
+
+		<dependency org="org.apache.kafka" name="kafka_2.11" rev="0.10.0.1"/>
+	</dependencies>
+</ivy-module>

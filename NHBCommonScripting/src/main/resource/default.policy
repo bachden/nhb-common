@@ -1,0 +1,5 @@
+// default permissions granted to all domains
+grant {
+	permission java.security.AllPermission;
+};
+

@@ -1,0 +1,74 @@
+<project name="nhb-common-scripting" default="deploy" xmlns:ivy="antlib:org.apache.ivy.ant">
+
+	<buildnumber file="build.number" />
+	<property file="build.properties" />
+	<property name="version">build.${build.number}</property>
+	<property name="jar.name">${ant.project.name}-${version}</property>
+	<property name="lib" value="lib" />
+	<property name="classes" value="bin" />
+	<property name="conf" value="conf" />
+	<property name="dist" value="dist" />
+	<property name="dist.jar" value="${dist}/jar" />
+	<property name="dist.ext" value="${dist}/ext" />
+
+	<!-- clean cache for ivy -->
+	<target name="clean-cache" description="--> clean the ivy cache">
+		<ivy:cleancache />
+	</target>
+
+	<!-- User when ivy.xml changed -->
+	<target name="resolve" description="retreive dependencies with ivy">
+		<delete dir="${lib.dir}">
+			<include name="*.jar" />
+			<exclude name="sqljdbc*.jar" />
+		</delete>
+		<ivy:retrieve />
+	</target>
+
+	<target name="report" depends="resolve" description="generates a report of dependencies">
+		<ivy:report todir="${build.classes}" />
+	</target>
+
+	<target name="clear" description="delete dist folder">
+		<delete dir="${dist}" />
+	</target>
+
+	<target name="prep" depends="clear" description="make dirs">
+		<mkdir dir="${dist}" />
+		<mkdir dir="${dist.jar}" />
+		<mkdir dir="${dist.ext}" />
+	</target>
+
+	<target name="build" depends="prep" description="build jar file">
+		<jar jarfile="${dist.jar}/${jar.name}.jar">
+			<fileset dir="${classes}" />
+		</jar>
+	</target>
+
+	<target name="pack" depends="build" description="copy nessesary files to dist folder">
+		<copy todir="${dist.ext}">
+			<fileset dir="${lib}">
+				<include name="*.jar" />
+				<include name="*.zip" />
+			</fileset>
+			<fileset dir="${dist.jar}">
+				<include name="*.jar" />
+				<include name="*.zip" />
+			</fileset>
+		</copy>
+	</target>
+
+	<target name="deploy" depends="pack">
+		<delete>
+			<fileset dir="${deploy.path}">
+				<include name="${ant.project.name}-build.*.jar" />
+			</fileset>
+		</delete>
+		<copy todir="${deploy.path}">
+			<fileset dir="${dist.jar}" />
+			<fileset dir="${lib}" />
+		</copy>
+	</target>
+
+
+</project>
