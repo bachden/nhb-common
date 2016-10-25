@@ -13,7 +13,7 @@
 	</properties>
 
 	<modules>
-		<module>NHBCommon</module>
+		<module>NHBCommonCore</module>
 		<module>NHBCommonDB</module>
 		<module>NHBCommonEncryption</module>
 		<module>NHBCommonMessaging</module>
