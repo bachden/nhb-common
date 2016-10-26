@@ -3,8 +3,9 @@ package nhb.common.test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.nhb.common.Loggable;
+
 import junit.framework.TestCase;
-import nhb.common.Loggable;
 
 public abstract class NHBCommonTestCase extends TestCase implements Loggable {
 

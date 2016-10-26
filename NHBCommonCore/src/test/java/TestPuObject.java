@@ -1,8 +1,9 @@
 import java.io.IOException;
 
+import com.nhb.common.data.PuValue;
+import com.nhb.common.data.msgpkg.PuElementTemplate;
+
 import net.minidev.json.parser.ParseException;
-import nhb.common.data.PuValue;
-import nhb.common.data.msgpkg.PuElementTemplate;
 
 public class TestPuObject {
 

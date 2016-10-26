@@ -7,8 +7,8 @@ import java.util.Collections;
 import java.util.Random;
 import java.util.Scanner;
 
-import nhb.common.BaseLoggable;
-import nhb.common.utils.Initializer;
+import com.nhb.common.BaseLoggable;
+import com.nhb.common.utils.Initializer;
 
 public class ClusterPoints extends BaseLoggable {
 

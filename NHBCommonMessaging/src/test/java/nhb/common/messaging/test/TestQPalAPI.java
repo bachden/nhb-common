@@ -10,14 +10,14 @@ import java.util.concurrent.ExecutionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import nhb.common.data.PuElement;
-import nhb.common.data.PuObject;
-import nhb.common.utils.Initializer;
-import nhb.common.utils.StringUtils;
-import nhb.messaging.http.HttpAsyncFuture;
-import nhb.messaging.http.HttpClientHelper;
-import nhb.messaging.http.HttpMethod;
-import nhb.messaging.http.producer.HttpAsyncMessageProducer;
+import com.nhb.common.data.PuElement;
+import com.nhb.common.data.PuObject;
+import com.nhb.common.utils.Initializer;
+import com.nhb.common.utils.StringUtils;
+import com.nhb.messaging.http.HttpAsyncFuture;
+import com.nhb.messaging.http.HttpClientHelper;
+import com.nhb.messaging.http.HttpMethod;
+import com.nhb.messaging.http.producer.HttpAsyncMessageProducer;
 
 public class TestQPalAPI {
 

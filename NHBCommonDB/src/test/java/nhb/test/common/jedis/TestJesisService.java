@@ -4,8 +4,9 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
-import nhb.common.cache.jedis.JedisService;
-import nhb.common.vo.HostAndPort;
+import com.nhb.common.cache.jedis.JedisService;
+import com.nhb.common.vo.HostAndPort;
+
 import redis.clients.jedis.JedisSentinelPool;
 
 public class TestJesisService {

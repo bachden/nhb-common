@@ -1,6 +1,6 @@
 package nhb.test.encrypt;
 
-import nhb.common.encrypt.aes.AESEncryptor;
+import com.nhb.common.encrypt.aes.AESEncryptor;
 
 public class TestAESEncryption {
 

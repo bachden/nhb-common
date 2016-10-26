@@ -1,7 +1,7 @@
 package nhb.common.messaging.test;
 
-import nhb.common.BaseLoggable;
-import nhb.common.utils.Initializer;
+import com.nhb.common.BaseLoggable;
+import com.nhb.common.utils.Initializer;
 
 public class TestKafka extends BaseLoggable {
 

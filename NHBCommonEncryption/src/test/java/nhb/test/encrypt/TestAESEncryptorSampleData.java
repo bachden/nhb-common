@@ -3,7 +3,7 @@ package nhb.test.encrypt;
 import java.text.DecimalFormat;
 import java.util.concurrent.CountDownLatch;
 
-import nhb.common.encrypt.aes.AESEncryptor;
+import com.nhb.common.encrypt.aes.AESEncryptor;
 
 public class TestAESEncryptorSampleData {
 

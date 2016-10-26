@@ -5,10 +5,10 @@ import java.util.concurrent.CountDownLatch;
 
 import org.apache.http.HttpResponse;
 
-import nhb.common.async.Callback;
-import nhb.messaging.http.HttpAsyncFuture;
-import nhb.messaging.http.HttpClientHelper;
-import nhb.messaging.http.producer.HttpAsyncMessageProducer;
+import com.nhb.common.async.Callback;
+import com.nhb.messaging.http.HttpAsyncFuture;
+import com.nhb.messaging.http.HttpClientHelper;
+import com.nhb.messaging.http.producer.HttpAsyncMessageProducer;
 
 public class TestAsynHttp {
 

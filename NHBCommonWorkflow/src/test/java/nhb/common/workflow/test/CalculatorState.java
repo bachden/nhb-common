@@ -1,7 +1,8 @@
 package nhb.common.workflow.test;
 
+import com.nhb.common.workflow.statemachine.State;
+
 import lombok.Getter;
-import nhb.common.workflow.statemachine.State;
 
 @Getter
 public enum CalculatorState implements State {

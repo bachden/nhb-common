@@ -1,8 +1,9 @@
 package nhb.common.workflow.test;
 
+import com.nhb.common.workflow.statemachine.State;
+import com.nhb.common.workflow.statemachine.Transition;
+
 import lombok.Getter;
-import nhb.common.workflow.statemachine.State;
-import nhb.common.workflow.statemachine.Transition;
 
 @Getter
 public enum CalculatorTransition implements Transition {

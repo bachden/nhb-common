@@ -1,15 +1,15 @@
 package nhb.common.workflow.test.task;
 
-import nhb.common.async.BaseRPCFuture;
-import nhb.common.async.Callback;
-import nhb.common.async.RPCFuture;
-import nhb.common.workflow.JobContext;
-import nhb.common.workflow.async.CancelDispatcher;
-import nhb.common.workflow.async.CancelListener;
-import nhb.common.workflow.async.TaskFuture;
-import nhb.common.workflow.async.impl.BaseTaskFuture;
-import nhb.common.workflow.impl.AbstractTask;
-import nhb.common.workflow.impl.GenericJobContext;
+import com.nhb.common.async.BaseRPCFuture;
+import com.nhb.common.async.Callback;
+import com.nhb.common.async.RPCFuture;
+import com.nhb.common.workflow.JobContext;
+import com.nhb.common.workflow.async.CancelDispatcher;
+import com.nhb.common.workflow.async.CancelListener;
+import com.nhb.common.workflow.async.TaskFuture;
+import com.nhb.common.workflow.async.impl.BaseTaskFuture;
+import com.nhb.common.workflow.impl.AbstractTask;
+import com.nhb.common.workflow.impl.GenericJobContext;
 
 public class PrintResultTask extends AbstractTask {
 

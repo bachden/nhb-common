@@ -3,8 +3,8 @@ package nhb.common.test;
 import java.util.HashMap;
 import java.util.Map;
 
-import nhb.common.utils.MapUtils;
-import nhb.common.vo.ByteArrayWrapper;
+import com.nhb.common.utils.MapUtils;
+import com.nhb.common.vo.ByteArrayWrapper;
 
 public class TestByteArrayWrapper {
 

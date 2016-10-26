@@ -4,10 +4,10 @@ import com.infomatiq.jsi.Point;
 import com.infomatiq.jsi.Rectangle;
 import com.infomatiq.jsi.SpatialIndex;
 import com.infomatiq.jsi.rtree.RTree;
+import com.nhb.common.BaseLoggable;
+import com.nhb.common.utils.Initializer;
 
 import gnu.trove.TIntProcedure;
-import nhb.common.BaseLoggable;
-import nhb.common.utils.Initializer;
 
 public class NearestN extends BaseLoggable {
 

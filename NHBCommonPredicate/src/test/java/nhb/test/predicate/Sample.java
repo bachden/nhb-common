@@ -1,8 +1,8 @@
 package nhb.test.predicate;
 
-import nhb.common.predicate.FilteredObject;
-import nhb.common.predicate.Predicate;
-import nhb.common.predicate.PredicateBuilder;
+import com.nhb.common.predicate.FilteredObject;
+import com.nhb.common.predicate.Predicate;
+import com.nhb.common.predicate.PredicateBuilder;
 
 public class Sample {
 

@@ -4,7 +4,7 @@ import java.text.DecimalFormat;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 
-import nhb.common.encrypt.aes.AESEncryptor;
+import com.nhb.common.encrypt.aes.AESEncryptor;
 
 public class TestAESEncryptorRandomData {
 

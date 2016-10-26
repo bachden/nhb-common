@@ -11,7 +11,7 @@ import org.msgpack.packer.Packer;
 import org.msgpack.template.StringTemplate;
 import org.msgpack.template.Template;
 
-import nhb.common.data.msgpkg.GenericTypeTemplate;
+import com.nhb.common.data.msgpkg.GenericTypeTemplate;
 
 public class TestMessagePack {
 

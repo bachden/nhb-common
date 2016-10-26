@@ -1,7 +1,7 @@
 import java.util.UUID;
 
-import nhb.common.utils.Converter;
-import nhb.common.utils.StringUtils;
+import com.nhb.common.utils.Converter;
+import com.nhb.common.utils.StringUtils;
 
 public class TestPrintable {
 	public static void main(String[] args) {
