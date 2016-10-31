@@ -1,34 +1,23 @@
 package com.nhb.common.scripting.groovy;
 
 import java.util.Map;
-import java.util.Map.Entry;
-
-import javax.script.ScriptContext;
-import javax.script.ScriptException;
-import javax.script.SimpleScriptContext;
 
 import com.nhb.common.scripting.CompiledScript;
-import com.nhb.common.scripting.exception.ScriptRuntimeException;
+
+import groovy.lang.Binding;
 
 public class GroovyCompiledScript implements CompiledScript {
 
-	private final javax.script.CompiledScript compiledObject;
+	private final groovy.lang.Script compiledObject;
 
-	public GroovyCompiledScript(javax.script.CompiledScript compiled) {
+	public GroovyCompiledScript(groovy.lang.Script compiled) {
 		this.compiledObject = compiled;
 	}
 
 	@Override
 	public Object run(Map<String, Object> arguments) {
-		ScriptContext context = new SimpleScriptContext();
-		for (Entry<String, Object> entry : arguments.entrySet()) {
-			context.setAttribute(entry.getKey(), entry.getValue(), ScriptContext.ENGINE_SCOPE);
-		}
-		try {
-			return this.compiledObject.eval(context);
-		} catch (ScriptException e) {
-			throw new ScriptRuntimeException(e);
-		}
+		compiledObject.setBinding(new Binding(arguments));
+		return this.compiledObject.run();
 	}
 
 }
