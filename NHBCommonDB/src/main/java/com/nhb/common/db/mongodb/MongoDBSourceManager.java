@@ -100,6 +100,7 @@ public class MongoDBSourceManager extends BaseLoggable {
 							}
 							tagSetList.add(new TagSet(tags));
 						}
+
 						mongoClient.setReadPreference(
 								ReadPreference.valueOf(config.getReadPreference().getName(), tagSetList));
 					}
