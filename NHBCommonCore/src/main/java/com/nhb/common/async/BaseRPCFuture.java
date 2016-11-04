@@ -174,7 +174,7 @@ public class BaseRPCFuture<V> extends BaseEventDispatcher implements RPCFuture<V
 		return failedCause;
 	}
 
-	protected void setFailedCause(Throwable failedCause) {
+	public void setFailedCause(Throwable failedCause) {
 		this.failedCause = failedCause;
 	}
 

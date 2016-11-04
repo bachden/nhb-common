@@ -5,7 +5,6 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.rabbitmq.client.AMQP.BasicProperties;
 import com.nhb.common.async.BaseRPCFuture;
 import com.nhb.common.async.RPCFuture;
 import com.nhb.common.data.PuElement;
@@ -13,6 +12,7 @@ import com.nhb.common.data.msgpkg.PuElementTemplate;
 import com.nhb.messaging.rabbit.RabbitMQQueueConfig;
 import com.nhb.messaging.rabbit.connection.RabbitMQConnection;
 import com.nhb.messaging.rabbit.connection.RabbitMQConnectionPool;
+import com.rabbitmq.client.AMQP.BasicProperties;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Consumer;
 import com.rabbitmq.client.DefaultConsumer;
@@ -71,7 +71,13 @@ public class RabbitMQRPCProducer extends RabbitMQProducer<RPCFuture<PuElement>> 
 				BaseRPCFuture<PuElement> future = futures.get(corrId);
 				if (future != null) {
 					try {
-						future.set(PuElementTemplate.getInstance().read(body));
+						try {
+							future.set(PuElementTemplate.getInstance().read(body));
+						} catch (Exception ex) {
+							getLogger().error("Error while deserialize response data, queue name: "
+									+ getQueueConfig().getQueueName(), ex);
+							future.setFailedCause(ex);
+						}
 						future.done();
 					} finally {
 						RabbitMQRPCProducer.this.futures.remove(corrId);
