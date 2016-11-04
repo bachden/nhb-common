@@ -46,4 +46,5 @@
 			<version>2.4.7</version>
 		</dependency>
 	</dependencies>
+	<version>1.0.1</version>
 </project>
