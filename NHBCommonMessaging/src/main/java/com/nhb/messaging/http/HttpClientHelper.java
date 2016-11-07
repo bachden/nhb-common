@@ -153,7 +153,7 @@ public class HttpClientHelper extends BaseLoggable implements Closeable {
 		PuElement result = null;
 		if (response != null) {
 			try {
-				String responseText = EntityUtils.toString(response.getEntity());
+				String responseText = EntityUtils.toString(response.getEntity(), "utf-8");
 				if (responseText != null) {
 					responseText = responseText.trim();
 					try {
