@@ -2,13 +2,12 @@ package com.nhb.common.encrypt.aes;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.util.Base64;
 
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
-
-import org.apache.commons.codec.binary.Base64;
 
 import com.nhb.common.encrypt.exception.VerificationFailureException;
 import com.nhb.common.encrypt.utils.EncryptionUtils;
@@ -26,11 +25,11 @@ public final class AESEncryptor {
 			.getProperty("encryption.aes.authenticationInfo", "NHBCommonEncryption|KeyForAuthentication").getBytes();
 
 	private static byte[] decodeBase64(String base64Data) {
-		return Base64.decodeBase64(base64Data);
+		return Base64.getDecoder().decode(base64Data);
 	}
 
 	private static String encodeBase64(byte[] bytes) {
-		return Base64.encodeBase64String(bytes);
+		return Base64.getEncoder().encodeToString(bytes);
 	}
 
 	private static IvParameterSpec randomIV() {
@@ -275,7 +274,7 @@ public final class AESEncryptor {
 		SecretKey key = this.getSecretKey();
 		return key.getEncoded();
 	}
-	
+
 	public String getSecretKeyAsBase64() {
 		SecretKey key = this.getSecretKey();
 		return encodeBase64(key.getEncoded());
