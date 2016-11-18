@@ -4,7 +4,9 @@ import java.io.IOException;
 import java.util.concurrent.ExecutionException;
 
 import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.concurrent.FutureCallback;
+import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.EntityUtils;
 
 import com.nhb.common.async.BaseRPCFuture;
@@ -15,7 +17,18 @@ import com.nhb.common.data.PuObject;
 import com.nhb.common.data.PuValue;
 import com.nhb.common.data.PuXmlHelper;
 
+import lombok.Getter;
+import lombok.Setter;
+
 class HttpAsyncFutureImpl extends BaseRPCFuture<HttpResponse> implements HttpAsyncFuture, FutureCallback<HttpResponse> {
+
+	@Setter
+	@Getter
+	private HttpUriRequest request;
+
+	@Setter
+	@Getter
+	private HttpContext context;
 
 	@Override
 	public void cancelled() {

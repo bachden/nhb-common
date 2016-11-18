@@ -21,6 +21,7 @@ import org.apache.http.impl.nio.client.CloseableHttpAsyncClient;
 import org.apache.http.impl.nio.client.HttpAsyncClientBuilder;
 import org.apache.http.impl.nio.client.HttpAsyncClients;
 import org.apache.http.nio.client.HttpAsyncClient;
+import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.util.EntityUtils;
 
 import com.nhb.common.BaseLoggable;
@@ -87,8 +88,11 @@ public class HttpClientHelper extends BaseLoggable implements Closeable {
 		}
 		getLogger().debug("\n------- " + builder.getMethod() + " -------\nURI: {}\nPARAMS: {}\n-----------------------",
 				builder.getUri().toString(), params != null ? params : params);
+
 		HttpAsyncFutureImpl future = new HttpAsyncFutureImpl();
-		Future<HttpResponse> cancelFuture = getAsyncClient().execute(builder.build(), future);
+		future.setContext(new BasicHttpContext());
+		future.setRequest(builder.build());
+		Future<HttpResponse> cancelFuture = getAsyncClient().execute(future.getRequest(), future.getContext(), future);
 		future.setCancelFuture(cancelFuture);
 		return future;
 	}

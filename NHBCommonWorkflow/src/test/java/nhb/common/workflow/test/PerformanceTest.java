@@ -36,8 +36,9 @@ public class PerformanceTest implements Loggable {
 	private AtomicInteger idSeed = new AtomicInteger(0);
 
 	private JobContext generateContext() {
-		GenericJobContext context = GenericJobContext.builder().id(idSeed.incrementAndGet())
-				.stateMachine(generateStateMachine()).build();
+		GenericJobContext context = new GenericJobContext();
+		context.setId(idSeed.incrementAndGet());
+		context.setStateMachine(generateStateMachine());
 		context.setInput(PuObject.fromObject(new MapTuple<>("data", new int[] { 1, 2, 3 })));
 		return context;
 	}

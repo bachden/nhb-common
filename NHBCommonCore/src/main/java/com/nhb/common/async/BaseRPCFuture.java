@@ -123,22 +123,14 @@ public class BaseRPCFuture<V> extends BaseEventDispatcher implements RPCFuture<V
 
 	@Override
 	public V get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
-		if (this.monitorFuture == null) {
-			this.monitorFuture = monitoringExecutorService.schedule(new Runnable() {
-
-				@Override
-				public void run() {
-					if (monitorFuture == null) {
-						return;
-					}
-					timeoutFlag = true;
-					cancel(true);
-				}
-			}, timeout, unit);
-		}
+		this.setTimeout(timeout, unit);
 		V result = this.get();
 		if (timeoutFlag) {
-			throw new TimeoutException();
+			if (this.getFailedCause() instanceof TimeoutException) {
+				throw (TimeoutException) this.getFailedCause();
+			} else {
+				throw new TimeoutException();
+			}
 		}
 		if (this.cancelled) {
 			return null;
@@ -176,6 +168,30 @@ public class BaseRPCFuture<V> extends BaseEventDispatcher implements RPCFuture<V
 
 	public void setFailedCause(Throwable failedCause) {
 		this.failedCause = failedCause;
+	}
+
+	@Override
+	public void setTimeout(long timeout, TimeUnit unit) {
+		if (this.monitorFuture == null) {
+			synchronized (this) {
+				if (this.monitorFuture == null) {
+					final TimeoutException exceptionTobeThrown = new TimeoutException();
+					this.monitorFuture = monitoringExecutorService.schedule(new Runnable() {
+						@Override
+						public void run() {
+							if (monitorFuture == null) {
+								return;
+							}
+							setFailedCause(exceptionTobeThrown);
+							timeoutFlag = true;
+							cancel(true);
+						}
+					}, timeout, unit);
+				}
+			}
+		} else {
+			throw new IllegalStateException("Timeout has been set");
+		}
 	}
 
 }
