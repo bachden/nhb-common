@@ -32,7 +32,7 @@ public interface StateMachine extends Loggable {
 	 * 
 	 * @param startState
 	 */
-	default void start(State startState) {
+	default void setStartState(State startState) {
 		if (this.getCurrentState() == null) {
 			this.gotoState(startState);
 		} else {

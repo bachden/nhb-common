@@ -141,5 +141,4 @@ public abstract class AbstractFutureTranslator<FromType, ToType> extends BaseLog
 	protected boolean isLastResultIsNull() {
 		return this.lastResultIsNull;
 	}
-
 }

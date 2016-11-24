@@ -29,7 +29,7 @@ public class PerformanceTest implements Loggable {
 		stateMachine.addTransition(CalculatorState.ASTERISK, CalculatorState.END);
 		stateMachine.addTransition(CalculatorState.CALCULATE_SUM, CalculatorState.PRINT_RESULT);
 		stateMachine.setFinalState(CalculatorState.END);
-		stateMachine.start(CalculatorState.CALCULATE_SUM);
+		stateMachine.setStartState(CalculatorState.CALCULATE_SUM);
 		return stateMachine;
 	}
 
