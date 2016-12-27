@@ -1,7 +1,7 @@
 {
   "version" : "1.0.1",
   "name" : "nhb-common-base",
-  "number" : "1479981031192",
+  "number" : "1482837888574",
   "type" : "MAVEN",
   "buildAgent" : {
     "name" : "Maven",
@@ -11,14 +11,14 @@
     "name" : "Maven",
     "version" : "3.3.9"
   },
-  "started" : "2016-11-24T16:50:33.456+0700",
-  "durationMillis" : 52384,
+  "started" : "2016-12-27T18:24:50.418+0700",
+  "durationMillis" : 49554,
   "licenseControl" : {
     "runChecks" : false,
     "includePublishedArtifacts" : false,
     "autoDiscover" : false,
-    "scopesList" : "",
-    "licenseViolationsRecipientsList" : ""
+    "licenseViolationsRecipientsList" : "",
+    "scopesList" : ""
   },
   "buildRetention" : {
     "count" : -1,
@@ -43,23 +43,23 @@
     "id" : "nhb.common:nhb-common-messaging:1.0.2",
     "artifacts" : [ {
       "type" : "javadoc-jar",
-      "sha1" : "5c0bc2fdb12cb7f27786b131c5c1cf4b8604f605",
-      "md5" : "b6bc81d9c9662531548c1ccfe3c30442",
+      "sha1" : "e1de37f700d49bab89a7b84ab589538502ed3ab6",
+      "md5" : "dd8eb3689e219f4cde6eeaa58a143d1f",
       "name" : "nhb-common-messaging-1.0.2-javadoc.jar"
     }, {
       "type" : "java-source-jar",
-      "sha1" : "f469c059a73eddd626c244e1002b16fc2ce409e2",
-      "md5" : "e6aa719ad22cccdaf3e209938bc52c37",
+      "sha1" : "3760996d3563c44b3e7d9675c9877ed0a8295a61",
+      "md5" : "8869089bfa0bb35a0f30f7b0d2f06110",
       "name" : "nhb-common-messaging-1.0.2-sources.jar"
     }, {
       "type" : "jar",
-      "sha1" : "220da45ea9d25627f95850d2c41537a446b8c6f0",
-      "md5" : "5165309f6b96d8fe829f6763470a4a61",
+      "sha1" : "0282e30bd68c23c829978c44a82e0917f1e8450a",
+      "md5" : "989896bb56a722e7d3169f185171cc96",
       "name" : "nhb-common-messaging-1.0.2.jar"
     }, {
       "type" : "pom",
-      "sha1" : "fafe890abb67f39a45cff173bb4e045dfff8fff8",
-      "md5" : "1d0d94ebd1049c8752b97aed38734530",
+      "sha1" : "93367efbe9a52d72dbe6b6cf42090a775ea1fba9",
+      "md5" : "c18f94eacdf11eceaf8b7ec3587aed78",
       "name" : "nhb-common-messaging-1.0.2.pom"
     } ],
     "dependencies" : [ {
@@ -220,6 +220,12 @@
       "scopes" : [ "compile" ]
     }, {
       "type" : "jar",
+      "sha1" : "7ec897a0057bf3c948be3032c24b56a8f72fa7a6",
+      "md5" : "42933192855129e9e753dc854f2f308d",
+      "id" : "nhb.common:nhb-common-core:1.0.4",
+      "scopes" : [ "compile" ]
+    }, {
+      "type" : "jar",
       "sha1" : "42a25dc3219429f0e5d060061f71acb49bf010a0",
       "md5" : "6393363b47ddcbba82321110c3e07519",
       "id" : "org.hamcrest:hamcrest-core:1.3",
@@ -262,12 +268,6 @@
       "scopes" : [ "compile" ]
     }, {
       "type" : "jar",
-      "sha1" : "e58b29d722c0723223f02f31b43147f61413c7dc",
-      "md5" : "6ab54ae8bb89a442fe23bc291dc7e3e4",
-      "id" : "nhb.common:nhb-common-core:1.0.2",
-      "scopes" : [ "compile" ]
-    }, {
-      "type" : "jar",
       "sha1" : "59e11141636ba2469a6fdd8c986d622480c3e239",
       "md5" : "752fead2513a521317f8e87d8a26c7d7",
       "id" : "com.rabbitmq:amqp-client:3.6.5",
@@ -307,27 +307,27 @@
     "properties" : {
       "project.build.sourceEncoding" : "UTF-8"
     },
-    "id" : "nhb.common:nhb-common-core:1.0.3",
+    "id" : "nhb.common:nhb-common-predicate:1.0.0",
     "artifacts" : [ {
+      "type" : "jar",
+      "sha1" : "519f808dd1c03f22fca190b2c0a7160f11ebf2ee",
+      "md5" : "4d9b657c546a066aae070d61447f76eb",
+      "name" : "nhb-common-predicate-1.0.0.jar"
+    }, {
       "type" : "javadoc-jar",
-      "sha1" : "a09841532557a25d2226806c1ded61fb3da647c2",
-      "md5" : "44e2df9ff458c16d38acbb3db85821f2",
-      "name" : "nhb-common-core-1.0.3-javadoc.jar"
+      "sha1" : "79d5a3e397779659e253b264200000bdce30fdf6",
+      "md5" : "2c3223a6e47ba41dc7274d28179903d7",
+      "name" : "nhb-common-predicate-1.0.0-javadoc.jar"
     }, {
       "type" : "java-source-jar",
-      "sha1" : "4469eefe4dd76f9ab003d64471c01b2a71eaa085",
-      "md5" : "7c6813b713813fbf5375e24b721a8a0c",
-      "name" : "nhb-common-core-1.0.3-sources.jar"
-    }, {
-      "type" : "jar",
-      "sha1" : "2c2849c4377e20fefe5d2b6ed9545c533a889819",
-      "md5" : "5dbd239dc6f66726ca638b1737b01f4d",
-      "name" : "nhb-common-core-1.0.3.jar"
+      "sha1" : "b425e34044c615ea9db827a6586dc8f319b65a8a",
+      "md5" : "75f12e4796cfdedeb9c6b0589570e0f6",
+      "name" : "nhb-common-predicate-1.0.0-sources.jar"
     }, {
       "type" : "pom",
-      "sha1" : "6ca418b210029322d09d40f5d70a1747a4739515",
-      "md5" : "01c1679fb4b9ddbd9a4887a33641e397",
-      "name" : "nhb-common-core-1.0.3.pom"
+      "sha1" : "1deb3ef16917675bb89d75535831a081d9ed0a11",
+      "md5" : "a2929bd89201a045d3cb0b29bc1bd4d4",
+      "name" : "nhb-common-predicate-1.0.0.pom"
     } ],
     "dependencies" : [ {
       "type" : "jar",
@@ -340,6 +340,12 @@
       "sha1" : "b1b6ea3b7e4aa4f492509a4952029cd8e48019ad",
       "md5" : "7f97854dc04c119d461fed14f5d8bb96",
       "id" : "commons-io:commons-io:2.4",
+      "scopes" : [ "compile" ]
+    }, {
+      "type" : "jar",
+      "sha1" : "7ec897a0057bf3c948be3032c24b56a8f72fa7a6",
+      "md5" : "42933192855129e9e753dc854f2f308d",
+      "id" : "nhb.common:nhb-common-core:1.0.4",
       "scopes" : [ "compile" ]
     }, {
       "type" : "jar",
@@ -436,27 +442,27 @@
     "properties" : {
       "project.build.sourceEncoding" : "UTF-8"
     },
-    "id" : "nhb.common:nhb-common-predicate:1.0.0",
+    "id" : "nhb.common:nhb-common-core:1.0.4",
     "artifacts" : [ {
+      "type" : "java-source-jar",
+      "sha1" : "acb73e745b37391c6884a09696efb368004efa72",
+      "md5" : "5cc78edbd119655d2f089f990f6dc7b3",
+      "name" : "nhb-common-core-1.0.4-sources.jar"
+    }, {
       "type" : "jar",
-      "sha1" : "5786a67ac5c2a3298317cba5824115ac072b559a",
-      "md5" : "0c6ba198b0d0b50c5c4398e1d37697c8",
-      "name" : "nhb-common-predicate-1.0.0.jar"
+      "sha1" : "7ec897a0057bf3c948be3032c24b56a8f72fa7a6",
+      "md5" : "42933192855129e9e753dc854f2f308d",
+      "name" : "nhb-common-core-1.0.4.jar"
     }, {
       "type" : "javadoc-jar",
-      "sha1" : "e1669fd583deec5863c3237656c7c318f7d423fe",
-      "md5" : "035902eb239cbf2e93d599d7cd5af6cf",
-      "name" : "nhb-common-predicate-1.0.0-javadoc.jar"
-    }, {
-      "type" : "java-source-jar",
-      "sha1" : "2a01369aae6e0b13c57a4175e5e33c0409eed316",
-      "md5" : "211fa9870e11340c0f6a1cd72268e09b",
-      "name" : "nhb-common-predicate-1.0.0-sources.jar"
+      "sha1" : "d7cbd2b46cbb9c41259ae57b04d5bd62b4825174",
+      "md5" : "b0ce13798e5067f45f4ae060d7d7c1ca",
+      "name" : "nhb-common-core-1.0.4-javadoc.jar"
     }, {
       "type" : "pom",
-      "sha1" : "9d51a676679e67d780eef2976f421683e3ef5791",
-      "md5" : "fe064781e0a7e837b8ff61184982c3e6",
-      "name" : "nhb-common-predicate-1.0.0.pom"
+      "sha1" : "072fc805080755d2158874a92fd934d870740b84",
+      "md5" : "69a46098ee81ce22d051b6303488535d",
+      "name" : "nhb-common-core-1.0.4.pom"
     } ],
     "dependencies" : [ {
       "type" : "jar",
@@ -517,12 +523,6 @@
       "sha1" : "0ce1edb914c94ebc388f086c6827e8bdeec71ac2",
       "md5" : "4d5c1693079575b362edf41500630bbd",
       "id" : "commons-lang:commons-lang:2.6",
-      "scopes" : [ "compile" ]
-    }, {
-      "type" : "jar",
-      "sha1" : "e58b29d722c0723223f02f31b43147f61413c7dc",
-      "md5" : "6ab54ae8bb89a442fe23bc291dc7e3e4",
-      "id" : "nhb.common:nhb-common-core:1.0.2",
       "scopes" : [ "compile" ]
     }, {
       "type" : "jar",
@@ -574,23 +574,23 @@
     "id" : "nhb.common:nhb-common-workflow:1.0.1",
     "artifacts" : [ {
       "type" : "javadoc-jar",
-      "sha1" : "7f5578e4a7043e1dd2a8d632d744dbe7fbb860b9",
-      "md5" : "63a2edc322b9eef78379683abb432356",
+      "sha1" : "592fb5162400e7eec3cd1db64cdf194d909d8d14",
+      "md5" : "00d3a88e22b46bb2604e75bbd2d1d8e7",
       "name" : "nhb-common-workflow-1.0.1-javadoc.jar"
     }, {
       "type" : "jar",
-      "sha1" : "a9f8ffc61ef59b0395d7d25f886c287006cb8d3c",
-      "md5" : "3221eb7c7305d77f58dc270bba7d5289",
+      "sha1" : "26253461d9bf62ecb6a6965e2aa3be446c2c898a",
+      "md5" : "8996dc26c28f4527ffd2a5c4ccd5cf12",
       "name" : "nhb-common-workflow-1.0.1.jar"
     }, {
       "type" : "java-source-jar",
-      "sha1" : "db670da96868e96086927ad0a702465797247efe",
-      "md5" : "9db9e54c90499958ff5c3defa54ffc24",
+      "sha1" : "4e66ac33c0aef9a455f4286ae8e402a6df858685",
+      "md5" : "8af61af6ec0b0b80d94d5e2d8bc49da2",
       "name" : "nhb-common-workflow-1.0.1-sources.jar"
     }, {
       "type" : "pom",
-      "sha1" : "04f2d08613e3148918c63333c9d566b74bb35d36",
-      "md5" : "eaa8a8dedb77e64cc08e18a13bb24348",
+      "sha1" : "4984b3631aaad78322b287c702ec66a6342916d7",
+      "md5" : "c151a98024707feb90806aa4e65b76e9",
       "name" : "nhb-common-workflow-1.0.1.pom"
     } ],
     "dependencies" : [ {
@@ -610,6 +610,12 @@
       "sha1" : "b1b6ea3b7e4aa4f492509a4952029cd8e48019ad",
       "md5" : "7f97854dc04c119d461fed14f5d8bb96",
       "id" : "commons-io:commons-io:2.4",
+      "scopes" : [ "compile" ]
+    }, {
+      "type" : "jar",
+      "sha1" : "7ec897a0057bf3c948be3032c24b56a8f72fa7a6",
+      "md5" : "42933192855129e9e753dc854f2f308d",
+      "id" : "nhb.common:nhb-common-core:1.0.4",
       "scopes" : [ "compile" ]
     }, {
       "type" : "jar",
@@ -661,12 +667,6 @@
       "scopes" : [ "compile" ]
     }, {
       "type" : "jar",
-      "sha1" : "e58b29d722c0723223f02f31b43147f61413c7dc",
-      "md5" : "6ab54ae8bb89a442fe23bc291dc7e3e4",
-      "id" : "nhb.common:nhb-common-core:1.0.2",
-      "scopes" : [ "compile" ]
-    }, {
-      "type" : "jar",
       "sha1" : "49f3068a4591b4aa6af553905ff2145685a21c2c",
       "md5" : "839d7d444cdd5c76ff329a82949daae9",
       "id" : "net.minidev:asm:1.0.2",
@@ -712,27 +712,72 @@
     "properties" : {
       "project.build.sourceEncoding" : "UTF-8"
     },
-    "id" : "nhb.common:nhb-common-db:1.0.0",
+    "id" : "nhb.common:nhb-common-encryption:1.0.0",
     "artifacts" : [ {
+      "type" : "javadoc-jar",
+      "sha1" : "838664411091d36d005d0e1481b884bc9cea5194",
+      "md5" : "ff7f00a56b2ab3ab0605cee211db0c60",
+      "name" : "nhb-common-encryption-1.0.0-javadoc.jar"
+    }, {
       "type" : "java-source-jar",
-      "sha1" : "7fffa9aa1f6a844bbb7c251c193d6cabcc7269a5",
-      "md5" : "ca5a5a005d9af08500283f3b06a5c0df",
-      "name" : "nhb-common-db-1.0.0-sources.jar"
+      "sha1" : "5f81653270c705dfa6a7e6653494013d215349a8",
+      "md5" : "776a54ee113c228faf3160fdb2d433d1",
+      "name" : "nhb-common-encryption-1.0.0-sources.jar"
     }, {
       "type" : "jar",
-      "sha1" : "7fb41aea5c9726462e5639a01e752c27e968fdbd",
-      "md5" : "4d591f36028c5a112b3d3c89b3942b57",
-      "name" : "nhb-common-db-1.0.0.jar"
-    }, {
-      "type" : "javadoc-jar",
-      "sha1" : "9212e76d2d5681f629b936f18accfa824eda8c54",
-      "md5" : "f08fd39947172ebbc1bb9e75352b9af2",
-      "name" : "nhb-common-db-1.0.0-javadoc.jar"
+      "sha1" : "6aed2358ee18d4e7fa97f8d8e91ebcc67a665e92",
+      "md5" : "88f4f7f71c27914a7a1fc733eb04200e",
+      "name" : "nhb-common-encryption-1.0.0.jar"
     }, {
       "type" : "pom",
-      "sha1" : "45bf4c9398dbd4bace99b9b8463749f0a74cbb96",
-      "md5" : "8e82895e9ebd0197c44aa3a0800e65d8",
-      "name" : "nhb-common-db-1.0.0.pom"
+      "sha1" : "378aa6d623ed8158a65f76b98b58ef62529146ff",
+      "md5" : "5c8c0731819420b6bd382c2a33f7ebf9",
+      "name" : "nhb-common-encryption-1.0.0.pom"
+    } ],
+    "dependencies" : [ {
+      "type" : "jar",
+      "sha1" : "b1b6ea3b7e4aa4f492509a4952029cd8e48019ad",
+      "md5" : "7f97854dc04c119d461fed14f5d8bb96",
+      "id" : "commons-io:commons-io:2.4",
+      "scopes" : [ "compile" ]
+    }, {
+      "type" : "jar",
+      "sha1" : "9ce04e34240f674bc72680f8b843b1457383161a",
+      "md5" : "75615356605c8128013da9e3ac62a249",
+      "id" : "commons-codec:commons-codec:1.9",
+      "scopes" : [ "compile" ]
+    }, {
+      "type" : "jar",
+      "sha1" : "7bd6fc5b3fb7a77c710226ffaa785b404b620ba0",
+      "md5" : "98fab55e47b35e6bcc954c2b00ee5a24",
+      "id" : "org.projectlombok:lombok:1.16.10",
+      "scopes" : [ "provided" ]
+    } ]
+  }, {
+    "properties" : {
+      "project.build.sourceEncoding" : "UTF-8"
+    },
+    "id" : "nhb.common:nhb-common-db:1.0.1",
+    "artifacts" : [ {
+      "type" : "java-source-jar",
+      "sha1" : "2bbf4664f78e119ea477dc7486073f6d61a358a8",
+      "md5" : "51a579c650316a96d93635d78e29db55",
+      "name" : "nhb-common-db-1.0.1-sources.jar"
+    }, {
+      "type" : "javadoc-jar",
+      "sha1" : "7bc8c09fb23b0f92cc35f8c85bf6ccb7dd6cdec5",
+      "md5" : "6c7adea5c383ca6bb12ac58565b0a313",
+      "name" : "nhb-common-db-1.0.1-javadoc.jar"
+    }, {
+      "type" : "jar",
+      "sha1" : "1fb97389c7f1c1c6fee33a58ee67834890041cb2",
+      "md5" : "96b3a707cd673e7b9995769d8817a7c4",
+      "name" : "nhb-common-db-1.0.1.jar"
+    }, {
+      "type" : "pom",
+      "sha1" : "adb23607f7050c1d1b2dcddf4cbae37ff5ce8f06",
+      "md5" : "e79b50dabe9bd4fcfad141f174fdbb7d",
+      "name" : "nhb-common-db-1.0.1.pom"
     } ],
     "dependencies" : [ {
       "type" : "jar",
@@ -910,6 +955,12 @@
       "scopes" : [ "compile" ]
     }, {
       "type" : "jar",
+      "sha1" : "7ec897a0057bf3c948be3032c24b56a8f72fa7a6",
+      "md5" : "42933192855129e9e753dc854f2f308d",
+      "id" : "nhb.common:nhb-common-core:1.0.4",
+      "scopes" : [ "compile" ]
+    }, {
+      "type" : "jar",
       "sha1" : "42a25dc3219429f0e5d060061f71acb49bf010a0",
       "md5" : "6393363b47ddcbba82321110c3e07519",
       "id" : "org.hamcrest:hamcrest-core:1.3",
@@ -946,9 +997,9 @@
       "scopes" : [ "compile" ]
     }, {
       "type" : "jar",
-      "sha1" : "e58b29d722c0723223f02f31b43147f61413c7dc",
-      "md5" : "6ab54ae8bb89a442fe23bc291dc7e3e4",
-      "id" : "nhb.common:nhb-common-core:1.0.2",
+      "sha1" : "ef2a2ceab1735eaaae0b5d1cccf574fb7c6e1c52",
+      "md5" : "ee039ffdcd65dec90eb8fd783748e016",
+      "id" : "mysql:mysql-connector-java:5.1.40",
       "scopes" : [ "compile" ]
     }, {
       "type" : "jar",
@@ -1003,71 +1054,26 @@
     "properties" : {
       "project.build.sourceEncoding" : "UTF-8"
     },
-    "id" : "nhb.common:nhb-common-encryption:1.0.0",
-    "artifacts" : [ {
-      "type" : "javadoc-jar",
-      "sha1" : "a570773f3b06ac19ca7f8447b71462fb978d7090",
-      "md5" : "07459885529e4ac07b670eedf3888cc7",
-      "name" : "nhb-common-encryption-1.0.0-javadoc.jar"
-    }, {
-      "type" : "java-source-jar",
-      "sha1" : "93b920eb4028dc811a4c72ac4f06f910a754dbd7",
-      "md5" : "b60f74450ca22590daca7f647cf9879a",
-      "name" : "nhb-common-encryption-1.0.0-sources.jar"
-    }, {
-      "type" : "jar",
-      "sha1" : "eb1427081828593546aaf13a497b4d8f5e47664c",
-      "md5" : "b6edf856c5781b09af74cf36dfc17431",
-      "name" : "nhb-common-encryption-1.0.0.jar"
-    }, {
-      "type" : "pom",
-      "sha1" : "378aa6d623ed8158a65f76b98b58ef62529146ff",
-      "md5" : "5c8c0731819420b6bd382c2a33f7ebf9",
-      "name" : "nhb-common-encryption-1.0.0.pom"
-    } ],
-    "dependencies" : [ {
-      "type" : "jar",
-      "sha1" : "b1b6ea3b7e4aa4f492509a4952029cd8e48019ad",
-      "md5" : "7f97854dc04c119d461fed14f5d8bb96",
-      "id" : "commons-io:commons-io:2.4",
-      "scopes" : [ "compile" ]
-    }, {
-      "type" : "jar",
-      "sha1" : "9ce04e34240f674bc72680f8b843b1457383161a",
-      "md5" : "75615356605c8128013da9e3ac62a249",
-      "id" : "commons-codec:commons-codec:1.9",
-      "scopes" : [ "compile" ]
-    }, {
-      "type" : "jar",
-      "sha1" : "7bd6fc5b3fb7a77c710226ffaa785b404b620ba0",
-      "md5" : "98fab55e47b35e6bcc954c2b00ee5a24",
-      "id" : "org.projectlombok:lombok:1.16.10",
-      "scopes" : [ "provided" ]
-    } ]
-  }, {
-    "properties" : {
-      "project.build.sourceEncoding" : "UTF-8"
-    },
     "id" : "nhb.common:nhb-common-scripting:1.0.1",
     "artifacts" : [ {
       "type" : "java-source-jar",
-      "sha1" : "166091a7331dcf8d81378669020c1e7dc4e33f8f",
-      "md5" : "4172846ee3826e460ac345e4783c0797",
+      "sha1" : "b30f87a250b4617bfbbf76f6ef4384db35dda1fd",
+      "md5" : "4e9e6bcac0c3ba724dd4656fce36a7e8",
       "name" : "nhb-common-scripting-1.0.1-sources.jar"
     }, {
       "type" : "jar",
-      "sha1" : "87c07d068e5beacea0f80ac3aff4315468026773",
-      "md5" : "f090de3751883ea79104714ada09a1b5",
+      "sha1" : "36b0ae3ca2ee5c920cbc6148b3bb247aeba20873",
+      "md5" : "a674b78f722d804c9addc816d8be2aec",
       "name" : "nhb-common-scripting-1.0.1.jar"
     }, {
       "type" : "javadoc-jar",
-      "sha1" : "1a0f08d898ecdc0365bcf3cf6297b44309d5c322",
-      "md5" : "b96011050da53ac1eaf1c4a4c1e26035",
+      "sha1" : "eb143fdc66e4b2b835f434a66e26107498d6503f",
+      "md5" : "80509d750dff1b8fa255888c8c56573f",
       "name" : "nhb-common-scripting-1.0.1-javadoc.jar"
     }, {
       "type" : "pom",
-      "sha1" : "a57d7dcb706404428e9927bcbee829979fa5c82a",
-      "md5" : "3b99ba79668b5d24db61e35e892d9a0d",
+      "sha1" : "555c97e66b41639bcacec182f0abea30bea7b258",
+      "md5" : "1a8bd9d08713bce21decc011bbeb0dbb",
       "name" : "nhb-common-scripting-1.0.1.pom"
     } ],
     "dependencies" : [ {
@@ -1087,6 +1093,12 @@
       "sha1" : "b1b6ea3b7e4aa4f492509a4952029cd8e48019ad",
       "md5" : "7f97854dc04c119d461fed14f5d8bb96",
       "id" : "commons-io:commons-io:2.4",
+      "scopes" : [ "compile" ]
+    }, {
+      "type" : "jar",
+      "sha1" : "7ec897a0057bf3c948be3032c24b56a8f72fa7a6",
+      "md5" : "42933192855129e9e753dc854f2f308d",
+      "id" : "nhb.common:nhb-common-core:1.0.4",
       "scopes" : [ "compile" ]
     }, {
       "type" : "jar",
@@ -1135,12 +1147,6 @@
       "sha1" : "0ce1edb914c94ebc388f086c6827e8bdeec71ac2",
       "md5" : "4d5c1693079575b362edf41500630bbd",
       "id" : "commons-lang:commons-lang:2.6",
-      "scopes" : [ "compile" ]
-    }, {
-      "type" : "jar",
-      "sha1" : "e58b29d722c0723223f02f31b43147f61413c7dc",
-      "md5" : "6ab54ae8bb89a442fe23bc291dc7e3e4",
-      "id" : "nhb.common:nhb-common-core:1.0.2",
       "scopes" : [ "compile" ]
     }, {
       "type" : "jar",

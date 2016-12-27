@@ -422,7 +422,9 @@ public final class ObjectUtils {
 			} else if (value instanceof Map<?, ?>) {
 				Map<String, Object> childMap = new HashMap<String, Object>();
 				for (Entry<?, ?> entry : ((Map<?, ?>) value).entrySet()) {
-					if (PrimitiveTypeUtils.isPrimitiveOrWrapperType(((Object) entry.getValue()).getClass())) {
+					if (entry.getValue() == null) {
+						childMap.put(String.valueOf(entry.getKey()), null);
+					} else if (PrimitiveTypeUtils.isPrimitiveOrWrapperType(((Object) entry.getValue()).getClass())) {
 						childMap.put(String.valueOf(entry.getKey()), (Object) entry.getValue());
 					} else if (ArrayUtils.isArrayOrCollection(entry.getValue().getClass())) {
 						childMap.put(String.valueOf(entry.getKey()), toList(entry.getValue()));
