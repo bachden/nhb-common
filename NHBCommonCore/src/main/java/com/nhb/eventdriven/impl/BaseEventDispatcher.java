@@ -12,7 +12,7 @@ import com.nhb.eventdriven.EventHandler;
 
 public class BaseEventDispatcher extends BaseLoggable implements EventDispatcher {
 
-	private Map<String, List<EventHandler>> listeners;
+	protected Map<String, List<EventHandler>> listeners;
 
 	@Override
 	public void addEventListener(String eventType, EventHandler listener) {
