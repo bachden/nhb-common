@@ -97,7 +97,11 @@ public class BaseRPCFuture<V> extends BaseEventDispatcher implements RPCFuture<V
 		}
 		this.doneSignal.countDown();
 		if (this.callable != null) {
-			this.callable.apply(this.value);
+			try {
+				this.callable.apply(this.value);
+			} catch (Exception e) {
+				getLogger().error("Error while execute callback", e);
+			}
 		}
 	}
 
