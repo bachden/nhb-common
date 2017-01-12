@@ -31,7 +31,7 @@
 		<dependency>
 			<groupId>nhb.common</groupId>
 			<artifactId>nhb-common-core</artifactId>
-			<version>1.0.6</version>
+			<version>1.0.7</version>
 		</dependency>
 
 		<!-- https://mvnrepository.com/artifact/com.rabbitmq/amqp-client -->
