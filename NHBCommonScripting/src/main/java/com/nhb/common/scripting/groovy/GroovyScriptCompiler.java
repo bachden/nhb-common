@@ -20,10 +20,20 @@ public class GroovyScriptCompiler extends BaseLoggable implements ScriptCompiler
 	@SuppressWarnings("rawtypes")
 	@Override
 	public CompiledScript compile(Script script) {
+		if (script == null) {
+			throw new NullPointerException("script is null");
+		}
+		
+		if (!(script instanceof GroovyScript)) {
+			throw new RuntimeException("No support for class: " + script.getClass());
+		}
+		
 		CompilerConfiguration configuration = new CompilerConfiguration();
-		configuration.getOptimizationOptions().put(GROOVY_INDY_SETTING_NAME, true);
+		configuration.getOptimizationOptions().put(GROOVY_INDY_SETTING_NAME, ((GroovyScript) script).isIndy());
 		GroovyCompiledScript result = null;
-		try (GroovyClassLoader groovyClassLoader = new GroovyClassLoader(getClass().getClassLoader(), configuration)) {
+		ClassLoader clazzLoader = ((GroovyScript) script).getClazzLoader();
+		clazzLoader = clazzLoader == null ? getClass().getClassLoader() : clazzLoader;
+		try (GroovyClassLoader groovyClassLoader = new GroovyClassLoader(clazzLoader, configuration)) {
 			GroovyCodeSource codeSource = new GroovyCodeSource(script.getContent(), script.getName(),
 					UNTRUSTED_CODEBASE);
 			codeSource.setCachable(false);

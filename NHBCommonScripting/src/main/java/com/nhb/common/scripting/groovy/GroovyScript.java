@@ -7,7 +7,18 @@ import com.nhb.common.scripting.BaseScript;
 import com.nhb.common.scripting.statics.ScriptLanguage;
 import com.nhb.common.utils.Converter;
 
+import lombok.Getter;
+import lombok.Setter;
+
 public class GroovyScript extends BaseScript {
+	
+	@Getter
+	@Setter
+	private boolean indy = false;
+	
+	@Getter
+	@Setter
+	private ClassLoader clazzLoader = null;
 
 	public GroovyScript() {
 		super(ScriptLanguage.GROOVY);
