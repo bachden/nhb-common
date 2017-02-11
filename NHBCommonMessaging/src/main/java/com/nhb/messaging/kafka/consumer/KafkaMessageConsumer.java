@@ -14,6 +14,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.common.PartitionInfo;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.errors.WakeupException;
 import org.apache.kafka.common.serialization.ByteArrayDeserializer;
@@ -56,6 +57,33 @@ public class KafkaMessageConsumer extends BaseEventDispatcher {
 		this.consumer = new KafkaConsumer<>(properties);
 		this.topics = topics;
 		this.pollTimeout = pollTimeout;
+	}
+
+	private Collection<PartitionInfo> _getTopicPartitions(String topic) {
+		if (topic != null) {
+			return this.consumer.partitionsFor(topic);
+		}
+		return null;
+	}
+
+	public Collection<PartitionInfo> getTopicPartitions(String topic) {
+		if (!this.isRunning()) {
+			throw new RuntimeException("Consumer must be running before get partitions");
+		}
+		return this._getTopicPartitions(topic);
+	}
+
+	public Map<String, Collection<PartitionInfo>> getPartitions(String... topics) {
+		if (!this.isRunning()) {
+			throw new RuntimeException("Consumer must be running before get partitions");
+		} else if (topics != null) {
+			Map<String, Collection<PartitionInfo>> results = new HashMap<>();
+			for (String topic : topics) {
+				results.put(topic, _getTopicPartitions(topic));
+			}
+			return results;
+		}
+		return null;
 	}
 
 	public void seek(TopicPartition partition, long offset) {
