@@ -36,7 +36,7 @@ public class KafkaMessageConsumer extends BaseEventDispatcher {
 	private KafkaConsumer<byte[], PuElement> consumer;
 
 	private int pollTimeout = 100;
-	private Thread poolingThead;
+	private Thread pollingThead;
 
 	private Properties properties;
 
@@ -120,7 +120,7 @@ public class KafkaMessageConsumer extends BaseEventDispatcher {
 	public void start() {
 		if (this.running.compareAndSet(false, true)) {
 			this.consumer.subscribe(this.topics);
-			this.poolingThead = new Thread() {
+			this.pollingThead = new Thread() {
 
 				@Override
 				public void run() {
@@ -166,7 +166,7 @@ public class KafkaMessageConsumer extends BaseEventDispatcher {
 					}
 				}
 			};
-			this.poolingThead.start();
+			this.pollingThead.start();
 
 			StringBuffer sb = new StringBuffer();
 			sb.append("Kafka Message Consumer started successfully with properties: {");
@@ -190,9 +190,6 @@ public class KafkaMessageConsumer extends BaseEventDispatcher {
 				Thread.sleep(500);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
-			}
-			if (poolingThead.isAlive()) {
-				
 			}
 		}
 	}
