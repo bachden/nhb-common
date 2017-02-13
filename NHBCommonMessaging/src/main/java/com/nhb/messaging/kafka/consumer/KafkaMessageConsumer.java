@@ -1,6 +1,7 @@
 package com.nhb.messaging.kafka.consumer;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -47,7 +48,10 @@ public class KafkaMessageConsumer extends BaseEventDispatcher {
 			throw new IllegalArgumentException("Properties for kafka message consumer cannot be null");
 		}
 		if (topics == null || topics.size() == 0) {
-			throw new IllegalArgumentException("Topics cannot be empty");
+			getLogger().warn(//
+					"***************************************************************************************" + //
+							"* TOPIC FOR KAFKA MESSAGE CONSUMER WAS NOT SET, YOU MUST ASSIGN OR SUBSCRIBE MANUALLY *" + //
+							"***************************************************************************************");
 		}
 
 		properties.put("key.deserializer", ByteArrayDeserializer.class.getName());
@@ -60,11 +64,23 @@ public class KafkaMessageConsumer extends BaseEventDispatcher {
 		this.pollTimeout = pollTimeout;
 	}
 
+	public void assign(Collection<TopicPartition> partitions) {
+		this.consumer.assign(partitions);
+	}
+
+	public void subscribe(Collection<String> topics) {
+		this.consumer.subscribe(topics);
+	}
+
+	public void subscribe(String... topics) {
+		this.subscribe(Arrays.asList(topics));
+	}
+
 	public Set<TopicPartition> getTopicPartitions() {
 		return this.consumer.assignment();
 	}
 
-	private Collection<PartitionInfo> _getPartitionInfos(String topic) {
+	private Collection<PartitionInfo> getPartitionFor(String topic) {
 		if (topic != null) {
 			return this.consumer.partitionsFor(topic);
 		}
@@ -75,7 +91,7 @@ public class KafkaMessageConsumer extends BaseEventDispatcher {
 		if (topics != null) {
 			Map<String, Collection<PartitionInfo>> results = new HashMap<>();
 			for (String topic : topics) {
-				results.put(topic, _getPartitionInfos(topic));
+				results.put(topic, getPartitionFor(topic));
 			}
 			return results;
 		}
@@ -119,7 +135,11 @@ public class KafkaMessageConsumer extends BaseEventDispatcher {
 
 	public void start() {
 		if (this.running.compareAndSet(false, true)) {
-			this.consumer.subscribe(this.topics);
+
+			if (this.topics != null && this.topics.size() > 0) {
+				this.consumer.subscribe(this.topics);
+			}
+
 			this.pollingThead = new Thread() {
 
 				@Override
