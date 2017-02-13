@@ -84,26 +84,29 @@ public class KafkaMessageConsumer extends BaseEventDispatcher {
 
 	public void seek(TopicPartition partition, long offset) {
 		if (this.isRunning()) {
-			throw new IllegalStateException("Cannot seek while consumer is running");
+			this.consumer.seek(partition, offset);
+		} else {
+			this.seekConfigs.put(partition, offset);
 		}
-		this.seekConfigs.put(partition, offset);
 	}
 
 	public void seekToBeginning(Collection<TopicPartition> partitions) {
 		if (this.isRunning()) {
-			throw new IllegalStateException("Cannot seek while consumer is running");
-		}
-		for (TopicPartition topicPartition : partitions) {
-			this.seekConfigs.put(topicPartition, START_OFFSET);
+			this.consumer.seekToBeginning(partitions);
+		} else {
+			for (TopicPartition topicPartition : partitions) {
+				this.seekConfigs.put(topicPartition, START_OFFSET);
+			}
 		}
 	}
 
 	public void seekToEnd(Collection<TopicPartition> partitions) {
 		if (this.isRunning()) {
-			throw new IllegalStateException("Cannot seek while consumer is running");
-		}
-		for (TopicPartition topicPartition : partitions) {
-			this.seekConfigs.put(topicPartition, END_OFFSET);
+			this.consumer.seekToEnd(partitions);
+		} else {
+			for (TopicPartition topicPartition : partitions) {
+				this.seekConfigs.put(topicPartition, END_OFFSET);
+			}
 		}
 	}
 
