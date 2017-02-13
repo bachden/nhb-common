@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -59,27 +60,27 @@ public class KafkaMessageConsumer extends BaseEventDispatcher {
 		this.pollTimeout = pollTimeout;
 	}
 
-	private Collection<PartitionInfo> _getTopicPartitions(String topic) {
+	public Set<TopicPartition> getTopicPartitions() {
+		if (!this.isRunning()) {
+			throw new RuntimeException("Consumer must be running before get partitions");
+		}
+		return this.consumer.assignment();
+	}
+
+	private Collection<PartitionInfo> _getPartitionInfos(String topic) {
 		if (topic != null) {
 			return this.consumer.partitionsFor(topic);
 		}
 		return null;
 	}
 
-	public Collection<PartitionInfo> getTopicPartitions(String topic) {
-		if (!this.isRunning()) {
-			throw new RuntimeException("Consumer must be running before get partitions");
-		}
-		return this._getTopicPartitions(topic);
-	}
-
-	public Map<String, Collection<PartitionInfo>> getPartitions(String... topics) {
+	public Map<String, Collection<PartitionInfo>> getPartitionInfos(String... topics) {
 		if (!this.isRunning()) {
 			throw new RuntimeException("Consumer must be running before get partitions");
 		} else if (topics != null) {
 			Map<String, Collection<PartitionInfo>> results = new HashMap<>();
 			for (String topic : topics) {
-				results.put(topic, _getTopicPartitions(topic));
+				results.put(topic, _getPartitionInfos(topic));
 			}
 			return results;
 		}
