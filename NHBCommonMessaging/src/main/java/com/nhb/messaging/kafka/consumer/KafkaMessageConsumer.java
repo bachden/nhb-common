@@ -61,9 +61,6 @@ public class KafkaMessageConsumer extends BaseEventDispatcher {
 	}
 
 	public Set<TopicPartition> getTopicPartitions() {
-		if (!this.isRunning()) {
-			throw new RuntimeException("Consumer must be running before get partitions");
-		}
 		return this.consumer.assignment();
 	}
 
@@ -75,9 +72,7 @@ public class KafkaMessageConsumer extends BaseEventDispatcher {
 	}
 
 	public Map<String, Collection<PartitionInfo>> getPartitionInfos(String... topics) {
-		if (!this.isRunning()) {
-			throw new RuntimeException("Consumer must be running before get partitions");
-		} else if (topics != null) {
+		if (topics != null) {
 			Map<String, Collection<PartitionInfo>> results = new HashMap<>();
 			for (String topic : topics) {
 				results.put(topic, _getPartitionInfos(topic));
