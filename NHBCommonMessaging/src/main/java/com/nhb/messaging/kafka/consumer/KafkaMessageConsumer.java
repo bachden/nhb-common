@@ -85,6 +85,7 @@ public class KafkaMessageConsumer extends BaseEventDispatcher {
 	public void seek(TopicPartition partition, long offset) {
 		if (this.isRunning()) {
 			this.consumer.seek(partition, offset);
+			this.consumer.wakeup();
 		} else {
 			this.seekConfigs.put(partition, offset);
 		}
@@ -93,6 +94,7 @@ public class KafkaMessageConsumer extends BaseEventDispatcher {
 	public void seekToBeginning(Collection<TopicPartition> partitions) {
 		if (this.isRunning()) {
 			this.consumer.seekToBeginning(partitions);
+			this.consumer.wakeup();
 		} else {
 			for (TopicPartition topicPartition : partitions) {
 				this.seekConfigs.put(topicPartition, START_OFFSET);
@@ -103,6 +105,7 @@ public class KafkaMessageConsumer extends BaseEventDispatcher {
 	public void seekToEnd(Collection<TopicPartition> partitions) {
 		if (this.isRunning()) {
 			this.consumer.seekToEnd(partitions);
+			this.consumer.wakeup();
 		} else {
 			for (TopicPartition topicPartition : partitions) {
 				this.seekConfigs.put(topicPartition, END_OFFSET);
