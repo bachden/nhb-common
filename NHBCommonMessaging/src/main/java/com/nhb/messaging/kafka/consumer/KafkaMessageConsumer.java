@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -13,7 +12,6 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.PartitionInfo;
@@ -25,6 +23,9 @@ import com.nhb.common.data.PuElement;
 import com.nhb.eventdriven.impl.BaseEventDispatcher;
 import com.nhb.messaging.kafka.event.KafkaEvent;
 import com.nhb.messaging.kafka.serialization.KafkaPuElementDeserializer;
+
+import lombok.Getter;
+import lombok.Setter;
 
 public class KafkaMessageConsumer extends BaseEventDispatcher {
 
@@ -40,6 +41,10 @@ public class KafkaMessageConsumer extends BaseEventDispatcher {
 	private Thread pollingThead;
 
 	private Properties properties;
+
+	@Setter
+	@Getter
+	private int minBatchingSize = 1;
 
 	private final Map<TopicPartition, Long> seekConfigs = new ConcurrentHashMap<>();
 
@@ -174,12 +179,8 @@ public class KafkaMessageConsumer extends BaseEventDispatcher {
 					while (!closer.get()) {
 						try {
 							ConsumerRecords<byte[], PuElement> records = consumer.poll(pollTimeout);
-							Iterator<ConsumerRecord<byte[], PuElement>> it = records.iterator();
-							while (it.hasNext()) {
-								ConsumerRecord<byte[], PuElement> record = it.next();
-								KafkaEvent event = KafkaEvent.newInstance(record);
-								dispatchEvent(event);
-							}
+							KafkaEvent event = KafkaEvent.newInstance(records);
+							dispatchEvent(event);
 						} catch (WakeupException we) {
 							// do nothing
 						}
