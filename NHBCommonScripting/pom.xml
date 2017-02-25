@@ -36,7 +36,7 @@
 		<dependency>
 			<groupId>nhb.common</groupId>
 			<artifactId>nhb-common-core</artifactId>
-			<version>1.0.7</version>
+			<version>${project.parent.version}</version>
 		</dependency>
 
 		<!-- https://mvnrepository.com/artifact/org.codehaus.groovy/groovy-all -->
