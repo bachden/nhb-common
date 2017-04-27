@@ -45,7 +45,7 @@ public class Sample {
 		// Predicate predicate = filteredObject.get("age").between(10,
 		// 20).and(filteredObject.is("female")).build();
 
-		Predicate predicate = Predicates.fromSQL("age in (25,30) and (not female or name = 'bachden')");
+		Predicate predicate = Predicates.fromSQL("age in (25,30, '\\'40') and (not female or name = 'bachden')");
 
 		UserVO userVO = new UserVO();
 		userVO.setName("bachden");

@@ -33,7 +33,15 @@ public class In extends ArrayPredicate {
 			if (sb.length() > 1) {
 				sb.append(", ");
 			}
-			sb.append(obj.toString());
+			String element = obj.toString();
+			if (obj instanceof String) {
+				element = element.replaceAll("\\'", "\\\\'");
+				sb.append("'");
+			}
+			sb.append(element);
+			if (obj instanceof String) {
+				sb.append("'");
+			}
 		}
 		sb.append(")");
 		return this.value.toString() + " in " + sb.toString();
