@@ -78,7 +78,10 @@ public class SqlPredicateParser {
 
 	public static void main(String[] args) {
 		Initializer.bootstrap(SqlPredicateParser.class);
-		String sql = "gender='female' and (age not between 16 and 25 or (age>=35 or age<13) and salary not in (1000, 2000, 3000, 4000)) or name like 'Mc \\'Oco\\'nner'";
+		// String sql = "gender='female' and (age not between 16 and 25 or
+		// (age>=35 or age<13) and salary not in (1000, 2000, 3000, 4000)) or
+		// name like 'Mc \\'Oco\\'nner'";
+		String sql = "gender = 'female' and not (age between 16.0 and 25.0 or age >= 35.0 or age <= 13.0 and salary not in (1000.0, 2000.0, 3000.0, 4000.0) or name like 'Mc \\'Oco\\'nner' and money = 100)";
 		logger.debug("{}", parse(sql));
 	}
 
@@ -89,6 +92,7 @@ public class SqlPredicateParser {
 		logger.debug("Input string: " + sql);
 
 		List<String> extracted = extractString(sql);
+		logger.debug("extracted: " + extracted);
 		String sql1 = removeUnnecessarySpaces(extracted.get(0))//
 				.replaceAll("not in", NOT_IN) //
 				.replaceAll("not like", NOT_LIKE) //
@@ -100,6 +104,7 @@ public class SqlPredicateParser {
 			logger.debug("\t$" + i + ": " + extracted.get(i));
 		}
 		List<String> tokens = split(sql1);
+		logger.debug("Tokens before normalize: " + tokens);
 		normalize(tokens);
 		logger.debug("Tokens: " + tokens);
 
@@ -179,8 +184,8 @@ public class SqlPredicateParser {
 						Object upper = stack.pop();
 						Object lower = stack.pop();
 						Object attribute = stack.pop();
-						stack.push(Predicates.not(Predicates.between((String) attribute, Double.valueOf((String) lower),
-								Double.valueOf((String) upper), true, true)));
+						stack.push(Predicates.notBetween((String) attribute, Double.valueOf((String) lower),
+								Double.valueOf((String) upper), true, true));
 						break;
 					}
 					case IN: {
@@ -299,7 +304,9 @@ public class SqlPredicateParser {
 	}
 
 	private static int getOperatorPrecedence(String operator) {
-		if (LOGIC_OPERATORS.contains(operator.toLowerCase())) {
+		if (operator.equalsIgnoreCase(NOT)) {
+			return 2;
+		} else if (LOGIC_OPERATORS.contains(operator.toLowerCase())) {
 			return 1;
 		} else if (EQUALITY_OPERATORS.contains(operator.toLowerCase())) {
 			return 2;
@@ -402,6 +409,7 @@ public class SqlPredicateParser {
 	}
 
 	private static List<String> split(String sql) {
+
 		if (sql != null) {
 			String[] splittedBySpace = sql.split(" ");
 			List<String> results = new ArrayList<>();
@@ -409,6 +417,7 @@ public class SqlPredicateParser {
 				List<String> tokens = new ArrayList<>();
 				int lastIndex = 0;
 				char[] chars = token.toCharArray();
+
 				for (int i = 0; i < chars.length; i++) {
 					char c = chars[i];
 					if (c == OPENING_PARENTHESES || c == CLOSING_PARENTHESES || c == COMMA) {
@@ -421,8 +430,11 @@ public class SqlPredicateParser {
 						lastIndex = i + 1;
 					}
 				}
+
 				if (lastIndex < chars.length - 1) {
 					tokens.add(token.substring(lastIndex, chars.length));
+				} else if (isOperator(token)) {
+					tokens.add(token);
 				}
 
 				for (String str : tokens) {
@@ -432,12 +444,17 @@ public class SqlPredicateParser {
 						if (index >= 0) {
 							hasOperator = true;
 							do {
-								results.add(str.substring(0, index));
+								String preStr = str.substring(0, index).trim();
+								if (preStr.length() > 0) {
+									results.add(preStr);
+								}
 								results.add(operator);
-								str = str.substring(index + operator.length());
+								str = str.substring(index + operator.length()).trim();
 								index = str.indexOf(operator);
 							} while (index >= 0);
-							results.add(str);
+							if (str.length() > 0) {
+								results.add(str);
+							}
 						}
 					}
 					if (!hasOperator) {
@@ -469,18 +486,22 @@ public class SqlPredicateParser {
 		List<String> params = new ArrayList<>();
 		StringBuilder sb = new StringBuilder();
 		if (indexes.get(0) > 0) {
-			sb.append(sql.substring(0, indexes.get(0)));
+			String substring = sql.substring(0, indexes.get(0));
+			sb.append(substring);
 		}
 		for (int i = 0; i < indexes.size(); i += 2) {
 			int startIndex = indexes.get(i);
 			int endIndex = indexes.get(i + 1);
 			String subStr = sql.substring(startIndex + 1, endIndex);
 			params.add(subStr.replaceAll("\\\\'", "'"));
-			sb.append("$" + (i / 2 + 1));
+			String param = "$" + (i / 2 + 1);
+			sb.append(param);
 			if (i < indexes.size() - 2) {
 				sb.append(sql.substring(endIndex + 1, indexes.get(i + 2)));
 			}
 		}
+
+		sb.append(sql.substring(indexes.get(indexes.size() - 1) + 1, sql.length()));
 
 		List<String> result = new ArrayList<>();
 		result.add(sb.toString());

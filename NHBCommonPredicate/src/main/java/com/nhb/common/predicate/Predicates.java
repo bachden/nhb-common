@@ -17,6 +17,10 @@ import com.nhb.common.predicate.numeric.GreaterOrEquals;
 import com.nhb.common.predicate.numeric.GreaterThan;
 import com.nhb.common.predicate.numeric.LessEqual;
 import com.nhb.common.predicate.numeric.LessThan;
+import com.nhb.common.predicate.numeric.NotBetween;
+import com.nhb.common.predicate.numeric.NotBetweenIncludeBoth;
+import com.nhb.common.predicate.numeric.NotBetweenIncludeLeft;
+import com.nhb.common.predicate.numeric.NotBetweenIncludeRight;
 import com.nhb.common.predicate.numeric.NotEqual;
 import com.nhb.common.predicate.pointer.IsNotNull;
 import com.nhb.common.predicate.pointer.IsNull;
@@ -259,6 +263,35 @@ public final class Predicates {
 			boolean includeRight) {
 		return between(new NumberAttributeGetter(attribute), new NumberValue(lowerBound), new NumberValue(upperBound),
 				includeLeft, includeRight);
+	}
+
+	// *******
+	public static Predicate notBetween(Value<? extends Number> value, Value<? extends Number> lowerBound,
+			Value<? extends Number> upperBound, boolean includeLeft, boolean includeRight) {
+		if (includeLeft) {
+			if (includeRight) {
+				return new NotBetweenIncludeBoth(value, lowerBound, upperBound);
+			} else {
+				return new NotBetweenIncludeLeft(value, lowerBound, upperBound);
+			}
+		} else {
+			if (includeRight) {
+				return new NotBetweenIncludeRight(value, lowerBound, upperBound);
+			} else {
+				return new NotBetween(value, lowerBound, upperBound);
+			}
+		}
+	}
+
+	public static Predicate notBetween(String attribute, Value<? extends Number> lowerBound,
+			Value<? extends Number> upperBound, boolean includeLeft, boolean includeRight) {
+		return notBetween(new NumberAttributeGetter(attribute), lowerBound, upperBound, includeLeft, includeRight);
+	}
+
+	public static Predicate notBetween(String attribute, Number lowerBound, Number upperBound, boolean includeLeft,
+			boolean includeRight) {
+		return notBetween(new NumberAttributeGetter(attribute), new NumberValue(lowerBound),
+				new NumberValue(upperBound), includeLeft, includeRight);
 	}
 
 	public static Predicate isNull(String attribute) {
