@@ -483,25 +483,29 @@ public class SqlPredicateParser {
 			throw new SqlPredicateSyntaxException();
 		}
 
-		List<String> params = new ArrayList<>();
 		StringBuilder sb = new StringBuilder();
-		if (indexes.get(0) > 0) {
-			String substring = sql.substring(0, indexes.get(0));
-			sb.append(substring);
-		}
-		for (int i = 0; i < indexes.size(); i += 2) {
-			int startIndex = indexes.get(i);
-			int endIndex = indexes.get(i + 1);
-			String subStr = sql.substring(startIndex + 1, endIndex);
-			params.add(subStr.replaceAll("\\\\'", "'"));
-			String param = "$" + (i / 2 + 1);
-			sb.append(param);
-			if (i < indexes.size() - 2) {
-				sb.append(sql.substring(endIndex + 1, indexes.get(i + 2)));
+		List<String> params = new ArrayList<>();
+		if (indexes.size() > 0) {
+			if (indexes.get(0) > 0) {
+				String substring = sql.substring(0, indexes.get(0));
+				sb.append(substring);
 			}
-		}
+			for (int i = 0; i < indexes.size(); i += 2) {
+				int startIndex = indexes.get(i);
+				int endIndex = indexes.get(i + 1);
+				String subStr = sql.substring(startIndex + 1, endIndex);
+				params.add(subStr.replaceAll("\\\\'", "'"));
+				String param = "$" + (i / 2 + 1);
+				sb.append(param);
+				if (i < indexes.size() - 2) {
+					sb.append(sql.substring(endIndex + 1, indexes.get(i + 2)));
+				}
+			}
 
-		sb.append(sql.substring(indexes.get(indexes.size() - 1) + 1, sql.length()));
+			sb.append(sql.substring(indexes.get(indexes.size() - 1) + 1, sql.length()));
+		} else {
+			sb.append(sql);
+		}
 
 		List<String> result = new ArrayList<>();
 		result.add(sb.toString());

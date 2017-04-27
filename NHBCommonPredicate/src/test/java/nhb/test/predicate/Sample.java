@@ -1,10 +1,14 @@
 package nhb.test.predicate;
 
-import com.nhb.common.predicate.FilteredObject;
 import com.nhb.common.predicate.Predicate;
-import com.nhb.common.predicate.PredicateBuilder;
+import com.nhb.common.predicate.Predicates;
+import com.nhb.common.utils.Initializer;
 
 public class Sample {
+
+	static {
+		Initializer.bootstrap(Sample.class);
+	}
 
 	public static class UserVO {
 		private int age;
@@ -37,13 +41,16 @@ public class Sample {
 	}
 
 	public static void main(String[] args) {
-		FilteredObject filteredObject = PredicateBuilder.newFilteredObject();
+		// FilteredObject filteredObject = PredicateBuilder.newFilteredObject();
+		// Predicate predicate = filteredObject.get("age").between(10,
+		// 20).and(filteredObject.is("female")).build();
 
-		Predicate predicate = filteredObject.get("age").between(10, 20).and(filteredObject.is("female")).build();
+		Predicate predicate = Predicates.fromSQL("age between 25 and 31 and (not female or name like 'van')");
 
 		UserVO userVO = new UserVO();
+		userVO.setName("bachden");
 		userVO.setAge(30);
-		userVO.setFemale(true);
+		userVO.setFemale(false);
 
 		System.out.println("Is valid user: " + predicate.apply(userVO));
 	}
