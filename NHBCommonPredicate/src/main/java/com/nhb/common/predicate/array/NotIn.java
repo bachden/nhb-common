@@ -21,7 +21,8 @@ public class NotIn extends ArrayPredicate {
 		if (this.value instanceof ObjectDependence) {
 			((ObjectDependence) this.value).fill(object);
 		}
-		return !this.collection.contains(this.value.get());
+		Object value = this.value.get();
+		return !this.isIn(value);
 	}
 
 	@Override
