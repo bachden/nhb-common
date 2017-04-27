@@ -78,7 +78,7 @@ public class SqlPredicateParser {
 
 	public static void main(String[] args) {
 		Initializer.bootstrap(SqlPredicateParser.class);
-		String sql = "gender='female' and (age between 16 and 25 or (age>=35 or age<13) and salary not in (1000, 2000, 3000, 4000)) or name like 'Mc \\'Oco\\'nner'";
+		String sql = "gender='female' and (age not between 16 and 25 or (age>=35 or age<13) and salary not in (1000, 2000, 3000, 4000)) or name like 'Mc \\'Oco\\'nner'";
 		logger.debug("{}", parse(sql));
 	}
 
@@ -370,7 +370,7 @@ public class SqlPredicateParser {
 	private static void normalize(List<String> tokens) {
 		// remove "and" tokens if found "between" operator
 		for (int i = 0; i < tokens.size(); i++) {
-			if (tokens.get(i).equalsIgnoreCase(BETWEEN)) {
+			if (tokens.get(i).equalsIgnoreCase(BETWEEN) || tokens.get(i).equalsIgnoreCase(NOT_BETWEEN)) {
 				if (tokens.get(i + 2).equalsIgnoreCase(AND)) {
 					tokens.remove(i + 2);
 				}
