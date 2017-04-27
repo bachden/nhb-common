@@ -27,4 +27,9 @@ public class Exactly extends TextPredicate {
 		return false;
 	}
 
+	@Override
+	public String toString() {
+		return this.value.toString() + " = " + valueToCompareWith;
+	}
+
 }

@@ -60,4 +60,9 @@ public class AbstractAttributeGetter<Type> implements AttributeGetter, Value<Typ
 		}
 		return ObjectUtils.getFieldValue(this.getObject(), this.getAttribute());
 	}
+	
+	@Override
+	public String toString() {
+		return this.attribute;
+	}
 }

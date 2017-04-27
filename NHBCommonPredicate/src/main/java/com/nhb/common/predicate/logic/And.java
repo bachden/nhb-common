@@ -25,4 +25,15 @@ public class And extends LogicPredicate {
 		return true;
 	}
 
+	@Override
+	public String toString() {
+		StringBuilder sb = new StringBuilder();
+		for (Value<Boolean> value : this.values) {
+			if (sb.length() > 0) {
+				sb.append(" and ");
+			}
+			sb.append(value.toString());
+		}
+		return sb.toString();
+	}
 }

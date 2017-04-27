@@ -41,4 +41,8 @@ public class IsNotNull implements Predicate, ObjectDependence, Value<Boolean> {
 		this.object = object;
 	}
 
+	@Override
+	public String toString() {
+		return this.value.toString() + " is not null";
+	}
 }

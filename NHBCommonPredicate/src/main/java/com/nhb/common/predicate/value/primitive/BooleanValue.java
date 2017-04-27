@@ -11,4 +11,8 @@ public class BooleanValue implements Value<Boolean> {
 		return this.value;
 	}
 
+	@Override
+	public String toString() {
+		return String.valueOf(this.value);
+	}
 }

@@ -3,13 +3,13 @@ package com.nhb.common.predicate.text;
 import com.nhb.common.predicate.value.ObjectDependence;
 import com.nhb.common.predicate.value.Value;
 
-public class Contain extends TextPredicate {
+public class Contains extends TextPredicate {
 
 	private static final long serialVersionUID = -361022097741037086L;
 
 	private Value<String> searchString;
 
-	public Contain(Value<String> value, Value<String> searchString) {
+	public Contains(Value<String> value, Value<String> searchString) {
 		super(value);
 		this.searchString = searchString;
 	}
@@ -27,4 +27,8 @@ public class Contain extends TextPredicate {
 		return false;
 	}
 
+	@Override
+	public String toString() {
+		return this.value.toString() + " contains " + this.searchString.toString();
+	}
 }

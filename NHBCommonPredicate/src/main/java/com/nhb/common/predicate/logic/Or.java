@@ -25,4 +25,15 @@ public class Or extends LogicPredicate {
 		return false;
 	}
 
+	@Override
+	public String toString() {
+		StringBuilder sb = new StringBuilder();
+		for (Value<Boolean> value : this.values) {
+			if (sb.length() > 0) {
+				sb.append(" or ");
+			}
+			sb.append(value.toString());
+		}
+		return sb.toString();
+	}
 }

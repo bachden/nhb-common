@@ -29,4 +29,9 @@ public class BetweenIncludeLeft implements Predicate {
 		return comparator.compare(this.value.get(), this.lowerBound.get()) >= 0
 				&& comparator.compare(this.value.get(), this.upperBound.get()) < 0;
 	}
+
+	@Override
+	public String toString() {
+		return this.value + " between " + this.lowerBound.toString() + " and " + this.upperBound;
+	}
 }

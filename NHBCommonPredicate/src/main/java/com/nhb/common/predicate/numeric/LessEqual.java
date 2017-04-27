@@ -19,4 +19,8 @@ public class LessEqual extends LessThan {
 		return getComparator().compare(this.getValue().get(), this.getAnchorValue().get()) <= 0;
 	}
 
+	@Override
+	public String toString() {
+		return this.getValue().toString() + " <= " + this.getAnchorValue().toString();
+	}
 }

@@ -3,11 +3,11 @@ package com.nhb.common.predicate.numeric;
 import com.nhb.common.predicate.value.ObjectDependence;
 import com.nhb.common.predicate.value.Value;
 
-public class GreaterEqual extends GreaterThan {
+public class GreaterOrEquals extends GreaterThan {
 
 	private static final long serialVersionUID = -715457138661262264L;
 
-	public GreaterEqual(Value<? extends Number> value, Value<? extends Number> lowerBound) {
+	public GreaterOrEquals(Value<? extends Number> value, Value<? extends Number> lowerBound) {
 		super(value, lowerBound);
 	}
 

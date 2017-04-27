@@ -8,7 +8,7 @@ import com.nhb.common.predicate.value.Value;
 public class Between implements Predicate {
 
 	private static final long serialVersionUID = -4975458195604574385L;
-	
+
 	private NumberComparator comparator = new NumberComparator();
 	private Value<? extends Number> lowerBound;
 	private Value<? extends Number> upperBound;
@@ -28,5 +28,10 @@ public class Between implements Predicate {
 		}
 		return comparator.compare(this.value.get(), this.lowerBound.get()) > 0
 				&& comparator.compare(this.value.get(), this.upperBound.get()) < 0;
+	}
+
+	@Override
+	public String toString() {
+		return this.value + " between " + this.lowerBound.toString() + " and " + this.upperBound;
 	}
 }

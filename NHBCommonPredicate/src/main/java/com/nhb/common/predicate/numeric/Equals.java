@@ -3,13 +3,13 @@ package com.nhb.common.predicate.numeric;
 import com.nhb.common.predicate.value.ObjectDependence;
 import com.nhb.common.predicate.value.Value;
 
-public class Equal extends NumericComparisonPredicate {
+public class Equals extends NumericComparisonPredicate {
 
 	private static final long serialVersionUID = 562211748204617410L;
 
 	private Value<? extends Number> value;
 
-	public Equal(Value<? extends Number> value, Value<? extends Number> anchorValue) {
+	public Equals(Value<? extends Number> value, Value<? extends Number> anchorValue) {
 		super(anchorValue);
 		this.value = value;
 	}
@@ -24,5 +24,10 @@ public class Equal extends NumericComparisonPredicate {
 
 	protected Value<? extends Number> getValue() {
 		return value;
+	}
+
+	@Override
+	public String toString() {
+		return this.value.toString() + " = " + this.getAnchorValue().toString();
 	}
 }

@@ -7,7 +7,7 @@ import com.nhb.common.predicate.value.Value;
 public class Is implements Predicate {
 
 	private static final long serialVersionUID = 807015730137332579L;
-	
+
 	private Value<Boolean> value;
 
 	public Is(Value<Boolean> value) {
@@ -20,5 +20,10 @@ public class Is implements Predicate {
 			((ObjectDependence) this.value).fill(obj);
 		}
 		return this.value.get();
+	}
+
+	@Override
+	public String toString() {
+		return this.value.toString();
 	}
 }

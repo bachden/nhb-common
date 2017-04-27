@@ -14,7 +14,7 @@ public class FilteredObject {
 		this.filterBuilder = pb;
 	}
 
-	private PredicateBuilder addFilter(Predicate predicate) {
+	private PredicateBuilder addPredicate(Predicate predicate) {
 		filterBuilder.getPredicates().add(predicate);
 		this.filterBuilder.setAttribute(null);
 		return filterBuilder;
@@ -32,14 +32,14 @@ public class FilteredObject {
 		if (this.filterBuilder.getAttribute() != null) {
 			throw new IllegalStateException("Last attribute has been set and not used yet");
 		}
-		return this.addFilter(Predicates.is(attribute));
+		return this.addPredicate(Predicates.is(attribute));
 	}
 
 	public PredicateBuilder isNot(String attribute) {
 		if (this.filterBuilder.getAttribute() != null) {
 			throw new IllegalStateException("Last attribute has been set and not used yet");
 		}
-		return this.addFilter(Predicates.isNot(attribute));
+		return this.addPredicate(Predicates.not(attribute));
 	}
 
 	public PredicateBuilder lessThan(Number value) {
@@ -47,15 +47,15 @@ public class FilteredObject {
 			throw new IllegalStateException(
 					"Attribute must be set before compare with other value, use `EntryObject.get(attribute)` to do that");
 		}
-		return this.addFilter(Predicates.lessThan(this.filterBuilder.getAttribute(), value));
+		return this.addPredicate(Predicates.lessThan(this.filterBuilder.getAttribute(), value));
 	}
 
-	public PredicateBuilder lessEqual(Number value) {
+	public PredicateBuilder lessOrEquals(Number value) {
 		if (this.filterBuilder.getAttribute() == null) {
 			throw new IllegalStateException(
 					"Attribute must be set before compare with other value, use `EntryObject.get(attribute)` to do that");
 		}
-		return this.addFilter(Predicates.lessEqual(this.filterBuilder.getAttribute(), value));
+		return this.addPredicate(Predicates.lessEqual(this.filterBuilder.getAttribute(), value));
 	}
 
 	public PredicateBuilder greaterThan(Number value) {
@@ -63,15 +63,15 @@ public class FilteredObject {
 			throw new IllegalStateException(
 					"Attribute must be set before compare with other value, use `EntryObject.get(attribute)` to do that");
 		}
-		return this.addFilter(Predicates.greaterThan(this.filterBuilder.getAttribute(), value));
+		return this.addPredicate(Predicates.greaterThan(this.filterBuilder.getAttribute(), value));
 	}
 
-	public PredicateBuilder greaterEqual(Number value) {
+	public PredicateBuilder greaterOrEquals(Number value) {
 		if (this.filterBuilder.getAttribute() == null) {
 			throw new IllegalStateException(
 					"Attribute must be set before compare with other value, use `EntryObject.get(attribute)` to do that");
 		}
-		return this.addFilter(Predicates.greaterEqual(this.filterBuilder.getAttribute(), value));
+		return this.addPredicate(Predicates.greaterOrEquals(this.filterBuilder.getAttribute(), value));
 	}
 
 	public PredicateBuilder equal(Number value) {
@@ -79,7 +79,7 @@ public class FilteredObject {
 			throw new IllegalStateException(
 					"Attribute must be set before compare with other value, use `EntryObject.get(attribute)` to do that");
 		}
-		return this.addFilter(Predicates.equal(this.filterBuilder.getAttribute(), value));
+		return this.addPredicate(Predicates.equal(this.filterBuilder.getAttribute(), value));
 	}
 
 	public PredicateBuilder exactly(String value) {
@@ -87,7 +87,7 @@ public class FilteredObject {
 			throw new IllegalStateException(
 					"Attribute must be set before compare with other value, use `EntryObject.get(attribute)` to do that");
 		}
-		return this.addFilter(Predicates.exactly(this.filterBuilder.getAttribute(), value));
+		return this.addPredicate(Predicates.exactly(this.filterBuilder.getAttribute(), value));
 	}
 
 	public PredicateBuilder exactlyIgnoreCase(String value) {
@@ -95,7 +95,7 @@ public class FilteredObject {
 			throw new IllegalStateException(
 					"Attribute must be set before compare with other value, use `EntryObject.get(attribute)` to do that");
 		}
-		return this.addFilter(Predicates.exactlyIgnoreCase(this.filterBuilder.getAttribute(), value));
+		return this.addPredicate(Predicates.exactlyIgnoreCase(this.filterBuilder.getAttribute(), value));
 	}
 
 	public PredicateBuilder match(String pattern) {
@@ -103,7 +103,7 @@ public class FilteredObject {
 			throw new IllegalStateException(
 					"Attribute must be set before compare with other value, use `EntryObject.get(attribute)` to do that");
 		}
-		return this.addFilter(Predicates.match(this.filterBuilder.getAttribute(), pattern));
+		return this.addPredicate(Predicates.match(this.filterBuilder.getAttribute(), pattern));
 	}
 
 	public PredicateBuilder notMatch(String pattern) {
@@ -111,7 +111,7 @@ public class FilteredObject {
 			throw new IllegalStateException(
 					"Attribute must be set before compare with other value, use `EntryObject.get(attribute)` to do that");
 		}
-		return this.addFilter(Predicates.notMatch(this.filterBuilder.getAttribute(), pattern));
+		return this.addPredicate(Predicates.notMatch(this.filterBuilder.getAttribute(), pattern));
 	}
 
 	public PredicateBuilder contain(String value) {
@@ -119,26 +119,26 @@ public class FilteredObject {
 			throw new IllegalStateException(
 					"Attribute must be set before compare with other value, use `EntryObject.get(attribute)` to do that");
 		}
-		return this.addFilter(Predicates.contain(this.filterBuilder.getAttribute(), value));
+		return this.addPredicate(Predicates.contain(this.filterBuilder.getAttribute(), value));
 	}
 
 	@SuppressWarnings("unchecked")
 	public PredicateBuilder notContain(String string) {
-		return this.addFilter(new Not((Value<Boolean>) Predicates.contain(this.filterBuilder.getAttribute(), string)));
+		return this.addPredicate(new Not((Value<Boolean>) Predicates.contain(this.filterBuilder.getAttribute(), string)));
 	}
 
 	public PredicateBuilder isNull() {
 		if (this.filterBuilder.getAttribute() == null) {
-			return this.addFilter(Predicates.isNull());
+			return this.addPredicate(Predicates.isNull());
 		}
-		return this.addFilter(Predicates.isNull(this.filterBuilder.getAttribute()));
+		return this.addPredicate(Predicates.isNull(this.filterBuilder.getAttribute()));
 	}
 
 	public PredicateBuilder isNotNull() {
 		if (this.filterBuilder.getAttribute() == null) {
-			return this.addFilter(Predicates.isNotNull());
+			return this.addPredicate(Predicates.notNull());
 		}
-		return this.addFilter(Predicates.isNotNull(this.filterBuilder.getAttribute()));
+		return this.addPredicate(Predicates.notNull(this.filterBuilder.getAttribute()));
 	}
 
 	public PredicateBuilder notEqual(Number value) {
@@ -146,7 +146,7 @@ public class FilteredObject {
 			throw new IllegalStateException(
 					"Attribute must be set before compare with other value, use `EntryObject.get(attribute)` to do that");
 		}
-		return this.addFilter(Predicates.notEqual(this.filterBuilder.getAttribute(), value));
+		return this.addPredicate(Predicates.notEqual(this.filterBuilder.getAttribute(), value));
 	}
 
 	public PredicateBuilder between(Number lowerBound, Number upperBound) {
@@ -158,7 +158,7 @@ public class FilteredObject {
 			throw new IllegalStateException(
 					"Attribute must be set before compare with other value, use `EntryObject.get(attribute)` to do that");
 		}
-		return this.addFilter(Predicates.between(this.filterBuilder.getAttribute(), new NumberValue(lowerBound),
+		return this.addPredicate(Predicates.between(this.filterBuilder.getAttribute(), new NumberValue(lowerBound),
 				new NumberValue(upperBound), includeLeft, includeRight));
 	}
 
@@ -167,7 +167,7 @@ public class FilteredObject {
 			throw new IllegalStateException(
 					"Attribute must be set before compare with other value, use `EntryObject.get(attribute)` to do that");
 		}
-		return this.addFilter(Predicates.in(this.filterBuilder.getAttribute(), collection));
+		return this.addPredicate(Predicates.in(this.filterBuilder.getAttribute(), collection));
 	}
 
 	public PredicateBuilder notIn(Collection<?> collection) {
@@ -175,7 +175,7 @@ public class FilteredObject {
 			throw new IllegalStateException(
 					"Attribute must be set before compare with other value, use `EntryObject.get(attribute)` to do that");
 		}
-		return this.addFilter(Predicates.notIn(this.filterBuilder.getAttribute(), collection));
+		return this.addPredicate(Predicates.notIn(this.filterBuilder.getAttribute(), collection));
 	}
 
 	public PredicateBuilder clear() {

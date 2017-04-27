@@ -15,4 +15,8 @@ public class StringValue implements Value<String> {
 		return this.value;
 	}
 
+	@Override
+	public String toString() {
+		return "'" + this.value.replaceAll("\\'", "\\\\'") + "'";
+	}
 }

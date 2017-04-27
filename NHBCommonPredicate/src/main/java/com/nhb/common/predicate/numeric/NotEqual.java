@@ -25,4 +25,9 @@ public class NotEqual extends NumericComparisonPredicate {
 	protected Value<? extends Number> getValue() {
 		return value;
 	}
+
+	@Override
+	public String toString() {
+		return this.value.toString() + " != " + this.getAnchorValue().toString();
+	}
 }

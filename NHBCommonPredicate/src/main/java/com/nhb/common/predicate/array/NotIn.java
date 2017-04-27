@@ -24,4 +24,17 @@ public class NotIn extends ArrayPredicate {
 		return !this.collection.contains(this.value.get());
 	}
 
+	@Override
+	public String toString() {
+		StringBuilder sb = new StringBuilder();
+		sb.append("(");
+		for (Object obj : this.collection) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+			sb.append(obj.toString());
+		}
+		sb.append(")");
+		return this.value.toString() + " not in " + sb.toString();
+	}
 }

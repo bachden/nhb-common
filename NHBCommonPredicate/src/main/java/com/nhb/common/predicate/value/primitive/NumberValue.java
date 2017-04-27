@@ -15,4 +15,8 @@ public class NumberValue implements Value<Number> {
 		return this.value;
 	}
 
+	@Override
+	public String toString() {
+		return this.value.toString();
+	}
 }

@@ -7,7 +7,7 @@ import com.nhb.common.predicate.value.Value;
 public class Not implements Predicate {
 
 	private static final long serialVersionUID = 1462652965842662052L;
-	
+
 	private Value<Boolean> value;
 
 	public Not(Value<Boolean> value) {
@@ -20,5 +20,10 @@ public class Not implements Predicate {
 			((ObjectDependence) value).fill(obj);
 		}
 		return !value.get();
+	}
+
+	@Override
+	public String toString() {
+		return "not " + this.value;
 	}
 }

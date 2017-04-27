@@ -31,4 +31,8 @@ public class Match extends TextPredicate {
 		return false;
 	}
 
+	@Override
+	public String toString() {
+		return this.value.toString() + " like " + pattern.toString();
+	}
 }

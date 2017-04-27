@@ -25,4 +25,9 @@ public class GreaterThan extends NumericComparisonPredicate {
 	protected Value<? extends Number> getValue() {
 		return this.value;
 	}
+
+	@Override
+	public String toString() {
+		return this.value.toString() + " >= " + this.getAnchorValue().toString();
+	}
 }

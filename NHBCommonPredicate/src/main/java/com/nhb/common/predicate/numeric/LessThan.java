@@ -26,4 +26,9 @@ public class LessThan extends NumericComparisonPredicate {
 		return this.value;
 	}
 
+
+	@Override
+	public String toString() {
+		return this.value.toString() + " <= " + this.getAnchorValue().toString();
+	}
 }
