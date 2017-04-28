@@ -55,7 +55,7 @@ public class FilteredObject {
 			throw new IllegalStateException(
 					"Attribute must be set before compare with other value, use `EntryObject.get(attribute)` to do that");
 		}
-		return this.addPredicate(Predicates.lessEqual(this.filterBuilder.getAttribute(), value));
+		return this.addPredicate(Predicates.lessEquals(this.filterBuilder.getAttribute(), value));
 	}
 
 	public PredicateBuilder greaterThan(Number value) {
@@ -79,7 +79,7 @@ public class FilteredObject {
 			throw new IllegalStateException(
 					"Attribute must be set before compare with other value, use `EntryObject.get(attribute)` to do that");
 		}
-		return this.addPredicate(Predicates.equal(this.filterBuilder.getAttribute(), value));
+		return this.addPredicate(Predicates.equals(this.filterBuilder.getAttribute(), value));
 	}
 
 	public PredicateBuilder exactly(String value) {
@@ -119,12 +119,12 @@ public class FilteredObject {
 			throw new IllegalStateException(
 					"Attribute must be set before compare with other value, use `EntryObject.get(attribute)` to do that");
 		}
-		return this.addPredicate(Predicates.contain(this.filterBuilder.getAttribute(), value));
+		return this.addPredicate(Predicates.contains(this.filterBuilder.getAttribute(), value));
 	}
 
 	@SuppressWarnings("unchecked")
 	public PredicateBuilder notContain(String string) {
-		return this.addPredicate(new Not((Value<Boolean>) Predicates.contain(this.filterBuilder.getAttribute(), string)));
+		return this.addPredicate(new Not((Value<Boolean>) Predicates.contains(this.filterBuilder.getAttribute(), string)));
 	}
 
 	public PredicateBuilder isNull() {
@@ -146,7 +146,7 @@ public class FilteredObject {
 			throw new IllegalStateException(
 					"Attribute must be set before compare with other value, use `EntryObject.get(attribute)` to do that");
 		}
-		return this.addPredicate(Predicates.notEqual(this.filterBuilder.getAttribute(), value));
+		return this.addPredicate(Predicates.notEquals(this.filterBuilder.getAttribute(), value));
 	}
 
 	public PredicateBuilder between(Number lowerBound, Number upperBound) {

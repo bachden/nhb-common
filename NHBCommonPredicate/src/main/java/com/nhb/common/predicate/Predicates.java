@@ -224,16 +224,16 @@ public final class Predicates {
 		return lessThan(new NumberAttributeGetter(attribute), new NumberValue(value));
 	}
 
-	public static Predicate lessEqual(Value<? extends Number> value, Value<? extends Number> upperBound) {
+	public static Predicate lessEquals(Value<? extends Number> value, Value<? extends Number> upperBound) {
 		return new LessEqual(value, upperBound);
 	}
 
-	public static Predicate lessEqual(String attribute, Value<? extends Number> upperBound) {
-		return lessEqual(new NumberAttributeGetter(attribute), upperBound);
+	public static Predicate lessEquals(String attribute, Value<? extends Number> upperBound) {
+		return lessEquals(new NumberAttributeGetter(attribute), upperBound);
 	}
 
-	public static Predicate lessEqual(String attribute, Number value) {
-		return lessEqual(new NumberAttributeGetter(attribute), new NumberValue(value));
+	public static Predicate lessEquals(String attribute, Number value) {
+		return lessEquals(new NumberAttributeGetter(attribute), new NumberValue(value));
 	}
 
 	// *******
@@ -326,15 +326,15 @@ public final class Predicates {
 		return new NotMatch(new StringAttributeGetter(attribute), new StringValue(pattern));
 	}
 
-	public static Predicate contain(String attribute, String value) {
+	public static Predicate contains(String attribute, String value) {
 		return new Contains(new StringAttributeGetter(attribute), new StringValue(value));
 	}
 
-	public static Predicate equal(String attribute, Number value) {
+	public static Predicate equals(String attribute, Number value) {
 		return new Equals(new NumberAttributeGetter(attribute), new NumberValue(value));
 	}
 
-	public static Predicate notEqual(String attribute, Number value) {
+	public static Predicate notEquals(String attribute, Number value) {
 		return new NotEqual(new NumberAttributeGetter(attribute), new NumberValue(value));
 	}
 
