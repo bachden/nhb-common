@@ -1,15 +1,15 @@
 package com.nhb.common.predicate.numeric;
 
-import com.nhb.common.predicate.value.ObjectDependence;
-import com.nhb.common.predicate.value.Value;
+import com.nhb.common.predicate.object.ObjectDependence;
+import com.nhb.common.predicate.value.NumberValue;
 
-public class NotEqual extends NumericComparisonPredicate {
+public class NotEquals extends NumericComparisonPredicate {
 
 	private static final long serialVersionUID = 9116064549816891158L;
-	
-	private Value<? extends Number> value;
 
-	public NotEqual(Value<? extends Number> value, Value<? extends Number> anchorValue) {
+	private NumberValue value;
+
+	public NotEquals(NumberValue value, NumberValue anchorValue) {
 		super(anchorValue);
 		this.value = value;
 	}
@@ -22,7 +22,7 @@ public class NotEqual extends NumericComparisonPredicate {
 		return getComparator().compare(this.getValue().get(), this.getAnchorValue().get()) != 0;
 	}
 
-	protected Value<? extends Number> getValue() {
+	protected NumberValue getValue() {
 		return value;
 	}
 

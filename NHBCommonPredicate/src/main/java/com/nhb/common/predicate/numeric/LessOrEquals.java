@@ -1,13 +1,13 @@
 package com.nhb.common.predicate.numeric;
 
-import com.nhb.common.predicate.value.ObjectDependence;
-import com.nhb.common.predicate.value.Value;
+import com.nhb.common.predicate.object.ObjectDependence;
+import com.nhb.common.predicate.value.NumberValue;
 
-public class LessEqual extends LessThan {
+public class LessOrEquals extends LessThan {
 
 	private static final long serialVersionUID = -6691599929614100373L;
 
-	public LessEqual(Value<? extends Number> value, Value<? extends Number> upperBound) {
+	public LessOrEquals(NumberValue value, NumberValue upperBound) {
 		super(value, upperBound);
 	}
 

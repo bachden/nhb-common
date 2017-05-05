@@ -3,8 +3,8 @@ package com.nhb.common.predicate.array;
 import java.util.Collection;
 
 import com.nhb.common.predicate.Predicate;
+import com.nhb.common.predicate.object.ObjectDependenceValue;
 import com.nhb.common.predicate.utils.NumberComparator;
-import com.nhb.common.predicate.value.ObjectDependenceValue;
 
 abstract class ArrayPredicate extends ObjectDependenceValue<Boolean> implements Predicate {
 

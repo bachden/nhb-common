@@ -1,8 +1,8 @@
-package com.nhb.common.predicate.value.getter;
+package com.nhb.common.predicate.object.getter;
 
 import java.util.Map;
 
-import com.nhb.common.predicate.value.AttributeGetter;
+import com.nhb.common.predicate.object.AttributeGetter;
 import com.nhb.common.predicate.value.Value;
 import com.nhb.common.utils.ObjectUtils;
 

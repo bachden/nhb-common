@@ -2,7 +2,8 @@ package com.nhb.common.predicate.array;
 
 import java.util.Collection;
 
-import com.nhb.common.predicate.value.ObjectDependence;
+import com.nhb.common.predicate.math.MathOperator;
+import com.nhb.common.predicate.object.ObjectDependence;
 import com.nhb.common.predicate.value.Value;
 
 public class In extends ArrayPredicate {
@@ -44,6 +45,7 @@ public class In extends ArrayPredicate {
 			}
 		}
 		sb.append(")");
-		return this.value.toString() + " in " + sb.toString();
+		return (this.value instanceof MathOperator ? "(" : "") + this.value.toString()
+				+ (this.value instanceof MathOperator ? ")" : "") + " in " + sb.toString();
 	}
 }

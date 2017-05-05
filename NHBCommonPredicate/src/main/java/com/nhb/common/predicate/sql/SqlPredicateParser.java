@@ -4,18 +4,37 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.Stack;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.nhb.common.predicate.FilteredObject;
+import com.nhb.common.predicate.NumberValues;
 import com.nhb.common.predicate.Predicate;
 import com.nhb.common.predicate.PredicateBuilder;
 import com.nhb.common.predicate.Predicates;
+import com.nhb.common.predicate.numeric.Equals;
+import com.nhb.common.predicate.numeric.GreaterOrEquals;
+import com.nhb.common.predicate.numeric.GreaterThan;
+import com.nhb.common.predicate.numeric.LessOrEquals;
+import com.nhb.common.predicate.numeric.LessThan;
+import com.nhb.common.predicate.numeric.NotEquals;
+import com.nhb.common.predicate.object.getter.NumberAttributeGetter;
+import com.nhb.common.predicate.object.getter.StringAttributeGetter;
+import com.nhb.common.predicate.predefined.FalsePredicate;
+import com.nhb.common.predicate.text.Exactly;
+import com.nhb.common.predicate.text.NotExactly;
+import com.nhb.common.predicate.value.NumberValue;
+import com.nhb.common.predicate.value.StringValue;
+import com.nhb.common.predicate.value.primitive.RawNumberValue;
+import com.nhb.common.predicate.value.primitive.RawStringValue;
 import com.nhb.common.utils.Initializer;
+import com.nhb.common.utils.StringUtils;
 
 public class SqlPredicateParser {
 
@@ -28,16 +47,38 @@ public class SqlPredicateParser {
 	private static final char CLOSING_PARENTHESES = ')';
 	private static final char COMMA = ',';
 
+	private static final String ADD = "+";
+	private static final String MULTIPLY = "*";
+	private static final String SUBTRACT = "-";
+	private static final String DIVIDE = "/";
+	private static final String MOD = "%";
+	private static final String POW = "^";
+	private static final String SQRT = "sqrt";
+
+	private static final Set<String> MATH_OPERATORS = new HashSet<>();
+	static {
+		MATH_OPERATORS.add(ADD);
+		MATH_OPERATORS.add(SUBTRACT);
+		MATH_OPERATORS.add(MULTIPLY);
+		MATH_OPERATORS.add(DIVIDE);
+		MATH_OPERATORS.add(MOD);
+		MATH_OPERATORS.add(POW);
+		MATH_OPERATORS.add(SQRT);
+	}
+
 	private static final String AND = "and";
 	private static final String OR = "or";
 	private static final String NOT = "not";
 
-	private static final List<String> LOGIC_OPERATORS = new ArrayList<>();
+	private static final Set<String> LOGIC_OPERATORS = new HashSet<>();
 	static {
 		LOGIC_OPERATORS.add(AND);
 		LOGIC_OPERATORS.add(OR);
 		LOGIC_OPERATORS.add(NOT);
 	}
+
+	private static final String IS_NULL = "is_null";
+	private static final String IS_NOT_NULL = "is_not_null";
 
 	private static final String IN = "in";
 	private static final String NOT_IN = "not_in";
@@ -94,9 +135,11 @@ public class SqlPredicateParser {
 		List<String> extracted = extractString(sql);
 		logger.debug("extracted: " + extracted);
 		String sql1 = removeUnnecessarySpaces(extracted.get(0))//
-				.replaceAll("not in", NOT_IN) //
-				.replaceAll("not like", NOT_LIKE) //
-				.replaceAll("not between", NOT_BETWEEN);
+				.replaceAll("(?i)not in", NOT_IN) //
+				.replaceAll("(?i)not like", NOT_LIKE) //
+				.replaceAll("(?i)not between", NOT_BETWEEN) //
+				.replaceAll("(?i)is null", IS_NULL) //
+				.replaceAll("(?i)is not null", IS_NOT_NULL);
 
 		logger.debug("SQL: " + sql1);
 		logger.debug("Params: ");
@@ -130,16 +173,20 @@ public class SqlPredicateParser {
 						if (obj1 instanceof Predicate) {
 							if (obj2 instanceof Predicate) {
 								stack.push(Predicates.and((Predicate) obj1, (Predicate) obj2));
-							} else {
+							} else if (obj2 instanceof String) {
 								stack.push(Predicates.and((Predicate) obj1, entity.is((String) obj2).build()));
+							} else {
+								throw new SqlPredicateSyntaxException("Syntax error near AND operator");
 							}
-						} else {
+						} else if (obj1 instanceof String) {
 							if (obj2 instanceof Predicate) {
 								stack.push(Predicates.and(entity.is((String) obj1).build(), (Predicate) obj2));
 							} else {
 								stack.push(Predicates.and(entity.is((String) obj1).build(),
 										entity.is((String) obj2).build()));
 							}
+						} else {
+							throw new SqlPredicateSyntaxException("Syntax error near AND operator");
 						}
 						break;
 					}
@@ -176,16 +223,34 @@ public class SqlPredicateParser {
 						Object upper = stack.pop();
 						Object lower = stack.pop();
 						Object attribute = stack.pop();
-						stack.push(Predicates.between((String) attribute, Double.valueOf((String) lower),
-								Double.valueOf((String) upper), true, true));
+						if (attribute instanceof String) {
+							if (StringUtils.isRepresentNumber((String) attribute)) {
+								stack.push(Predicates.between(new RawNumberValue(Double.valueOf((String) attribute)),
+										Double.valueOf((String) lower), Double.valueOf((String) upper), true, true));
+							} else {
+								stack.push(Predicates.between((String) attribute, Double.valueOf((String) lower),
+										Double.valueOf((String) upper), true, true));
+							}
+						} else {
+							throw new SqlPredicateSyntaxException("Syntax error near " + BETWEEN);
+						}
 						break;
 					}
 					case NOT_BETWEEN: {
 						Object upper = stack.pop();
 						Object lower = stack.pop();
-						Object attribute = stack.pop();
-						stack.push(Predicates.notBetween((String) attribute, Double.valueOf((String) lower),
-								Double.valueOf((String) upper), true, true));
+						Object value = stack.pop();
+						if (value instanceof String) {
+							if (StringUtils.isRepresentNumber((String) value)) {
+								stack.push(Predicates.notBetween(new RawNumberValue(Double.valueOf((String) value)),
+										Double.valueOf((String) lower), Double.valueOf((String) upper), true, true));
+							} else {
+								stack.push(Predicates.notBetween((String) value, Double.valueOf((String) lower),
+										Double.valueOf((String) upper), true, true));
+							}
+						} else {
+							throw new SqlPredicateSyntaxException("Syntax error near " + BETWEEN);
+						}
 						break;
 					}
 					case IN: {
@@ -199,8 +264,14 @@ public class SqlPredicateParser {
 								list.add(0, Double.valueOf(entry));
 							}
 						}
-						String attribute = (String) stack.pop();
-						stack.push(entity.get(attribute).in(list).build());
+						Object obj = stack.pop();
+						if (obj instanceof NumberValue) {
+							stack.push(Predicates.in((NumberValue) obj, list));
+						} else if (obj instanceof Number) {
+							stack.push(Predicates.in((Number) obj, list));
+						} else if (obj instanceof String) {
+							stack.push(entity.get((String) obj).in(list).build());
+						}
 						break;
 					}
 					case NOT_IN: {
@@ -214,8 +285,32 @@ public class SqlPredicateParser {
 								list.add(0, Double.valueOf(entry));
 							}
 						}
-						String attribute = (String) stack.pop();
-						stack.push(entity.get(attribute).notIn(list).build());
+						Object obj = stack.pop();
+						if (obj instanceof NumberValue) {
+							stack.push(Predicates.notIn((NumberValue) obj, list));
+						} else if (obj instanceof Number) {
+							stack.push(Predicates.in((Number) obj, list));
+						} else if (obj instanceof String) {
+							stack.push(entity.get((String) obj).in(list).build());
+						}
+						break;
+					}
+					case IS_NULL: {
+						Object entry = stack.pop();
+						if (entry instanceof String) {
+							stack.push(Predicates.isNull((String) entry));
+						} else {
+							throw new SqlPredicateSyntaxException("Syntax error for 'is null' operator");
+						}
+						break;
+					}
+					case IS_NOT_NULL: {
+						Object entry = stack.pop();
+						if (entry instanceof String) {
+							stack.push(Predicates.notNull((String) entry));
+						} else {
+							throw new SqlPredicateSyntaxException("Syntax error for 'is not null' operator");
+						}
 						break;
 					}
 					case LIKE: {
@@ -235,58 +330,193 @@ public class SqlPredicateParser {
 					case EQUALS: {
 						Object obj2 = stack.pop();
 						Object obj1 = stack.pop();
-						if (obj2 instanceof String && ((String) obj2).startsWith("$")) {
-							int paramId = Integer.valueOf(((String) obj2).substring(1));
-							stack.push(entity.get((String) obj1).exactly(params.get(paramId)).build());
-						} else {
-							stack.push(entity.get((String) obj1).equal(Double.valueOf((String) obj2)).build());
-						}
+						stack.push(genEqualsPredicate(obj1, obj2, params));
 						break;
 					}
 					case NOT_EQUALS: {
 						Object obj2 = stack.pop();
 						Object obj1 = stack.pop();
-						if (obj2 instanceof String && ((String) obj2).startsWith("$")) {
-							int paramId = Integer.valueOf(((String) obj2).substring(1));
-							stack.push(Predicates.not(entity.get((String) obj1).exactly(params.get(paramId))).build());
-						} else {
-							stack.push(entity.get((String) obj1).notEqual(Double.valueOf((String) obj2)).build());
-						}
+						stack.push(genNotEqualsPredicate(obj1, obj2, params));
 						break;
 					}
 					case GREATER_THAN: {
 						Object obj2 = stack.pop();
 						Object obj1 = stack.pop();
-						stack.push(entity.get((String) obj1).greaterThan(Double.valueOf((String) obj2)).build());
+						NumberValue[] values = genNumberValues(obj1, obj2);
+						stack.push(new GreaterThan(values[0], values[1]));
 						break;
 					}
 					case LESS_THAN: {
 						Object obj2 = stack.pop();
 						Object obj1 = stack.pop();
-						stack.push(entity.get((String) obj1).lessThan(Double.valueOf((String) obj2)).build());
+						NumberValue[] values = genNumberValues(obj1, obj2);
+						stack.push(new LessThan(values[0], values[1]));
 						break;
 					}
 					case GREATER_OR_EQUALS: {
 						Object obj2 = stack.pop();
 						Object obj1 = stack.pop();
-						PredicateBuilder pb = entity.get((String) obj1).greaterOrEquals(Double.valueOf((String) obj2));
-						Predicate predicate = pb.build();
-						stack.push(predicate);
+						NumberValue[] values = genNumberValues(obj1, obj2);
+						stack.push(new GreaterOrEquals(values[0], values[1]));
 						break;
 					}
 					case LESS_OR_EQUALS: {
 						Object obj2 = stack.pop();
 						Object obj1 = stack.pop();
-						stack.push(entity.get((String) obj1).lessOrEquals(Double.valueOf((String) obj2)).build());
+						NumberValue[] values = genNumberValues(obj1, obj2);
+						stack.push(new LessOrEquals(values[0], values[1]));
+						break;
+					}
+					case ADD: {
+						Object value2 = stack.pop();
+						Object value1 = stack.pop();
+						stack.push(NumberValues.add(value1, value2));
+						break;
+					}
+					case SUBTRACT: {
+						Object value2 = stack.pop();
+						Object value1 = stack.pop();
+						stack.push(NumberValues.subtract(value1, value2));
+						break;
+					}
+					case MULTIPLY: {
+						Object value2 = stack.pop();
+						Object value1 = stack.pop();
+						stack.push(NumberValues.multiply(value1, value2));
+						break;
+					}
+					case DIVIDE: {
+						Object value2 = stack.pop();
+						Object value1 = stack.pop();
+						stack.push(NumberValues.divide(value1, value2));
+						break;
+					}
+					case MOD: {
+						Object value2 = stack.pop();
+						Object value1 = stack.pop();
+						stack.push(NumberValues.mod(value1, value2));
+						break;
+					}
+					case POW: {
+						Object value2 = stack.pop();
+						Object value1 = stack.pop();
+						stack.push(NumberValues.pow(value1, value2));
+						break;
+					}
+					case SQRT: {
+						Object value = stack.pop();
+						stack.push(NumberValues.sqrt(value));
 						break;
 					}
 					}
-					logger.debug("Operator [" + token.toUpperCase() + "] --> predicate: " + stack.peek());
+					logger.debug("Operator [" + token.toUpperCase() + "] --> " + stack.peek());
 				}
 			}
 			return (Predicate) stack.pop();
 		}
 		return null;
+
+	}
+
+	private static Predicate genEqualsPredicate(Object obj1, Object obj2, List<String> params) {
+
+		if (obj1 instanceof String) {
+			if (StringUtils.isRepresentNumber((String) obj1)) {
+				obj1 = new RawNumberValue(Double.valueOf((String) obj1));
+			} else if (((String) obj1).startsWith("$")) {
+				int paramId = Integer.valueOf(((String) obj1).substring(1));
+				obj1 = new RawStringValue(params.get(paramId));
+			} else {
+				obj1 = new StringAttributeGetter((String) obj1);
+			}
+		} else {
+			throw new SqlPredicateSyntaxException("Syntax error near = operator");
+		}
+
+		Predicate predicate = new FalsePredicate();
+		if (obj2 instanceof String) {
+			if (StringUtils.isRepresentNumber((String) obj2)) {
+				obj2 = new RawNumberValue(Double.valueOf((String) obj2));
+				if (obj1 instanceof NumberValue) {
+					predicate = new Equals((NumberValue) obj1, (NumberValue) obj2);
+				}
+			} else if (((String) obj2).startsWith("$")) {
+				int paramId = Integer.valueOf(((String) obj2).substring(1));
+				obj2 = new RawStringValue(params.get(paramId));
+				if (obj1 instanceof StringValue) {
+					predicate = new Exactly((StringValue) obj1, (StringValue) obj2);
+				}
+			} else {
+				obj2 = new StringAttributeGetter((String) obj2);
+				if (obj1 instanceof StringValue) {
+					predicate = new Exactly((StringValue) obj1, (StringValue) obj2);
+				}
+			}
+		} else {
+			throw new SqlPredicateSyntaxException("Syntax error near = operator");
+		}
+		return predicate;
+	}
+
+	private static NumberValue[] genNumberValues(Object obj1, Object obj2) {
+		if (obj1 instanceof String) {
+			if (StringUtils.isRepresentNumber((String) obj1)) {
+				obj1 = new RawNumberValue(Double.valueOf((String) obj1));
+			} else {
+				obj1 = new NumberAttributeGetter((String) obj1);
+			}
+		}
+
+		if (obj2 instanceof String) {
+			obj2 = new RawNumberValue(Double.valueOf((String) obj2));
+		} else {
+			obj2 = new NumberAttributeGetter((String) obj1);
+		}
+
+		if (!(obj1 instanceof NumberValue) || !(obj2 instanceof NumberValue)) {
+			throw new SqlPredicateSyntaxException("Syntax error near >= operator");
+		}
+		return new NumberValue[] { (NumberValue) obj1, (NumberValue) obj2 };
+	}
+
+	private static Predicate genNotEqualsPredicate(Object obj1, Object obj2, List<String> params) {
+
+		if (obj1 instanceof String) {
+			if (StringUtils.isRepresentNumber((String) obj1)) {
+				obj1 = new RawNumberValue(Double.valueOf((String) obj1));
+			} else if (((String) obj1).startsWith("$")) {
+				int paramId = Integer.valueOf(((String) obj1).substring(1));
+				obj1 = new RawStringValue(params.get(paramId));
+			} else {
+				obj1 = new StringAttributeGetter((String) obj1);
+			}
+		} else if (!(obj1 instanceof NumberValue) && !(obj1 instanceof StringValue)) {
+			throw new SqlPredicateSyntaxException("Syntax error near != operator");
+		}
+
+		Predicate predicate = new FalsePredicate();
+		if (obj2 instanceof String) {
+			if (StringUtils.isRepresentNumber((String) obj2)) {
+				obj2 = new RawNumberValue(Double.valueOf((String) obj2));
+				if (obj1 instanceof NumberValue) {
+					predicate = new NotEquals((NumberValue) obj1, (NumberValue) obj2);
+				}
+			} else if (((String) obj2).startsWith("$")) {
+				int paramId = Integer.valueOf(((String) obj2).substring(1));
+				obj2 = new RawStringValue(params.get(paramId));
+				if (obj1 instanceof StringValue) {
+					predicate = new NotExactly((StringValue) obj1, (StringValue) obj2);
+				}
+			} else {
+				obj2 = new StringAttributeGetter((String) obj2);
+				if (obj1 instanceof StringValue) {
+					predicate = new NotExactly((StringValue) obj1, (StringValue) obj2);
+				}
+			}
+		} else {
+			throw new SqlPredicateSyntaxException("Syntax error near != operator");
+		}
+		return predicate;
 	}
 
 	private static boolean isOperator(String token) {
@@ -299,12 +529,23 @@ public class SqlPredicateParser {
 				|| token.equalsIgnoreCase(NOT_BETWEEN) //
 				|| token.equalsIgnoreCase(IN) //
 				|| token.equalsIgnoreCase(NOT_IN) //
+				|| token.equalsIgnoreCase(IS_NULL) //
+				|| token.equalsIgnoreCase(IS_NOT_NULL) //
+				|| MATH_OPERATORS.contains(token.toLowerCase())//
 				|| LOGIC_OPERATORS.contains(token.toLowerCase()) //
 				|| EQUALITY_OPERATORS.contains(token.toLowerCase());
 	}
 
 	private static int getOperatorPrecedence(String operator) {
-		if (operator.equalsIgnoreCase(NOT)) {
+		if (MATH_OPERATORS.contains(operator)) {
+			if (operator.equalsIgnoreCase(POW) || operator.equalsIgnoreCase(SQRT)) {
+				return 5;
+			} else if (operator.equalsIgnoreCase(MULTIPLY) || operator.equalsIgnoreCase(DIVIDE)
+					|| operator.equalsIgnoreCase(MOD)) {
+				return 4;
+			}
+			return 3;
+		} else if (operator.equalsIgnoreCase(NOT)) {
 			return 2;
 		} else if (LOGIC_OPERATORS.contains(operator.toLowerCase())) {
 			return 1;
@@ -313,6 +554,8 @@ public class SqlPredicateParser {
 		} else if (operator.equalsIgnoreCase(LIKE) || operator.equalsIgnoreCase(NOT_LIKE)) {
 			return 2;
 		} else if (operator.equalsIgnoreCase(IN) || operator.equalsIgnoreCase(NOT_IN)) {
+			return 2;
+		} else if (operator.equalsIgnoreCase(IS_NULL) || operator.equalsIgnoreCase(IS_NOT_NULL)) {
 			return 2;
 		} else if (operator.equalsIgnoreCase(BETWEEN) || operator.equalsIgnoreCase(NOT_BETWEEN)) {
 			return 2;
@@ -401,6 +644,7 @@ public class SqlPredicateParser {
 				}
 			}
 		}
+
 		for (int i = inIndexes.size() - 1; i >= 0; i--) {
 			int index = inIndexes.get(i);
 			int listSize = inToSizeMap.get(index);
@@ -409,35 +653,41 @@ public class SqlPredicateParser {
 	}
 
 	private static List<String> split(String sql) {
-
 		if (sql != null) {
 			String[] splittedBySpace = sql.split(" ");
 			List<String> results = new ArrayList<>();
 			for (String token : splittedBySpace) {
-				List<String> tokens = new ArrayList<>();
+				System.out.println("checking token " + token);
+				List<String> localTokens = new ArrayList<>();
 				int lastIndex = 0;
 				char[] chars = token.toCharArray();
+
+				if (token.equalsIgnoreCase("4")) {
+					System.out.println("just for test");
+				}
 
 				for (int i = 0; i < chars.length; i++) {
 					char c = chars[i];
 					if (c == OPENING_PARENTHESES || c == CLOSING_PARENTHESES || c == COMMA) {
 						if (lastIndex < i) {
-							tokens.add(token.substring(lastIndex, i));
+							localTokens.add(token.substring(lastIndex, i));
 						}
 						if (c != COMMA) {
-							tokens.add(String.valueOf(c));
+							localTokens.add(String.valueOf(c));
 						}
 						lastIndex = i + 1;
 					}
 				}
 
 				if (lastIndex < chars.length - 1) {
-					tokens.add(token.substring(lastIndex, chars.length));
+					localTokens.add(token.substring(lastIndex, chars.length));
 				} else if (isOperator(token)) {
-					tokens.add(token);
+					localTokens.add(token);
+				} else if (localTokens.size() == 0) {
+					results.add(token);
 				}
 
-				for (String str : tokens) {
+				for (String str : localTokens) {
 					boolean hasOperator = false;
 					for (String operator : EQUALITY_OPERATORS) {
 						int index = str.indexOf(operator);

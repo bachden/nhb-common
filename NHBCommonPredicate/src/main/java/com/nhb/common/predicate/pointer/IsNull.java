@@ -1,9 +1,9 @@
 package com.nhb.common.predicate.pointer;
 
 import com.nhb.common.predicate.Predicate;
-import com.nhb.common.predicate.value.ObjectDependence;
+import com.nhb.common.predicate.object.ObjectDependence;
+import com.nhb.common.predicate.object.getter.PointerAttributeGetter;
 import com.nhb.common.predicate.value.Value;
-import com.nhb.common.predicate.value.getter.PointerAttributeGetter;
 
 public class IsNull implements Predicate, ObjectDependence, Value<Boolean> {
 

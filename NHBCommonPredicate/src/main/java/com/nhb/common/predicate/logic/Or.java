@@ -1,6 +1,6 @@
 package com.nhb.common.predicate.logic;
 
-import com.nhb.common.predicate.value.ObjectDependence;
+import com.nhb.common.predicate.object.ObjectDependence;
 import com.nhb.common.predicate.value.Value;
 
 public class Or extends LogicPredicate {

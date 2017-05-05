@@ -1,15 +1,15 @@
 package com.nhb.common.predicate.numeric;
 
-import com.nhb.common.predicate.value.ObjectDependence;
-import com.nhb.common.predicate.value.Value;
+import com.nhb.common.predicate.object.ObjectDependence;
+import com.nhb.common.predicate.value.NumberValue;
 
 public class GreaterThan extends NumericComparisonPredicate {
 
 	private static final long serialVersionUID = -3217505531609333605L;
 
-	private Value<? extends Number> value;
+	private NumberValue value;
 
-	public GreaterThan(Value<? extends Number> value, Value<? extends Number> lowerBound) {
+	public GreaterThan(NumberValue value, NumberValue lowerBound) {
 		super(lowerBound);
 		this.value = value;
 	}
@@ -22,7 +22,7 @@ public class GreaterThan extends NumericComparisonPredicate {
 		return getComparator().compare(this.value.get(), this.getAnchorValue().get()) > 0;
 	}
 
-	protected Value<? extends Number> getValue() {
+	protected NumberValue getValue() {
 		return this.value;
 	}
 

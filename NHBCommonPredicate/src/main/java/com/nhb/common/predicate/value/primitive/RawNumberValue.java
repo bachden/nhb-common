@@ -1,12 +1,16 @@
 package com.nhb.common.predicate.value.primitive;
 
-import com.nhb.common.predicate.value.Value;
+import com.nhb.common.predicate.value.NumberValue;
 
-public class NumberValue implements Value<Number> {
+public class RawNumberValue implements NumberValue {
 
 	private Number value;
 
-	public NumberValue(Number value) {
+	public RawNumberValue() {
+
+	}
+
+	public RawNumberValue(Number value) {
 		this.value = value;
 	}
 

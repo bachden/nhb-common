@@ -4,7 +4,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import com.nhb.common.predicate.Predicate;
-import com.nhb.common.predicate.value.ObjectDependence;
+import com.nhb.common.predicate.object.ObjectDependence;
 import com.nhb.common.predicate.value.Value;
 
 abstract class LogicPredicate implements Predicate, ObjectDependence, Value<Boolean> {

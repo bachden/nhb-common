@@ -4,7 +4,7 @@ import java.util.Collection;
 
 import com.nhb.common.predicate.logic.Not;
 import com.nhb.common.predicate.value.Value;
-import com.nhb.common.predicate.value.primitive.NumberValue;
+import com.nhb.common.predicate.value.primitive.RawNumberValue;
 
 public class FilteredObject {
 
@@ -124,7 +124,8 @@ public class FilteredObject {
 
 	@SuppressWarnings("unchecked")
 	public PredicateBuilder notContain(String string) {
-		return this.addPredicate(new Not((Value<Boolean>) Predicates.contains(this.filterBuilder.getAttribute(), string)));
+		return this
+				.addPredicate(new Not((Value<Boolean>) Predicates.contains(this.filterBuilder.getAttribute(), string)));
 	}
 
 	public PredicateBuilder isNull() {
@@ -158,8 +159,8 @@ public class FilteredObject {
 			throw new IllegalStateException(
 					"Attribute must be set before compare with other value, use `EntryObject.get(attribute)` to do that");
 		}
-		return this.addPredicate(Predicates.between(this.filterBuilder.getAttribute(), new NumberValue(lowerBound),
-				new NumberValue(upperBound), includeLeft, includeRight));
+		return this.addPredicate(Predicates.between(this.filterBuilder.getAttribute(), new RawNumberValue(lowerBound),
+				new RawNumberValue(upperBound), includeLeft, includeRight));
 	}
 
 	public PredicateBuilder in(Collection<?> collection) {

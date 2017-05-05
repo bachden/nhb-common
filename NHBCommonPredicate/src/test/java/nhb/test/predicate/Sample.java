@@ -36,16 +36,20 @@ public class Sample {
 		// Predicate predicate = filteredObject.get("age").between(10,
 		// 20).and(filteredObject.is("female")).build();
 
-		Predicate predicate = Predicates.fromSQL(
-				"age in (25,30, '\\'40') and (not female or name = 'bachden') and bar.foo.name = 'Mario' and bar.foo.value in (5, 8, 10)");
+		Predicate predicate = Predicates.fromSQL(//
+				"(age + 1) in (25,30, '\\'40') "//
+						+ "and (not female or name = 'bachden') " //
+						+ "and bar IS NOT NULL " //
+						+ "and bar.foo.name like '[Ms]ario.*' " //
+						+ "and sqrt(bar.foo.value) > 4");
 
 		UserVO userVO = new UserVO();
 		userVO.setName("bachden");
-		userVO.setAge(30);
+		userVO.setAge(29);
 		userVO.setFemale(false);
 
 		Foo foo = new Foo();
-		foo.setValue(10);
+		foo.setValue(16);
 		foo.setName("Mario");
 
 		Bar bar = new Bar();

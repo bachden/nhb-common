@@ -1,12 +1,12 @@
 package com.nhb.common.predicate.text;
 
-import com.nhb.common.predicate.value.ObjectDependence;
+import com.nhb.common.predicate.object.ObjectDependence;
 import com.nhb.common.predicate.value.Value;
 
 public class Exactly extends TextPredicate {
 
 	private static final long serialVersionUID = 2233578312936754365L;
-	
+
 	protected Value<String> valueToCompareWith;
 
 	public Exactly(Value<String> value, Value<String> valueToCompareWith) {

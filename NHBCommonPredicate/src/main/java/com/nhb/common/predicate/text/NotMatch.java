@@ -1,6 +1,6 @@
 package com.nhb.common.predicate.text;
 
-import com.nhb.common.predicate.value.ObjectDependence;
+import com.nhb.common.predicate.object.ObjectDependence;
 import com.nhb.common.predicate.value.Value;
 import com.nhb.common.utils.StringUtils;
 

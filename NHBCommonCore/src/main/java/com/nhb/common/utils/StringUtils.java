@@ -15,10 +15,6 @@ public final class StringUtils {
 		// just prevent other can create new instance...
 	}
 
-	public static void main(String[] args) {
-		System.out.println(getAllMatches("9c10d", "[123456789(10)jqkat][hdcs]"));
-	}
-
 	public static List<String> getAllMatches(String text, String regex) {
 		List<String> matches = new ArrayList<String>();
 		Matcher m = Pattern.compile("(?=(" + regex + "))").matcher(text);
@@ -92,7 +88,7 @@ public final class StringUtils {
 		}
 		return null;
 	}
-	
+
 	public static String implodeWithGlue(String glue, List<?> elements) {
 		if (elements != null && glue != null) {
 			StringBuilder sb = new StringBuilder();
@@ -108,5 +104,41 @@ public final class StringUtils {
 			return sb.toString();
 		}
 		return null;
+	}
+
+	public static boolean isRepresentNumber(String str) {
+		if (str == null) {
+			return false;
+		}
+		int length = str.length();
+		if (length == 0) {
+			return false;
+		}
+		int i = 0;
+		if (str.charAt(0) == '-') {
+			if (length == 1) {
+				return false;
+			}
+			i = 1;
+		}
+		boolean foundDot = false;
+		for (; i < length; i++) {
+			char c = str.charAt(i);
+			if (c == '.') {
+				if (foundDot) {
+					return false;
+				}
+				foundDot = true;
+			} else if (c < '0' || c > '9') {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	public static void main(String[] args) {
+		// System.out.println(getAllMatches("9c10d",
+		// "[123456789(10)jqkat][hdcs]"));
+		System.out.println(isRepresentNumber("123"));
 	}
 }

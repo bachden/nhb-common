@@ -1,6 +1,8 @@
-package com.nhb.common.predicate.value.getter;
+package com.nhb.common.predicate.object.getter;
 
-public class PointerAttributeGetter extends AbstractAttributeGetter<Object> {
+import com.nhb.common.predicate.value.PointerValue;
+
+public class PointerAttributeGetter extends AbstractAttributeGetter<Object> implements PointerValue {
 
 	public PointerAttributeGetter() {
 		super();

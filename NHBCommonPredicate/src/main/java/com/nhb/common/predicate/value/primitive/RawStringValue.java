@@ -1,12 +1,15 @@
 package com.nhb.common.predicate.value.primitive;
 
-import com.nhb.common.predicate.value.Value;
+import com.nhb.common.predicate.value.StringValue;
 
-public class StringValue implements Value<String> {
+import lombok.Setter;
 
+public class RawStringValue implements StringValue {
+
+	@Setter
 	private String value;
 
-	public StringValue(String value) {
+	public RawStringValue(String value) {
 		this.value = value;
 	}
 

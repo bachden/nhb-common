@@ -1,6 +1,8 @@
-package com.nhb.common.predicate.value.getter;
+package com.nhb.common.predicate.object.getter;
 
-public class NumberAttributeGetter extends AbstractAttributeGetter<Number> {
+import com.nhb.common.predicate.value.NumberValue;
+
+public class NumberAttributeGetter extends AbstractAttributeGetter<Number> implements NumberValue {
 
 	public NumberAttributeGetter() {
 		super();

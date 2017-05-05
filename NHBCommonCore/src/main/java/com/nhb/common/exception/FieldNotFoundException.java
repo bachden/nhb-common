@@ -8,7 +8,7 @@ public class FieldNotFoundException extends RuntimeException {
 		super();
 	}
 
-	public FieldNotFoundException(String fieldName) {
-		super("Field not found for name '" + fieldName + "'");
+	public FieldNotFoundException(String message) {
+		super(message);
 	}
 }

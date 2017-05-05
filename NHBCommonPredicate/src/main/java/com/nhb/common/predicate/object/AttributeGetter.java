@@ -1,4 +1,4 @@
-package com.nhb.common.predicate.value;
+package com.nhb.common.predicate.object;
 
 public interface AttributeGetter extends ObjectDependence {
 

@@ -1,21 +1,20 @@
 package com.nhb.common.predicate.numeric;
 
 import com.nhb.common.predicate.Predicate;
+import com.nhb.common.predicate.object.ObjectDependence;
 import com.nhb.common.predicate.utils.NumberComparator;
-import com.nhb.common.predicate.value.ObjectDependence;
-import com.nhb.common.predicate.value.Value;
+import com.nhb.common.predicate.value.NumberValue;
 
 public class NotBetweenIncludeBoth implements Predicate {
 
 	private static final long serialVersionUID = 7119288510614891978L;
 
 	private NumberComparator comparator = new NumberComparator();
-	private Value<? extends Number> lowerBound;
-	private Value<? extends Number> upperBound;
-	private Value<? extends Number> value;
+	private NumberValue lowerBound;
+	private NumberValue upperBound;
+	private NumberValue value;
 
-	public NotBetweenIncludeBoth(Value<? extends Number> value, Value<? extends Number> lowerBound,
-			Value<? extends Number> upperBound) {
+	public NotBetweenIncludeBoth(NumberValue value, NumberValue lowerBound, NumberValue upperBound) {
 		this.value = value;
 		this.lowerBound = lowerBound;
 		this.upperBound = upperBound;

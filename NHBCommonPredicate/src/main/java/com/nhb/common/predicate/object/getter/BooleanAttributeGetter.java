@@ -1,6 +1,8 @@
-package com.nhb.common.predicate.value.getter;
+package com.nhb.common.predicate.object.getter;
 
-public class BooleanAttributeGetter extends AbstractAttributeGetter<Boolean> {
+import com.nhb.common.predicate.value.BooleanValue;
+
+public class BooleanAttributeGetter extends AbstractAttributeGetter<Boolean> implements BooleanValue {
 
 	public BooleanAttributeGetter() {
 		super();

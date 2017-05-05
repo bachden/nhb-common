@@ -1,4 +1,6 @@
-package com.nhb.common.predicate.value;
+package com.nhb.common.predicate.object;
+
+import com.nhb.common.predicate.value.Value;
 
 public abstract class ObjectDependenceValue<Type> implements Value<Type>, ObjectDependence {
 

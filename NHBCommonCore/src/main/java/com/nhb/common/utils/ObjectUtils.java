@@ -317,7 +317,8 @@ public final class ObjectUtils {
 			if (getters.containsKey(fieldName)) {
 				return (T) getters.get(fieldName).get(obj);
 			} else {
-				throw new FieldNotFoundException();
+				throw new FieldNotFoundException(
+						"Field '" + fieldName + "' cannot be found in object type " + obj.getClass().getName());
 			}
 		}
 		throw new IllegalArgumentException("Object and fieldName must be not-null");
