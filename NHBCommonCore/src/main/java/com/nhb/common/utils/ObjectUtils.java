@@ -22,6 +22,7 @@ import org.apache.commons.lang.exception.ExceptionUtils;
 import com.nhb.common.annotations.DefaultSetter;
 import com.nhb.common.annotations.Transparent;
 import com.nhb.common.exception.FieldNotFoundException;
+import com.nhb.common.exception.NullValueOnPathException;
 import com.nhb.common.utils.ArrayUtils.ForeachCallback;
 
 //this is object utils class
@@ -287,6 +288,24 @@ public final class ObjectUtils {
 			_class = _class.getSuperclass();
 		}
 		return result;
+	}
+
+	@SuppressWarnings("unchecked")
+	public static final <T> T getValueByPath(Object obj, String path) {
+		if (obj != null && path != null) {
+			String[] arr = path.split("\\.");
+			Object currObj = obj;
+			for (int i = 0; i < arr.length; i++) {
+				String fieldName = arr[i];
+				if (currObj == null) {
+					throw new NullValueOnPathException("Cannot get field '" + fieldName + "' from '" + arr[i - 1]
+							+ "' == null, primitive object: " + obj.toString() + ", path: " + path);
+				}
+				currObj = getFieldValue(currObj, fieldName);
+			}
+			return (T) currObj;
+		}
+		throw new IllegalArgumentException("Object and path must be not-null");
 	}
 
 	@SuppressWarnings("unchecked")

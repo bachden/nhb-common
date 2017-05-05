@@ -58,9 +58,9 @@ public class AbstractAttributeGetter<Type> implements AttributeGetter, Value<Typ
 		if (this.getObject() instanceof Map && this.isAllowMapDetect()) {
 			return (Type) ((Map) this.getObject()).get(this.getAttribute());
 		}
-		return ObjectUtils.getFieldValue(this.getObject(), this.getAttribute());
+		return ObjectUtils.getValueByPath(this.getObject(), this.getAttribute());
 	}
-	
+
 	@Override
 	public String toString() {
 		return this.attribute;
