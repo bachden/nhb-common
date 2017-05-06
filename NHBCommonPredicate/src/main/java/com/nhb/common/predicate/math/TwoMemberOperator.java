@@ -44,9 +44,9 @@ public abstract class TwoMemberOperator extends MathOperator implements NumberVa
 				+ this.value1.toString() //
 				+ ((value1 instanceof RawNumberValue || value1 instanceof AttributeGetter) ? "" : ")")//
 				+ " " //
-				+ ((value2 instanceof RawNumberValue || value2 instanceof AttributeGetter) ? "" : "(") //
 				+ this.getSymbol() //
 				+ " " //
+				+ ((value2 instanceof RawNumberValue || value2 instanceof AttributeGetter) ? "" : "(") //
 				+ this.value2.toString() //
 				+ ((value2 instanceof RawNumberValue || value2 instanceof AttributeGetter) ? "" : ")");
 	}
