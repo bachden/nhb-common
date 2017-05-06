@@ -368,7 +368,7 @@ public final class Predicates {
 		return new In(new PointerAttributeGetterValue(attribute), collection);
 	}
 
-	public static Predicate in(NumberValue value, Collection<?> collection) {
+	public static Predicate in(Value<?> value, Collection<?> collection) {
 		return new In(value, collection);
 	}
 
@@ -380,7 +380,7 @@ public final class Predicates {
 		return new NotIn(new PointerAttributeGetterValue(attribute), collection);
 	}
 
-	public static Predicate notIn(NumberValue value, Collection<?> collection) {
+	public static Predicate notIn(Value<?> value, Collection<?> collection) {
 		return new NotIn(value, collection);
 	}
 

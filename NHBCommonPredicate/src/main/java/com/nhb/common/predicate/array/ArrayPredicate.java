@@ -5,7 +5,6 @@ import java.util.Collection;
 import com.nhb.common.predicate.object.ObjectDependence;
 import com.nhb.common.predicate.object.ObjectDependencePredicate;
 import com.nhb.common.predicate.utils.NumberComparator;
-import com.nhb.common.predicate.value.NumberValue;
 import com.nhb.common.predicate.value.Value;
 
 import lombok.AccessLevel;
@@ -37,19 +36,24 @@ abstract class ArrayPredicate extends ObjectDependencePredicate {
 		}
 	}
 
-	protected boolean isIn(Object value) {
-		if (value instanceof Number) {
-			for (Object obj : this.collection) {
-				if (obj instanceof NumberValue) {
-					obj = ((NumberValue) obj).get();
+	protected boolean isCollectionContainsValue() {
+		Object value = this.value.get();
+		for (Object entry : this.collection) {
+			if (entry instanceof Value<?>) {
+				entry = ((Value<?>) entry).get();
+			}
+			getLogger().debug("Checking equals: {} and {}", value, entry);
+			if (value == entry) {
+				return true;
+			}
+			if (value instanceof Number && entry instanceof Number) {
+				if (numberComparator.compare(value, entry) == 0) {
+					return true;
 				}
-				if (obj instanceof Number) {
-					if (numberComparator.compare(obj, value) == 0) {
-						return true;
-					}
-				}
+			} else if (value.equals(entry)) {
+				return true;
 			}
 		}
-		return this.collection.contains(value);
+		return false;
 	}
 }

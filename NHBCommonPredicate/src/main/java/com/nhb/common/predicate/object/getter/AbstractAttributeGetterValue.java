@@ -1,7 +1,5 @@
 package com.nhb.common.predicate.object.getter;
 
-import java.util.Map;
-
 import com.nhb.common.predicate.object.AttributeGetter;
 import com.nhb.common.predicate.value.Value;
 import com.nhb.common.utils.ObjectUtils;
@@ -10,7 +8,6 @@ public class AbstractAttributeGetterValue<Type> implements AttributeGetter, Valu
 
 	private String attribute;
 	private Object object;
-	private boolean allowMapDetect = true;
 
 	public AbstractAttributeGetterValue() {
 		// do nothing
@@ -44,20 +41,8 @@ public class AbstractAttributeGetterValue<Type> implements AttributeGetter, Valu
 		return this.object;
 	}
 
-	public boolean isAllowMapDetect() {
-		return allowMapDetect;
-	}
-
-	public void setAllowMapDetect(boolean allowMapDetect) {
-		this.allowMapDetect = allowMapDetect;
-	}
-
 	@Override
-	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public Type get() {
-		if (this.getObject() instanceof Map && this.isAllowMapDetect()) {
-			return (Type) ((Map) this.getObject()).get(this.getAttribute());
-		}
 		return ObjectUtils.getValueByPath(this.getObject(), this.getAttribute());
 	}
 

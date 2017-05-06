@@ -37,20 +37,21 @@ public class Sample {
 		// 20).and(filteredObject.is("female")).build();
 
 		Predicate predicate = Predicates.fromSQL(//
-				"(1 + age + 1) between 20 and 30 "//
-						+ "and (not female or name = 'bachden') " //
+				"age in (25, 28, 29, 30) "//
+						+ "and (not female or name = bar.foo.name) " //
 						+ "and bar IS NOT NULL " //
-						+ "and bar.foo.name like '[Ms]ario.*' " //
-						+ "and sqrt(bar.foo.value) > 4");
+						+ "and (name in ('noname', 1, bar.foo.name) " //
+						+ "or bar.foo.name like '[Ms]ario.*') " //
+						+ "and (sqrt(bar.foo.value) > 4)");
 
 		UserVO userVO = new UserVO();
 		userVO.setName("bachden");
-		userVO.setAge(29);
+		userVO.setAge(28);
 		userVO.setFemale(false);
 
 		Foo foo = new Foo();
-		foo.setValue(16);
-		foo.setName("Mario");
+		foo.setValue(27);
+		foo.setName("bachden");
 
 		Bar bar = new Bar();
 		bar.setFoo(foo);

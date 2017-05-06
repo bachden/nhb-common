@@ -15,7 +15,7 @@ public class In extends ArrayPredicate {
 
 	@Override
 	public Boolean get() {
-		return this.isIn(this.getValue().get());
+		return this.isCollectionContainsValue();
 	}
 
 	@Override

@@ -14,10 +14,8 @@ import java.util.Stack;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.nhb.common.predicate.FilteredObject;
 import com.nhb.common.predicate.NumberValues;
 import com.nhb.common.predicate.Predicate;
-import com.nhb.common.predicate.PredicateBuilder;
 import com.nhb.common.predicate.Predicates;
 import com.nhb.common.predicate.numeric.Equals;
 import com.nhb.common.predicate.numeric.GreaterOrEquals;
@@ -27,10 +25,13 @@ import com.nhb.common.predicate.numeric.LessThan;
 import com.nhb.common.predicate.numeric.NotEquals;
 import com.nhb.common.predicate.object.getter.BooleanAttributeGetterValue;
 import com.nhb.common.predicate.object.getter.NumberAttributeGetterValue;
+import com.nhb.common.predicate.object.getter.PointerAttributeGetterValue;
 import com.nhb.common.predicate.object.getter.StringAttributeGetterValue;
 import com.nhb.common.predicate.predefined.FalsePredicate;
 import com.nhb.common.predicate.text.Exactly;
+import com.nhb.common.predicate.text.Match;
 import com.nhb.common.predicate.text.NotExactly;
+import com.nhb.common.predicate.text.NotMatch;
 import com.nhb.common.predicate.value.BooleanValue;
 import com.nhb.common.predicate.value.NumberValue;
 import com.nhb.common.predicate.value.StringValue;
@@ -169,55 +170,21 @@ public class SqlPredicateParser {
 				if (!isOperator(token)) {
 					stack.push(token);
 				} else {
-					FilteredObject entity = PredicateBuilder.newFilteredObject();
+					// FilteredObject entity =
+					// PredicateBuilder.newFilteredObject();
 					switch (token) {
 					case AND: {
 						Object obj2 = stack.pop();
 						Object obj1 = stack.pop();
-
-						if (!(obj1 instanceof BooleanValue)) {
-							if (obj1 instanceof String) {
-								obj1 = new BooleanAttributeGetterValue((String) obj1);
-							}
-						}
-
-						if (obj1 instanceof Predicate) {
-							if (obj2 instanceof Predicate) {
-								stack.push(Predicates.and((Predicate) obj1, (Predicate) obj2));
-							} else if (obj2 instanceof String) {
-								stack.push(Predicates.and((Predicate) obj1, entity.is((String) obj2).build()));
-							} else {
-								throw new SqlPredicateSyntaxException("Syntax error near AND operator");
-							}
-						} else if (obj1 instanceof String) {
-							if (obj2 instanceof Predicate) {
-								stack.push(Predicates.and(entity.is((String) obj1).build(), (Predicate) obj2));
-							} else {
-								stack.push(Predicates.and(entity.is((String) obj1).build(),
-										entity.is((String) obj2).build()));
-							}
-						} else {
-							throw new SqlPredicateSyntaxException("Syntax error near AND operator");
-						}
+						Predicate predicate = genAndPredicate(obj2, obj1);
+						stack.push(predicate);
 						break;
 					}
 					case OR: {
 						Object obj2 = stack.pop();
 						Object obj1 = stack.pop();
-						if (obj1 instanceof Predicate) {
-							if (obj2 instanceof Predicate) {
-								stack.push(Predicates.or((Predicate) obj1, (Predicate) obj2));
-							} else {
-								stack.push(Predicates.or((Predicate) obj1, entity.is((String) obj2).build()));
-							}
-						} else {
-							if (obj2 instanceof Predicate) {
-								stack.push(Predicates.or(entity.is((String) obj1).build(), (Predicate) obj2));
-							} else {
-								stack.push(Predicates.or(entity.is((String) obj1).build(),
-										entity.is((String) obj2).build()));
-							}
-						}
+						Predicate predicate = genOrPredicate(obj2, obj1);
+						stack.push(predicate);
 						break;
 					}
 					case NOT: {
@@ -234,7 +201,6 @@ public class SqlPredicateParser {
 						Object upper = stack.pop();
 						Object lower = stack.pop();
 						Object value = stack.pop();
-
 						Predicate predicate = genBetweenPredicate(upper, lower, value);
 						stack.push(predicate);
 						break;
@@ -249,44 +215,68 @@ public class SqlPredicateParser {
 					}
 					case IN: {
 						Object size = stack.pop();
-						List<Object> list = new ArrayList<>();
+						Predicate predicate = null;
+						List<Object> collection = new ArrayList<>();
 						for (int i = 0; i < Integer.valueOf((String) size); i++) {
 							String entry = (String) stack.pop();
 							if (entry.startsWith("$")) {
-								list.add(0, params.get(Integer.valueOf(entry.substring(1))));
+								collection.add(0, params.get(Integer.valueOf(entry.substring(1))));
+							} else if (StringUtils.isRepresentNumber(entry)) {
+								collection.add(0, Double.valueOf(entry));
 							} else {
-								list.add(0, Double.valueOf(entry));
+								collection.add(0, new PointerAttributeGetterValue(entry));
 							}
 						}
 						Object obj = stack.pop();
-						if (obj instanceof NumberValue) {
-							stack.push(Predicates.in((NumberValue) obj, list));
+						if (obj instanceof Value) {
+							predicate = Predicates.in((Value<?>) obj, collection);
 						} else if (obj instanceof Number) {
-							stack.push(Predicates.in((Number) obj, list));
+							predicate = Predicates.in((Number) obj, collection);
 						} else if (obj instanceof String) {
-							stack.push(entity.get((String) obj).in(list).build());
+							String str = (String) obj;
+							if (str.startsWith("$")) {
+								str = params.get(Integer.valueOf(str.substring(1)));
+								predicate = Predicates.in(new RawStringValue(str), collection);
+							} else {
+								predicate = Predicates.in(new PointerAttributeGetterValue(str), collection);
+							}
+						} else {
+							throw new SqlPredicateSyntaxException("Syntax error near IN operator");
 						}
+						stack.push(predicate);
 						break;
 					}
 					case NOT_IN: {
 						Object size = stack.pop();
-						List<Object> list = new ArrayList<>();
+						Predicate predicate = null;
+						List<Object> collection = new ArrayList<>();
 						for (int i = 0; i < Integer.valueOf((String) size); i++) {
 							String entry = (String) stack.pop();
 							if (entry.startsWith("$")) {
-								list.add(0, params.get(Integer.valueOf(entry.substring(1))));
+								collection.add(0, params.get(Integer.valueOf(entry.substring(1))));
+							} else if (StringUtils.isRepresentNumber(entry)) {
+								collection.add(0, Double.valueOf(entry));
 							} else {
-								list.add(0, Double.valueOf(entry));
+								collection.add(0, new PointerAttributeGetterValue(entry));
 							}
 						}
 						Object obj = stack.pop();
-						if (obj instanceof NumberValue) {
-							stack.push(Predicates.notIn((NumberValue) obj, list));
+						if (obj instanceof Value) {
+							predicate = Predicates.notIn((Value<?>) obj, collection);
 						} else if (obj instanceof Number) {
-							stack.push(Predicates.in((Number) obj, list));
+							predicate = Predicates.notIn((Number) obj, collection);
 						} else if (obj instanceof String) {
-							stack.push(entity.get((String) obj).in(list).build());
+							String str = (String) obj;
+							if (str.startsWith("$")) {
+								str = params.get(Integer.valueOf(str.substring(1)));
+								predicate = Predicates.notIn(new RawStringValue(str), collection);
+							} else {
+								predicate = Predicates.notIn(new PointerAttributeGetterValue(str), collection);
+							}
+						} else {
+							throw new SqlPredicateSyntaxException("Syntax error near NOT IN operator");
 						}
+						stack.push(predicate);
 						break;
 					}
 					case IS_NULL: {
@@ -310,15 +300,57 @@ public class SqlPredicateParser {
 					case LIKE: {
 						Object obj2 = stack.pop();
 						Object obj1 = stack.pop();
-						stack.push(entity.get((String) obj1)
-								.match((String) params.get(Integer.valueOf(((String) obj2).substring(1)))).build());
+
+						if (obj1 instanceof String) {
+							String str1 = (String) obj1;
+							if (str1.startsWith("$")) {
+								str1 = params.get(Integer.valueOf(str1.substring(1)));
+								obj1 = new RawStringValue(str1);
+							} else {
+								obj1 = new StringAttributeGetterValue(str1);
+							}
+						}
+						if (obj2 instanceof String) {
+							String str2 = (String) obj2;
+							if (str2.startsWith("$")) {
+								str2 = params.get(Integer.valueOf(str2.substring(1)));
+								obj2 = new RawStringValue(str2);
+							} else {
+								obj2 = new StringAttributeGetterValue(str2);
+							}
+						}
+						if (!(obj1 instanceof StringValue) || !(obj2 instanceof StringValue)) {
+							throw new SqlPredicateSyntaxException("Syntax error near LIKE operator");
+						}
+						stack.push(new Match((StringValue) obj1, (StringValue) obj2));
 						break;
 					}
 					case NOT_LIKE: {
 						Object obj2 = stack.pop();
 						Object obj1 = stack.pop();
-						stack.push(entity.get((String) obj1)
-								.notMatch((String) params.get(Integer.valueOf(((String) obj2).substring(1)))).build());
+
+						if (obj1 instanceof String) {
+							String str1 = (String) obj1;
+							if (str1.startsWith("$")) {
+								str1 = params.get(Integer.valueOf(str1.substring(1)));
+								obj1 = new RawStringValue(str1);
+							} else {
+								obj1 = new StringAttributeGetterValue(str1);
+							}
+						}
+						if (obj2 instanceof String) {
+							String str2 = (String) obj2;
+							if (str2.startsWith("$")) {
+								str2 = params.get(Integer.valueOf(str2.substring(1)));
+								obj2 = new RawStringValue(str2);
+							} else {
+								obj2 = new StringAttributeGetterValue(str2);
+							}
+						}
+						if (!(obj1 instanceof StringValue) || !(obj2 instanceof StringValue)) {
+							throw new SqlPredicateSyntaxException("Syntax error near LIKE operator");
+						}
+						stack.push(new NotMatch((StringValue) obj1, (StringValue) obj2));
 						break;
 					}
 					case EQUALS: {
@@ -412,6 +444,56 @@ public class SqlPredicateParser {
 
 	}
 
+	private static List<Predicate> genLogicBooleanValues(Object obj1, Object obj2) {
+
+		Object _obj1 = obj1;
+		Object _obj2 = obj2;
+
+		if (!(_obj1 instanceof BooleanValue)) {
+			if (_obj1 instanceof String) {
+				_obj1 = new BooleanAttributeGetterValue((String) _obj1);
+			}
+		}
+
+		if (!(_obj2 instanceof BooleanValue)) {
+			if (_obj2 instanceof String) {
+				_obj2 = new BooleanAttributeGetterValue((String) _obj2);
+			}
+		}
+
+		if (!(_obj1 instanceof Predicate)) {
+			if (_obj1 instanceof BooleanValue) {
+				_obj1 = Predicates.is((BooleanValue) _obj1);
+			} else {
+				throw new SqlPredicateSyntaxException("Syntax error near AND operator, value1");
+			}
+		}
+
+		if (!(_obj2 instanceof Predicate)) {
+			if (_obj2 instanceof BooleanValue) {
+				_obj2 = Predicates.is((BooleanValue) _obj2);
+			} else {
+				throw new SqlPredicateSyntaxException("Syntax error near AND operator, value2");
+			}
+		}
+
+		if (!(_obj1 instanceof Predicate) || !(_obj2 instanceof Predicate)) {
+			throw new SqlPredicateSyntaxException("Syntax error near AND operator");
+		}
+
+		return Arrays.asList((Predicate) _obj1, (Predicate) _obj2);
+	}
+
+	private static Predicate genAndPredicate(Object obj2, Object obj1) {
+		List<Predicate> values = genLogicBooleanValues(obj1, obj2);
+		return Predicates.and(values.get(0), values.get(1));
+	}
+
+	private static Predicate genOrPredicate(Object obj2, Object obj1) {
+		List<Predicate> values = genLogicBooleanValues(obj1, obj2);
+		return Predicates.or(values.get(0), values.get(1));
+	}
+
 	private static List<NumberValue> genBetweenNumberValues(Object upper, Object lower, Object value) {
 		if (upper instanceof String) {
 			if (StringUtils.isRepresentNumber((String) upper)) {
@@ -438,7 +520,7 @@ public class SqlPredicateParser {
 		}
 
 		if (!(value instanceof NumberValue) || !(lower instanceof NumberValue) || !(upper instanceof NumberValue)) {
-			throw new SqlPredicateSyntaxException("Syntax error near between");
+			throw new SqlPredicateSyntaxException("Syntax error near BETWEEN operator");
 		}
 
 		return Arrays.asList((NumberValue) value, (NumberValue) lower, (NumberValue) upper);
@@ -712,6 +794,9 @@ public class SqlPredicateParser {
 							}
 							lastIndex = index + 1;
 						}
+					}
+					if (lastIndex < chars.length - 1) {
+						localTokens.add(token.substring(lastIndex));
 					}
 				} else {
 					localTokens.add(token);
