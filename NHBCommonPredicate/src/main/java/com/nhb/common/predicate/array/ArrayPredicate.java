@@ -42,7 +42,7 @@ abstract class ArrayPredicate extends ObjectDependencePredicate {
 			if (entry instanceof Value<?>) {
 				entry = ((Value<?>) entry).get();
 			}
-			getLogger().debug("Checking equals: {} and {}", value, entry);
+			// getLogger().debug("Checking equals: {} and {}", value, entry);
 			if (value == entry) {
 				return true;
 			}

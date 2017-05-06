@@ -19,7 +19,7 @@ public abstract class ObjectDependencePredicate extends ObjectDependenceValue<Bo
 
 	@Override
 	public final boolean apply(Object obj) {
-		getLogger().debug("Applying object on predicate: {}", this.toString());
+		// getLogger().debug("Applying object on predicate: {}", this.toString());
 		this.fill(obj);
 		return this.get();
 	}
