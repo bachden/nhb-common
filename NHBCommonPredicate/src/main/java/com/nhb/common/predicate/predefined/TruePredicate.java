@@ -10,4 +10,9 @@ public class TruePredicate implements Predicate {
 	public boolean apply(Object obj) {
 		return true;
 	}
+
+	@Override
+	public String toString() {
+		return "TRUE";
+	}
 }

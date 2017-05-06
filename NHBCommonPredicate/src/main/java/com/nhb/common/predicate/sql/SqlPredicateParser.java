@@ -11,9 +11,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.nhb.common.predicate.NumberValues;
 import com.nhb.common.predicate.Predicate;
 import com.nhb.common.predicate.Predicates;
@@ -38,12 +35,12 @@ import com.nhb.common.predicate.value.StringValue;
 import com.nhb.common.predicate.value.Value;
 import com.nhb.common.predicate.value.primitive.RawNumberValue;
 import com.nhb.common.predicate.value.primitive.RawStringValue;
-import com.nhb.common.utils.Initializer;
 import com.nhb.common.utils.StringUtils;
+import com.nhb.common.utils.TimeWatcher;
 
 public class SqlPredicateParser {
 
-	private static final Logger logger = LoggerFactory.getLogger(SqlPredicateParser.class);
+//	private static final Logger logger = LoggerFactory.getLogger(SqlPredicateParser.class);
 
 	private static final char ESCAPE = '\\';
 	private static final char APOSTROPHE = '\'';
@@ -109,8 +106,14 @@ public class SqlPredicateParser {
 		EQUALITY_OPERATORS.add(GREATER_OR_EQUALS);
 		EQUALITY_OPERATORS.add(LESS_THAN);
 		EQUALITY_OPERATORS.add(LESS_OR_EQUALS);
+	}
 
-		Collections.sort(EQUALITY_OPERATORS, new Comparator<String>() {
+	private static final List<String> SYMBOLIZE_OPERATORS = new ArrayList<>();
+	static {
+		SYMBOLIZE_OPERATORS.addAll(EQUALITY_OPERATORS);
+		SYMBOLIZE_OPERATORS.addAll(MATH_OPERATORS);
+
+		Collections.sort(SYMBOLIZE_OPERATORS, new Comparator<String>() {
 
 			@Override
 			public int compare(String o1, String o2) {
@@ -122,44 +125,38 @@ public class SqlPredicateParser {
 		});
 	}
 
-	public static void main(String[] args) {
-		Initializer.bootstrap(SqlPredicateParser.class);
-		// String sql = "gender='female' and (age not between 16 and 25 or
-		// (age>=35 or age<13) and salary not in (1000, 2000, 3000, 4000)) or
-		// name like 'Mc \\'Oco\\'nner'";
-		String sql = "gender = 'female' and not (age between 16.0 and 25.0 or age >= 35.0 or age <= 13.0 and salary not in (1000.0, 2000.0, 3000.0, 4000.0) or name like 'Mc \\'Oco\\'nner' and money = 100)";
-		logger.debug("{}", parse(sql));
-	}
-
 	public static Predicate parse(String sql) {
 		if (sql == null) {
 			return null;
 		}
-		logger.debug("Input string: " + sql);
+		// logger.debug("Input string: " + sql);
+
+		TimeWatcher timeWatcher = new TimeWatcher();
+		timeWatcher.reset();
 
 		List<String> extracted = extractString(sql);
-		logger.debug("extracted: " + extracted);
-		String sql1 = removeUnnecessarySpaces(extracted.get(0))//
-				.replaceAll("(?i)not in", NOT_IN) //
-				.replaceAll("(?i)not like", NOT_LIKE) //
-				.replaceAll("(?i)not between", NOT_BETWEEN) //
-				.replaceAll("(?i)is null", IS_NULL) //
-				.replaceAll("(?i)is not null", IS_NOT_NULL);
+		// logger.debug("Time to extract string: {}ms",
+		// timeWatcher.endLapMillis());
 
-		logger.debug("SQL: " + sql1);
-		logger.debug("Params: ");
-		for (int i = 1; i < extracted.size(); i++) {
-			logger.debug("\t$" + i + ": " + extracted.get(i));
-		}
+		String sql1 = removeUnnecessarySpaces(extracted.get(0));
+		// logger.debug("Time to remove unnecessary spaces: {}ms",
+		// timeWatcher.endLapMillis());
+
 		List<String> tokens = split(sql1);
-		logger.debug("Tokens before normalize: " + tokens);
+		// logger.debug("Time to split: {}ms", timeWatcher.endLapMillis());
+
 		normalize(tokens);
-		logger.debug("Tokens: " + tokens);
+		// logger.debug("Time to normalize: {}ms", timeWatcher.endLapMillis());
 
 		List<String> prefixTokens = toPrefix(tokens);
-		logger.debug("Tokens in prefix mode: " + prefixTokens);
+		// logger.debug("Time to convert tokens to prefix: {}ms",
+		// timeWatcher.endLapMillis());
 
-		return toPredicate(prefixTokens, extracted);
+		Predicate predicate = toPredicate(prefixTokens, extracted);
+		// logger.debug("Time to convert prefix to predicate: {}ms",
+		// timeWatcher.endLapMillis());
+
+		return predicate;
 	}
 
 	private static Predicate toPredicate(List<String> prefixTokens, List<String> params) {
@@ -435,7 +432,8 @@ public class SqlPredicateParser {
 						break;
 					}
 					}
-					logger.debug("Operator [" + token.toUpperCase() + "] --> " + stack.peek());
+					// logger.debug("Operator [" + token.toUpperCase() + "] -->
+					// " + stack.peek());
 				}
 			}
 			return (Predicate) stack.pop();
@@ -676,46 +674,71 @@ public class SqlPredicateParser {
 			Stack<String> stack = new Stack<>();
 			Stack<String> output = new Stack<>();
 			for (String token : tokens) {
-				logger.debug("**** " + token + " ****");
+				// logger.debug("**** " + token + " ****");
 				if (token.equals("(")) {
-					logger.debug("Found openParentheses, push to stack");
+					// logger.debug("\tFound openParentheses, push to stack");
 					stack.push(token);
 				} else if (token.equals(")")) {
-					logger.debug("Found closing parentheses, pop all from stack until found open");
+					// logger.debug("\tFound closing parentheses, pop all from
+					// stack until found open");
 					if (stack.size() > 0) {
 						String stackHead = stack.pop();
 						while (!stackHead.equals("(")) {
-							logger.debug("Pop " + stackHead + " from stack --> add to output");
+							// logger.debug("\tPop " + stackHead + " from stack
+							// --> add to output");
 							output.push(stackHead);
 							stackHead = stack.pop();
 						}
 					}
-				} else if (!isOperator(token)) {
-					logger.debug("Found operand " + token + " --> push to output");
-					output.push(token);
-				} else {
-					logger.debug("Found operator " + token + ", checking stack head");
+				} else if (isOperator(token)) {
+					// logger.debug("\tFound operator " + token + ", checking
+					// stack head");
 					String stackHead = stack.size() > 0 ? stack.peek() : null;
 					if (isOperator(stackHead)) {
-						logger.debug("Stack head (" + stackHead + ") is operator, checking precedence...");
+						// logger.debug("\tStack head (" + stackHead + ") is
+						// operator, checking precedence...");
 						if (getOperatorPrecedence(stackHead) >= getOperatorPrecedence(token)) {
 							stackHead = stack.pop();
-							logger.debug("Stack head has higher (or equals) precedence, pop stack (" + stackHead
-									+ ") and push to output, put new token (" + token + ") to stack");
+							// logger.debug("\tStack head has higher (or equals)
+							// precedence, pop stack (" + stackHead
+							// + ") and push to output, put new token (" + token
+							// + ") to stack");
+
 							output.push(stackHead);
+							// nếu token hiện tại không phải là math opt và
+							// stackHead lại là math opt --> bốc tất cả
+							// stackHead còn là math opt
+							if (!MATH_OPERATORS.contains(token) && MATH_OPERATORS.contains(stackHead)) {
+								// logger.debug("\tFound non-math operator {},
+								// checking stack head for math operator",
+								// token);
+								while (stack.size() > 0 && MATH_OPERATORS.contains(stack.peek())) {
+									stackHead = stack.pop();
+									// logger.debug("\tPop {} from stack and
+									// push to output", stackHead);
+									output.push(stackHead);
+								}
+							}
+
 							stack.push(token);
 						} else {
-							logger.debug("Stack head has lower precedence, push token (" + token + ") to stack...");
+							// logger.debug("\tStack head has lower precedence,
+							// push token (" + token + ") to stack...");
 							stack.push(token);
 						}
 					} else {
-						logger.debug(
-								"Stack head (" + stackHead + ") is not a operator, push token " + token + " to stack");
+						// logger.debug("\tStack head (" + stackHead + ") is not
+						// a operator, push token " + token
+						// + " to stack");
 						stack.push(token);
 					}
+				} else {
+					// logger.debug("\tFound operand " + token + " --> push to
+					// output");
+					output.push(token);
 				}
-				logger.debug("\tStack: " + stack);
-				logger.debug("\tOutput: " + output);
+				// logger.debug("\tStack: " + stack);
+				// logger.debug("\tOutput: " + output);
 			}
 			while (stack.size() > 0) {
 				output.push(stack.pop());
@@ -802,31 +825,67 @@ public class SqlPredicateParser {
 					localTokens.add(token);
 				}
 
-				logger.debug("Token: {} --> local tokens: {}", token, localTokens);
+				// logger.debug("Token: {} --> local tokens: {}", token,
+				// localTokens);
 
-				for (String str : localTokens) {
-					boolean hasOperator = false;
-					for (String operator : EQUALITY_OPERATORS) {
-						int index = str.indexOf(operator);
-						if (index >= 0) {
-							hasOperator = true;
-							do {
-								String preStr = str.substring(0, index).trim();
-								if (preStr.length() > 0) {
-									results.add(preStr);
+				for (String localToken : localTokens) {
+					indexes = new ArrayList<>();
+					Map<Integer, String> indexToOperators = new HashMap<>();
+					// logger.debug("Checking operator existence on {}",
+					// localToken);
+					if (!StringUtils.isRepresentNumber(localToken)) {
+						char[] localTokenChars = localToken.toCharArray();
+						for (int i = 0; i < localTokenChars.length; i++) {
+							for (String operator : SYMBOLIZE_OPERATORS) {
+								int opLength = operator.length();
+								if (opLength > localTokenChars.length - i) {
+									continue;
 								}
-								results.add(operator);
-								str = str.substring(index + operator.length()).trim();
-								index = str.indexOf(operator);
-							} while (index >= 0);
-							if (str.length() > 0) {
-								results.add(str);
+								char[] opChars = operator.toCharArray();
+								boolean hasOperator = true;
+								for (int j = 0; j < opLength; j++) {
+									if (opChars[j] != localTokenChars[i + j]) {
+										hasOperator = false;
+										break;
+									}
+								}
+								if (hasOperator) {
+									indexes.add(i);
+									indexToOperators.put(i, operator);
+									// logger.debug("---> found operator {} at
+									// index {}", operator, i);
+									i += opLength - 1;
+									break;
+								}
 							}
 						}
 					}
-					if (!hasOperator) {
-						results.add(str);
+					// logger.debug(" indexes: {}", indexes);
+					if (indexes.size() == 0) {
+						results.add(localToken);
+					} else {
+						int lastIndex = 0;
+						indexes.sort(new Comparator<Integer>() {
+
+							@Override
+							public int compare(Integer o1, Integer o2) {
+								return o1 == o2 ? 0 : (o1 > o2 ? 1 : -1);
+							}
+						});
+						for (int i = 0; i < indexes.size(); i++) {
+							int index = indexes.get(i);
+							int opLength = indexToOperators.get(index).length();
+							if (lastIndex < index) {
+								results.add(localToken.substring(lastIndex, index));
+							}
+							results.add(localToken.substring(index, index + opLength));
+							lastIndex = index + opLength;
+						}
+						if (lastIndex < localToken.length()) {
+							results.add(localToken.substring(lastIndex, localToken.length()));
+						}
 					}
+					// logger.debug("---> results: {}", results);
 				}
 			}
 			return results;
@@ -835,7 +894,12 @@ public class SqlPredicateParser {
 	}
 
 	private static String removeUnnecessarySpaces(String input) {
-		return input.replaceAll("\\s+", " ");
+		return input.replaceAll("\\s+", " ")//
+				.replaceAll("(?i)not in", NOT_IN) //
+				.replaceAll("(?i)not like", NOT_LIKE) //
+				.replaceAll("(?i)not between", NOT_BETWEEN) //
+				.replaceAll("(?i)is null", IS_NULL) //
+				.replaceAll("(?i)is not null", IS_NOT_NULL);
 	}
 
 	private static List<String> extractString(String sql) {

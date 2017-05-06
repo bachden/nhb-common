@@ -10,4 +10,9 @@ public class FalsePredicate implements Predicate {
 	public boolean apply(Object obj) {
 		return false;
 	}
+	
+	@Override
+	public String toString() {
+		return "FALSE";
+	}
 }

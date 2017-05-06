@@ -1,6 +1,8 @@
 package com.nhb.common.predicate;
 
 import java.util.Collection;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import com.nhb.common.predicate.array.In;
 import com.nhb.common.predicate.array.NotIn;
@@ -29,7 +31,7 @@ import com.nhb.common.predicate.object.getter.PointerAttributeGetterValue;
 import com.nhb.common.predicate.object.getter.StringAttributeGetterValue;
 import com.nhb.common.predicate.pointer.IsNotNull;
 import com.nhb.common.predicate.pointer.IsNull;
-import com.nhb.common.predicate.sql.SqlPredicateParser;
+import com.nhb.common.predicate.sql.SqlPredicateThreadLocal;
 import com.nhb.common.predicate.text.Contains;
 import com.nhb.common.predicate.text.Exactly;
 import com.nhb.common.predicate.text.ExactlyIgnoreCase;
@@ -388,7 +390,18 @@ public final class Predicates {
 		return new NotIn(new RawNumberValue(value), collection);
 	}
 
+	private static final Map<String, SqlPredicateThreadLocal> sqlPredicateThreadLocalBySQL = new ConcurrentHashMap<>();
+
+	private static final SqlPredicateThreadLocal getSqlPredicateThreadLocal(String sql) {
+		if (!sqlPredicateThreadLocalBySQL.containsKey(sql)) {
+			synchronized (sqlPredicateThreadLocalBySQL) {
+				sqlPredicateThreadLocalBySQL.put(sql, new SqlPredicateThreadLocal(sql));
+			}
+		}
+		return sqlPredicateThreadLocalBySQL.get(sql);
+	}
+
 	public static Predicate fromSQL(String sql) {
-		return SqlPredicateParser.parse(sql);
+		return getSqlPredicateThreadLocal(sql).get();
 	}
 }
