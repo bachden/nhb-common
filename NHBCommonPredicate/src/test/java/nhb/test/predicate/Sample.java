@@ -29,6 +29,7 @@ public class Sample {
 		private int age;
 		private String name;
 		private boolean isFemale;
+		private String sqrt;
 	}
 
 	public static void main(String[] args) {
@@ -36,15 +37,18 @@ public class Sample {
 		// Predicate predicate = filteredObject.get("age").between(10,
 		// 20).and(filteredObject.is("female")).build();
 
-		String sql = "age%2+4*age-1*5+6 != 0 and (not female or name = bar.foo.name) and bar IS NOT NULL and (name in ('noname', -1, bar.foo.name) or bar.foo.name like '[Ms]ario.*') and (sqrt bar.foo.value >= 4)";
+		String sql = "age%2+4*age-1*5+6 != 0 and `sqrt` = 'ok' and (not female or name = bar.foo.name) and bar IS NOT NULL and (name in ('noname', -1, bar.foo.name) or bar.foo.name like '[Ms]ario.*') and (sqrt bar.foo.value >= 4)";
 		Predicate predicate = Predicates.fromSQL(sql);
 
 		predicate = Predicates.fromSQL(sql);
+
+		System.out.println("Predicate: " + predicate.toString());
 
 		UserVO userVO = new UserVO();
 		userVO.setName("bachden");
 		userVO.setAge(23);
 		userVO.setFemale(false);
+		userVO.setSqrt("ok");
 
 		Foo foo = new Foo();
 		foo.setValue(27);

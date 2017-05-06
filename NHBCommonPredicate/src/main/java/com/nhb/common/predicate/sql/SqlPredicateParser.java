@@ -25,6 +25,8 @@ import com.nhb.common.predicate.object.getter.NumberAttributeGetterValue;
 import com.nhb.common.predicate.object.getter.PointerAttributeGetterValue;
 import com.nhb.common.predicate.object.getter.StringAttributeGetterValue;
 import com.nhb.common.predicate.predefined.FalsePredicate;
+import com.nhb.common.predicate.sql.exception.SqlPredicateInvalidOperatorException;
+import com.nhb.common.predicate.sql.exception.SqlPredicateSyntaxException;
 import com.nhb.common.predicate.text.Exactly;
 import com.nhb.common.predicate.text.Match;
 import com.nhb.common.predicate.text.NotExactly;
@@ -36,11 +38,11 @@ import com.nhb.common.predicate.value.Value;
 import com.nhb.common.predicate.value.primitive.RawNumberValue;
 import com.nhb.common.predicate.value.primitive.RawStringValue;
 import com.nhb.common.utils.StringUtils;
-import com.nhb.common.utils.TimeWatcher;
 
 public class SqlPredicateParser {
 
-//	private static final Logger logger = LoggerFactory.getLogger(SqlPredicateParser.class);
+	// private static final Logger logger =
+	// LoggerFactory.getLogger(SqlPredicateParser.class);
 
 	private static final char ESCAPE = '\\';
 	private static final char APOSTROPHE = '\'';
@@ -131,8 +133,8 @@ public class SqlPredicateParser {
 		}
 		// logger.debug("Input string: " + sql);
 
-		TimeWatcher timeWatcher = new TimeWatcher();
-		timeWatcher.reset();
+		// TimeWatcher timeWatcher = new TimeWatcher();
+		// timeWatcher.reset();
 
 		List<String> extracted = extractString(sql);
 		// logger.debug("Time to extract string: {}ms",
@@ -836,6 +838,9 @@ public class SqlPredicateParser {
 					if (!StringUtils.isRepresentNumber(localToken)) {
 						char[] localTokenChars = localToken.toCharArray();
 						for (int i = 0; i < localTokenChars.length; i++) {
+							if (i > 0 && localTokenChars[i - 1] == '`') {
+								continue;
+							}
 							for (String operator : SYMBOLIZE_OPERATORS) {
 								int opLength = operator.length();
 								if (opLength > localTokenChars.length - i) {
@@ -847,6 +852,14 @@ public class SqlPredicateParser {
 									if (opChars[j] != localTokenChars[i + j]) {
 										hasOperator = false;
 										break;
+									}
+								}
+								if (hasOperator && operator.equals(SQRT)) {
+									int index = i + opLength + 1;
+									Character nextChar = index < localTokenChars.length ? localTokenChars[index] : null;
+									if (nextChar != null && nextChar.charValue() != ' '
+											&& nextChar.charValue() != '(') {
+										hasOperator = false;
 									}
 								}
 								if (hasOperator) {

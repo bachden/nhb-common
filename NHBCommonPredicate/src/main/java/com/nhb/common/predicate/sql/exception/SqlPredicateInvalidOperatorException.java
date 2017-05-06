@@ -1,4 +1,4 @@
-package com.nhb.common.predicate.sql;
+package com.nhb.common.predicate.sql.exception;
 
 public class SqlPredicateInvalidOperatorException extends RuntimeException {
 
