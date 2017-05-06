@@ -23,10 +23,10 @@ import com.nhb.common.predicate.numeric.NotBetweenIncludeLeft;
 import com.nhb.common.predicate.numeric.NotBetweenIncludeRight;
 import com.nhb.common.predicate.numeric.NotEquals;
 import com.nhb.common.predicate.object.ObjectDependenceValue;
-import com.nhb.common.predicate.object.getter.BooleanAttributeGetter;
-import com.nhb.common.predicate.object.getter.NumberAttributeGetter;
-import com.nhb.common.predicate.object.getter.PointerAttributeGetter;
-import com.nhb.common.predicate.object.getter.StringAttributeGetter;
+import com.nhb.common.predicate.object.getter.BooleanAttributeGetterValue;
+import com.nhb.common.predicate.object.getter.NumberAttributeGetterValue;
+import com.nhb.common.predicate.object.getter.PointerAttributeGetterValue;
+import com.nhb.common.predicate.object.getter.StringAttributeGetterValue;
 import com.nhb.common.predicate.pointer.IsNotNull;
 import com.nhb.common.predicate.pointer.IsNull;
 import com.nhb.common.predicate.sql.SqlPredicateParser;
@@ -158,7 +158,7 @@ public final class Predicates {
 	}
 
 	public static Predicate not(String attribute) {
-		return not(new BooleanAttributeGetter(attribute));
+		return not(new BooleanAttributeGetterValue(attribute));
 	}
 
 	public static Predicate is(Value<Boolean> value) {
@@ -166,7 +166,7 @@ public final class Predicates {
 	}
 
 	public static Predicate is(String attribute) {
-		return is(new BooleanAttributeGetter(attribute));
+		return is(new BooleanAttributeGetterValue(attribute));
 	}
 
 	public static Predicate is(final Predicate predicate) {
@@ -194,11 +194,11 @@ public final class Predicates {
 	}
 
 	public static Predicate greaterThan(String attribute, NumberValue lowerBound) {
-		return greaterThan(new NumberAttributeGetter(attribute), lowerBound);
+		return greaterThan(new NumberAttributeGetterValue(attribute), lowerBound);
 	}
 
 	public static Predicate greaterThan(String attribute, Number value) {
-		return greaterThan(new NumberAttributeGetter(attribute), new RawNumberValue(value));
+		return greaterThan(new NumberAttributeGetterValue(attribute), new RawNumberValue(value));
 	}
 
 	public static Predicate greaterOrEquals(NumberValue value, NumberValue lowerBound) {
@@ -206,11 +206,11 @@ public final class Predicates {
 	}
 
 	public static Predicate greaterEqual(String attribute, NumberValue lowerBound) {
-		return greaterOrEquals(new NumberAttributeGetter(attribute), lowerBound);
+		return greaterOrEquals(new NumberAttributeGetterValue(attribute), lowerBound);
 	}
 
 	public static Predicate greaterOrEquals(String attribute, Number value) {
-		return greaterOrEquals(new NumberAttributeGetter(attribute), new RawNumberValue(value));
+		return greaterOrEquals(new NumberAttributeGetterValue(attribute), new RawNumberValue(value));
 	}
 
 	// *******
@@ -219,11 +219,11 @@ public final class Predicates {
 	}
 
 	public static Predicate lessThan(String attribute, NumberValue upperBound) {
-		return lessThan(new NumberAttributeGetter(attribute), upperBound);
+		return lessThan(new NumberAttributeGetterValue(attribute), upperBound);
 	}
 
 	public static Predicate lessThan(String attribute, Number value) {
-		return lessThan(new NumberAttributeGetter(attribute), new RawNumberValue(value));
+		return lessThan(new NumberAttributeGetterValue(attribute), new RawNumberValue(value));
 	}
 
 	public static Predicate lessEquals(NumberValue value, NumberValue upperBound) {
@@ -231,11 +231,11 @@ public final class Predicates {
 	}
 
 	public static Predicate lessEquals(String attribute, NumberValue upperBound) {
-		return lessEquals(new NumberAttributeGetter(attribute), upperBound);
+		return lessEquals(new NumberAttributeGetterValue(attribute), upperBound);
 	}
 
 	public static Predicate lessEquals(String attribute, Number value) {
-		return lessEquals(new NumberAttributeGetter(attribute), new RawNumberValue(value));
+		return lessEquals(new NumberAttributeGetterValue(attribute), new RawNumberValue(value));
 	}
 
 	// *******
@@ -258,12 +258,12 @@ public final class Predicates {
 
 	public static Predicate between(String attribute, NumberValue lowerBound, NumberValue upperBound,
 			boolean includeLeft, boolean includeRight) {
-		return between(new NumberAttributeGetter(attribute), lowerBound, upperBound, includeLeft, includeRight);
+		return between(new NumberAttributeGetterValue(attribute), lowerBound, upperBound, includeLeft, includeRight);
 	}
 
 	public static Predicate between(String attribute, Number lowerBound, Number upperBound, boolean includeLeft,
 			boolean includeRight) {
-		return between(new NumberAttributeGetter(attribute), new RawNumberValue(lowerBound),
+		return between(new NumberAttributeGetterValue(attribute), new RawNumberValue(lowerBound),
 				new RawNumberValue(upperBound), includeLeft, includeRight);
 	}
 
@@ -293,12 +293,12 @@ public final class Predicates {
 
 	public static Predicate notBetween(String attribute, NumberValue lowerBound, NumberValue upperBound,
 			boolean includeLeft, boolean includeRight) {
-		return notBetween(new NumberAttributeGetter(attribute), lowerBound, upperBound, includeLeft, includeRight);
+		return notBetween(new NumberAttributeGetterValue(attribute), lowerBound, upperBound, includeLeft, includeRight);
 	}
 
 	public static Predicate notBetween(String attribute, Number lowerBound, Number upperBound, boolean includeLeft,
 			boolean includeRight) {
-		return notBetween(new NumberAttributeGetter(attribute), new RawNumberValue(lowerBound),
+		return notBetween(new NumberAttributeGetterValue(attribute), new RawNumberValue(lowerBound),
 				new RawNumberValue(upperBound), includeLeft, includeRight);
 	}
 
@@ -309,11 +309,11 @@ public final class Predicates {
 	}
 
 	public static Predicate isNull(String attribute) {
-		return new IsNull(new PointerAttributeGetter(attribute));
+		return new IsNull(new PointerAttributeGetterValue(attribute));
 	}
 
 	public static Predicate notNull(String attribute) {
-		return new IsNotNull(new PointerAttributeGetter(attribute));
+		return new IsNotNull(new PointerAttributeGetterValue(attribute));
 	}
 
 	public static Predicate isNull() {
@@ -325,7 +325,7 @@ public final class Predicates {
 	}
 
 	public static Predicate exactly(String attribute, String value) {
-		return new Exactly(new StringAttributeGetter(attribute), new RawStringValue(value));
+		return new Exactly(new StringAttributeGetterValue(attribute), new RawStringValue(value));
 	}
 
 	public static Predicate exactly(Value<String> value1, Value<String> value2) {
@@ -337,23 +337,23 @@ public final class Predicates {
 	}
 
 	public static Predicate exactlyIgnoreCase(String attribute, String value) {
-		return new ExactlyIgnoreCase(new StringAttributeGetter(attribute), new RawStringValue(value));
+		return new ExactlyIgnoreCase(new StringAttributeGetterValue(attribute), new RawStringValue(value));
 	}
 
 	public static Predicate match(String attribute, String pattern) {
-		return new Match(new StringAttributeGetter(attribute), new RawStringValue(pattern));
+		return new Match(new StringAttributeGetterValue(attribute), new RawStringValue(pattern));
 	}
 
 	public static Predicate notMatch(String attribute, String pattern) {
-		return new NotMatch(new StringAttributeGetter(attribute), new RawStringValue(pattern));
+		return new NotMatch(new StringAttributeGetterValue(attribute), new RawStringValue(pattern));
 	}
 
 	public static Predicate contains(String attribute, String value) {
-		return new Contains(new StringAttributeGetter(attribute), new RawStringValue(value));
+		return new Contains(new StringAttributeGetterValue(attribute), new RawStringValue(value));
 	}
 
 	public static Predicate equals(String attribute, Number value) {
-		return new Equals(new NumberAttributeGetter(attribute), new RawNumberValue(value));
+		return new Equals(new NumberAttributeGetterValue(attribute), new RawNumberValue(value));
 	}
 
 	public static Predicate equals(StringValue value1, StringValue value2) {
@@ -361,11 +361,11 @@ public final class Predicates {
 	}
 
 	public static Predicate notEquals(String attribute, Number value) {
-		return new NotEquals(new NumberAttributeGetter(attribute), new RawNumberValue(value));
+		return new NotEquals(new NumberAttributeGetterValue(attribute), new RawNumberValue(value));
 	}
 
 	public static Predicate in(String attribute, Collection<?> collection) {
-		return new In(new PointerAttributeGetter(attribute), collection);
+		return new In(new PointerAttributeGetterValue(attribute), collection);
 	}
 
 	public static Predicate in(NumberValue value, Collection<?> collection) {
@@ -377,7 +377,7 @@ public final class Predicates {
 	}
 
 	public static Predicate notIn(String attribute, Collection<?> collection) {
-		return new NotIn(new PointerAttributeGetter(attribute), collection);
+		return new NotIn(new PointerAttributeGetterValue(attribute), collection);
 	}
 
 	public static Predicate notIn(NumberValue value, Collection<?> collection) {

@@ -13,10 +13,10 @@ public class Or extends LogicPredicate {
 	}
 
 	@Override
-	public boolean apply(Object obj) {
-		for (Value<Boolean> value : this.values) {
+	public Boolean get() {
+		for (Value<Boolean> value : this.getValues()) {
 			if (value instanceof ObjectDependence) {
-				((ObjectDependence) value).fill(obj);
+				((ObjectDependence) value).fill(getObject());
 			}
 			if (value.get()) {
 				return true;
@@ -28,7 +28,7 @@ public class Or extends LogicPredicate {
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
-		for (Value<Boolean> value : this.values) {
+		for (Value<Boolean> value : this.getValues()) {
 			if (sb.length() > 0) {
 				sb.append(" or ");
 			}

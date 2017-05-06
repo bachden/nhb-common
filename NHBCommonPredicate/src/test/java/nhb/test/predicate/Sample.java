@@ -37,7 +37,7 @@ public class Sample {
 		// 20).and(filteredObject.is("female")).build();
 
 		Predicate predicate = Predicates.fromSQL(//
-				"(age + 1) in (25,30, '\\'40') "//
+				"(1 + age + 1) between 20 and 30 "//
 						+ "and (not female or name = 'bachden') " //
 						+ "and bar IS NOT NULL " //
 						+ "and bar.foo.name like '[Ms]ario.*' " //

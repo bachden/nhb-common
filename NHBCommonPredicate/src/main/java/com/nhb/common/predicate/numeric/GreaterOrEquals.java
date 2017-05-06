@@ -1,6 +1,5 @@
 package com.nhb.common.predicate.numeric;
 
-import com.nhb.common.predicate.object.ObjectDependence;
 import com.nhb.common.predicate.value.NumberValue;
 
 public class GreaterOrEquals extends GreaterThan {
@@ -12,10 +11,12 @@ public class GreaterOrEquals extends GreaterThan {
 	}
 
 	@Override
-	public boolean apply(Object object) {
-		if (this.getValue() instanceof ObjectDependence) {
-			((ObjectDependence) this.getValue()).fill(object);
-		}
+	public Boolean get() {
 		return getComparator().compare(this.getValue().get(), this.getAnchorValue().get()) >= 0;
+	}
+
+	@Override
+	public String toString() {
+		return this.getValue().toString() + " >= " + this.getAnchorValue().toString();
 	}
 }

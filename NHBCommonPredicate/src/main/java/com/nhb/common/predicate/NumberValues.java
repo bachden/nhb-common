@@ -8,7 +8,7 @@ import com.nhb.common.predicate.math.Multiply;
 import com.nhb.common.predicate.math.Pow;
 import com.nhb.common.predicate.math.Sqrt;
 import com.nhb.common.predicate.math.Subtract;
-import com.nhb.common.predicate.object.getter.NumberAttributeGetter;
+import com.nhb.common.predicate.object.getter.NumberAttributeGetterValue;
 import com.nhb.common.predicate.value.NumberValue;
 import com.nhb.common.predicate.value.primitive.RawNumberValue;
 import com.nhb.common.utils.StringUtils;
@@ -25,7 +25,7 @@ public class NumberValues {
 			if (StringUtils.isRepresentNumber((String) value1)) {
 				value1 = new RawNumberValue(Double.valueOf((String) value1));
 			} else {
-				value1 = new NumberAttributeGetter((String) value1);
+				value1 = new NumberAttributeGetterValue((String) value1);
 			}
 		} else if (value1 instanceof Number) {
 			value1 = new RawNumberValue((Number) value1);
@@ -38,7 +38,7 @@ public class NumberValues {
 			if (StringUtils.isRepresentNumber((String) value2)) {
 				value2 = new RawNumberValue(Double.valueOf((String) value2));
 			} else {
-				value2 = new NumberAttributeGetter((String) value2);
+				value2 = new NumberAttributeGetterValue((String) value2);
 			}
 		} else if (value1 instanceof Number) {
 			value2 = new RawNumberValue((Number) value2);
@@ -60,7 +60,7 @@ public class NumberValues {
 			if (StringUtils.isRepresentNumber((String) value1)) {
 				value1 = new RawNumberValue(Double.valueOf((String) value1));
 			} else {
-				value1 = new NumberAttributeGetter((String) value1);
+				value1 = new NumberAttributeGetterValue((String) value1);
 			}
 		} else if (value1 instanceof Number) {
 			value1 = new RawNumberValue((Number) value1);
@@ -73,7 +73,7 @@ public class NumberValues {
 			if (StringUtils.isRepresentNumber((String) value2)) {
 				value2 = new RawNumberValue(Double.valueOf((String) value2));
 			} else {
-				value2 = new NumberAttributeGetter((String) value2);
+				value2 = new NumberAttributeGetterValue((String) value2);
 			}
 		} else if (value1 instanceof Number) {
 			value2 = new RawNumberValue((Number) value2);
@@ -95,7 +95,7 @@ public class NumberValues {
 			if (StringUtils.isRepresentNumber((String) value1)) {
 				value1 = new RawNumberValue(Double.valueOf((String) value1));
 			} else {
-				value1 = new NumberAttributeGetter((String) value1);
+				value1 = new NumberAttributeGetterValue((String) value1);
 			}
 		} else if (value1 instanceof Number) {
 			value1 = new RawNumberValue((Number) value1);
@@ -108,7 +108,7 @@ public class NumberValues {
 			if (StringUtils.isRepresentNumber((String) value2)) {
 				value2 = new RawNumberValue(Double.valueOf((String) value2));
 			} else {
-				value2 = new NumberAttributeGetter((String) value2);
+				value2 = new NumberAttributeGetterValue((String) value2);
 			}
 		} else if (value1 instanceof Number) {
 			value2 = new RawNumberValue((Number) value2);
@@ -130,7 +130,7 @@ public class NumberValues {
 			if (StringUtils.isRepresentNumber((String) value1)) {
 				value1 = new RawNumberValue(Double.valueOf((String) value1));
 			} else {
-				value1 = new NumberAttributeGetter((String) value1);
+				value1 = new NumberAttributeGetterValue((String) value1);
 			}
 		} else if (value1 instanceof Number) {
 			value1 = new RawNumberValue((Number) value1);
@@ -143,7 +143,7 @@ public class NumberValues {
 			if (StringUtils.isRepresentNumber((String) value2)) {
 				value2 = new RawNumberValue(Double.valueOf((String) value2));
 			} else {
-				value2 = new NumberAttributeGetter((String) value2);
+				value2 = new NumberAttributeGetterValue((String) value2);
 			}
 		} else if (value1 instanceof Number) {
 			value2 = new RawNumberValue((Number) value2);
@@ -165,7 +165,7 @@ public class NumberValues {
 			if (StringUtils.isRepresentNumber((String) value1)) {
 				value1 = new RawNumberValue(Double.valueOf((String) value1));
 			} else {
-				value1 = new NumberAttributeGetter((String) value1);
+				value1 = new NumberAttributeGetterValue((String) value1);
 			}
 		} else if (value1 instanceof Number) {
 			value1 = new RawNumberValue((Number) value1);
@@ -178,7 +178,7 @@ public class NumberValues {
 			if (StringUtils.isRepresentNumber((String) value2)) {
 				value2 = new RawNumberValue(Double.valueOf((String) value2));
 			} else {
-				value2 = new NumberAttributeGetter((String) value2);
+				value2 = new NumberAttributeGetterValue((String) value2);
 			}
 		} else if (value1 instanceof Number) {
 			value2 = new RawNumberValue((Number) value2);
@@ -200,7 +200,7 @@ public class NumberValues {
 			if (StringUtils.isRepresentNumber((String) value1)) {
 				value1 = new RawNumberValue(Double.valueOf((String) value1));
 			} else {
-				value1 = new NumberAttributeGetter((String) value1);
+				value1 = new NumberAttributeGetterValue((String) value1);
 			}
 		} else if (value1 instanceof Number) {
 			value1 = new RawNumberValue((Number) value1);
@@ -213,7 +213,7 @@ public class NumberValues {
 			if (StringUtils.isRepresentNumber((String) value2)) {
 				value2 = new RawNumberValue(Double.valueOf((String) value2));
 			} else {
-				value2 = new NumberAttributeGetter((String) value2);
+				value2 = new NumberAttributeGetterValue((String) value2);
 			}
 		} else if (value1 instanceof Number) {
 			value2 = new RawNumberValue((Number) value2);
@@ -235,7 +235,7 @@ public class NumberValues {
 			if (StringUtils.isRepresentNumber((String) value1)) {
 				value1 = new RawNumberValue(Double.valueOf((String) value1));
 			} else {
-				value1 = new NumberAttributeGetter((String) value1);
+				value1 = new NumberAttributeGetterValue((String) value1);
 			}
 		} else if (value1 instanceof Number) {
 			value1 = new RawNumberValue((Number) value1);
@@ -248,7 +248,7 @@ public class NumberValues {
 			if (StringUtils.isRepresentNumber((String) value2)) {
 				value2 = new RawNumberValue(Double.valueOf((String) value2));
 			} else {
-				value2 = new NumberAttributeGetter((String) value2);
+				value2 = new NumberAttributeGetterValue((String) value2);
 			}
 		} else if (value1 instanceof Number) {
 			value2 = new RawNumberValue((Number) value2);
@@ -270,7 +270,7 @@ public class NumberValues {
 			if (StringUtils.isRepresentNumber((String) value)) {
 				value = new RawNumberValue(Double.valueOf((String) value));
 			} else {
-				value = new NumberAttributeGetter((String) value);
+				value = new NumberAttributeGetterValue((String) value);
 			}
 		} else if (value instanceof Number) {
 			value = new RawNumberValue((Number) value);

@@ -11,13 +11,13 @@ public class NotExactly extends Exactly {
 	}
 
 	@Override
-	public boolean apply(Object object) {
-		return !super.apply(object);
+	public Boolean get() {
+		return !super.get();
 	}
 
 	@Override
 	public String toString() {
-		return this.value.toString() + " != " + valueToCompareWith;
+		return this.getValue().toString() + " != " + getAnchor();
 	}
 
 }

@@ -1,14 +1,13 @@
 package com.nhb.common.predicate.math;
 
 import com.nhb.common.predicate.object.ObjectDependence;
-import com.nhb.common.predicate.object.ObjectDependenceValue;
 import com.nhb.common.predicate.value.NumberValue;
 import com.nhb.common.predicate.value.primitive.RawNumberValue;
 
 import lombok.AccessLevel;
 import lombok.Getter;
 
-public abstract class SingleMemberOperator extends ObjectDependenceValue<Number> implements NumberValue, MathOperator {
+public abstract class SingleMemberOperator extends MathOperator implements NumberValue {
 
 	@Getter(AccessLevel.PROTECTED)
 	private NumberValue value;
@@ -34,10 +33,9 @@ public abstract class SingleMemberOperator extends ObjectDependenceValue<Number>
 	}
 
 	@Override
-	public void fill(Object object) {
-		super.fill(object);
+	protected void fill() {
 		if (this.value instanceof ObjectDependence) {
-			((ObjectDependence) this.value).fill(object);
+			((ObjectDependence) this.value).fill(getObject());
 		}
 	}
 

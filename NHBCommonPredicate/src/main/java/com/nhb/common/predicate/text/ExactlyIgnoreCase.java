@@ -1,6 +1,5 @@
 package com.nhb.common.predicate.text;
 
-import com.nhb.common.predicate.object.ObjectDependence;
 import com.nhb.common.predicate.value.Value;
 
 public class ExactlyIgnoreCase extends Exactly {
@@ -12,12 +11,9 @@ public class ExactlyIgnoreCase extends Exactly {
 	}
 
 	@Override
-	public boolean apply(Object object) {
-		if (this.value instanceof ObjectDependence) {
-			((ObjectDependence) this.value).fill(object);
-		}
-		String value = this.value.get();
-		String valueToCompareWith = this.valueToCompareWith.get();
+	public Boolean get() {
+		String value = this.getValue().get();
+		String valueToCompareWith = this.getAnchor().get();
 		if (value != null && valueToCompareWith != null) {
 			return value.equalsIgnoreCase(valueToCompareWith);
 		}
@@ -26,6 +22,6 @@ public class ExactlyIgnoreCase extends Exactly {
 
 	@Override
 	public String toString() {
-		return this.value.toString() + " = " + valueToCompareWith;
+		return this.getValue().toString() + " = " + getAnchor();
 	}
 }

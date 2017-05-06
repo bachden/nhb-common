@@ -1,31 +1,39 @@
 package com.nhb.common.predicate.text;
 
-import com.nhb.common.predicate.Predicate;
 import com.nhb.common.predicate.object.ObjectDependence;
+import com.nhb.common.predicate.object.ObjectDependencePredicate;
 import com.nhb.common.predicate.value.Value;
 
-abstract class TextPredicate implements Predicate, Value<Boolean>, ObjectDependence {
+import lombok.AccessLevel;
+import lombok.Getter;
+
+@Getter(AccessLevel.PROTECTED)
+abstract class TextPredicate extends ObjectDependencePredicate {
 
 	private static final long serialVersionUID = 2927039166426942119L;
 
-	protected Value<String> value;
-	private Object object;
+	private Value<String> value;
 
-	public TextPredicate(Value<String> value) {
+	private Value<String> anchor;
+
+	public TextPredicate(Value<String> value, Value<String> anchor) {
 		this.value = value;
+		this.anchor = anchor;
 	}
 
 	@Override
-	public void fill(Object object) {
-		this.object = object;
+	protected final void fill() {
+		if (this.value instanceof ObjectDependence) {
+			((ObjectDependence) this.value).fill(getObject());
+		}
+		if (this.anchor instanceof ObjectDependence) {
+			((ObjectDependence) anchor).fill(getObject());
+		}
+		this._fill();
 	}
 
-	protected Object getObject() {
-		return this.object;
+	protected void _fill() {
+		// do nothing
 	}
 
-	@Override
-	public Boolean get() {
-		return this.apply(getObject());
-	}
 }

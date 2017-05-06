@@ -1,44 +1,45 @@
 package com.nhb.common.predicate.pointer;
 
-import com.nhb.common.predicate.Predicate;
 import com.nhb.common.predicate.object.ObjectDependence;
-import com.nhb.common.predicate.object.getter.PointerAttributeGetter;
-import com.nhb.common.predicate.value.Value;
+import com.nhb.common.predicate.object.ObjectDependencePredicate;
+import com.nhb.common.predicate.object.getter.PointerAttributeGetterValue;
 
-public class IsNotNull implements Predicate, ObjectDependence, Value<Boolean> {
+import lombok.AccessLevel;
+import lombok.Getter;
+
+@Getter(AccessLevel.PROTECTED)
+public class IsNotNull extends ObjectDependencePredicate {
 
 	private static final long serialVersionUID = 7293242036653166493L;
-
-	private Object object;
-	private PointerAttributeGetter value;
+	private PointerAttributeGetterValue value;
 
 	public IsNotNull() {
-		// do nothing
+
 	}
 
-	public IsNotNull(PointerAttributeGetter value) {
+	public IsNotNull(PointerAttributeGetterValue value) {
+		if (value == null) {
+			throw new NullPointerException("Value cannot be null");
+		}
 		this.value = value;
 	}
 
 	@Override
-	public Boolean get() {
-		return this.apply(this.object);
-	}
-
-	@Override
-	public boolean apply(Object obj) {
-		if (this.value != null) {
-			if (this.value instanceof ObjectDependence) {
-				this.value.fill(obj);
-			}
-			return this.value.get() != null;
+	protected void fill() {
+		if (value == null) {
+			throw new NullPointerException("Value cannot be null");
 		}
-		return obj != null;
+		if (this.value instanceof ObjectDependence) {
+			this.value.fill(getObject());
+		}
 	}
 
 	@Override
-	public void fill(Object object) {
-		this.object = object;
+	public Boolean get() {
+		if (value == null) {
+			throw new NullPointerException("Value cannot be null");
+		}
+		return this.value.get() != null;
 	}
 
 	@Override

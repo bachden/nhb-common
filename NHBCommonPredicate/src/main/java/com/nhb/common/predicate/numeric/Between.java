@@ -1,36 +1,24 @@
 package com.nhb.common.predicate.numeric;
 
-import com.nhb.common.predicate.Predicate;
-import com.nhb.common.predicate.object.ObjectDependence;
-import com.nhb.common.predicate.utils.NumberComparator;
 import com.nhb.common.predicate.value.NumberValue;
 
-public class Between implements Predicate {
+public class Between extends TwoWayNumbericComparisionPredicate {
 
 	private static final long serialVersionUID = -4975458195604574385L;
 
-	private NumberComparator comparator = new NumberComparator();
-	private NumberValue lowerBound;
-	private NumberValue upperBound;
-	private NumberValue value;
-
 	public Between(NumberValue value, NumberValue lowerBound, NumberValue upperBound) {
-		this.value = value;
-		this.lowerBound = lowerBound;
-		this.upperBound = upperBound;
+		super(value, lowerBound, upperBound);
 	}
 
 	@Override
-	public boolean apply(Object object) {
-		if (this.value instanceof ObjectDependence) {
-			((ObjectDependence) this.value).fill(object);
-		}
-		return comparator.compare(this.value.get(), this.lowerBound.get()) > 0
-				&& comparator.compare(this.value.get(), this.upperBound.get()) < 0;
+	public Boolean get() {
+		return getComparator().compare(this.getValue().get(), this.getLowerBound().get()) > 0
+				&& getComparator().compare(this.getValue().get(), this.getUpperBound().get()) < 0;
 	}
 
 	@Override
 	public String toString() {
-		return this.value + " between " + this.lowerBound.toString() + " and " + this.upperBound;
+		return this.getValue() + " between " + this.getLowerBound().toString() + " and " + this.getUpperBound();
 	}
+
 }

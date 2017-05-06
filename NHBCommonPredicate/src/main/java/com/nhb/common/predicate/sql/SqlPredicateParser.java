@@ -1,6 +1,7 @@
 package com.nhb.common.predicate.sql;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -24,13 +25,16 @@ import com.nhb.common.predicate.numeric.GreaterThan;
 import com.nhb.common.predicate.numeric.LessOrEquals;
 import com.nhb.common.predicate.numeric.LessThan;
 import com.nhb.common.predicate.numeric.NotEquals;
-import com.nhb.common.predicate.object.getter.NumberAttributeGetter;
-import com.nhb.common.predicate.object.getter.StringAttributeGetter;
+import com.nhb.common.predicate.object.getter.BooleanAttributeGetterValue;
+import com.nhb.common.predicate.object.getter.NumberAttributeGetterValue;
+import com.nhb.common.predicate.object.getter.StringAttributeGetterValue;
 import com.nhb.common.predicate.predefined.FalsePredicate;
 import com.nhb.common.predicate.text.Exactly;
 import com.nhb.common.predicate.text.NotExactly;
+import com.nhb.common.predicate.value.BooleanValue;
 import com.nhb.common.predicate.value.NumberValue;
 import com.nhb.common.predicate.value.StringValue;
+import com.nhb.common.predicate.value.Value;
 import com.nhb.common.predicate.value.primitive.RawNumberValue;
 import com.nhb.common.predicate.value.primitive.RawStringValue;
 import com.nhb.common.utils.Initializer;
@@ -170,6 +174,13 @@ public class SqlPredicateParser {
 					case AND: {
 						Object obj2 = stack.pop();
 						Object obj1 = stack.pop();
+
+						if (!(obj1 instanceof BooleanValue)) {
+							if (obj1 instanceof String) {
+								obj1 = new BooleanAttributeGetterValue((String) obj1);
+							}
+						}
+
 						if (obj1 instanceof Predicate) {
 							if (obj2 instanceof Predicate) {
 								stack.push(Predicates.and((Predicate) obj1, (Predicate) obj2));
@@ -222,35 +233,18 @@ public class SqlPredicateParser {
 					case BETWEEN: {
 						Object upper = stack.pop();
 						Object lower = stack.pop();
-						Object attribute = stack.pop();
-						if (attribute instanceof String) {
-							if (StringUtils.isRepresentNumber((String) attribute)) {
-								stack.push(Predicates.between(new RawNumberValue(Double.valueOf((String) attribute)),
-										Double.valueOf((String) lower), Double.valueOf((String) upper), true, true));
-							} else {
-								stack.push(Predicates.between((String) attribute, Double.valueOf((String) lower),
-										Double.valueOf((String) upper), true, true));
-							}
-						} else {
-							throw new SqlPredicateSyntaxException("Syntax error near " + BETWEEN);
-						}
+						Object value = stack.pop();
+
+						Predicate predicate = genBetweenPredicate(upper, lower, value);
+						stack.push(predicate);
 						break;
 					}
 					case NOT_BETWEEN: {
 						Object upper = stack.pop();
 						Object lower = stack.pop();
 						Object value = stack.pop();
-						if (value instanceof String) {
-							if (StringUtils.isRepresentNumber((String) value)) {
-								stack.push(Predicates.notBetween(new RawNumberValue(Double.valueOf((String) value)),
-										Double.valueOf((String) lower), Double.valueOf((String) upper), true, true));
-							} else {
-								stack.push(Predicates.notBetween((String) value, Double.valueOf((String) lower),
-										Double.valueOf((String) upper), true, true));
-							}
-						} else {
-							throw new SqlPredicateSyntaxException("Syntax error near " + BETWEEN);
-						}
+						Predicate predicate = generateNotBetweenPredicate(upper, lower, value);
+						stack.push(predicate);
 						break;
 					}
 					case IN: {
@@ -418,8 +412,53 @@ public class SqlPredicateParser {
 
 	}
 
-	private static Predicate genEqualsPredicate(Object obj1, Object obj2, List<String> params) {
+	private static List<NumberValue> genBetweenNumberValues(Object upper, Object lower, Object value) {
+		if (upper instanceof String) {
+			if (StringUtils.isRepresentNumber((String) upper)) {
+				upper = new RawNumberValue(Double.valueOf((String) upper));
+			} else {
+				upper = new NumberAttributeGetterValue((String) upper);
+			}
+		}
 
+		if (lower instanceof String) {
+			if (StringUtils.isRepresentNumber((String) lower)) {
+				lower = new RawNumberValue(Double.valueOf((String) lower));
+			} else {
+				lower = new NumberAttributeGetterValue((String) lower);
+			}
+		}
+
+		if (value instanceof String) {
+			if (StringUtils.isRepresentNumber((String) value)) {
+				value = new RawNumberValue(Double.valueOf((String) value));
+			} else {
+				value = new NumberAttributeGetterValue((String) value);
+			}
+		}
+
+		if (!(value instanceof NumberValue) || !(lower instanceof NumberValue) || !(upper instanceof NumberValue)) {
+			throw new SqlPredicateSyntaxException("Syntax error near between");
+		}
+
+		return Arrays.asList((NumberValue) value, (NumberValue) lower, (NumberValue) upper);
+	}
+
+	private static Predicate genBetweenPredicate(Object upper, Object lower, Object value) {
+		List<NumberValue> numberValues = genBetweenNumberValues(upper, lower, value);
+		Predicate predicate = Predicates.between(numberValues.get(0), numberValues.get(1), numberValues.get(2), true,
+				true);
+		return predicate;
+	}
+
+	private static Predicate generateNotBetweenPredicate(Object upper, Object lower, Object value) {
+		List<NumberValue> numberValues = genBetweenNumberValues(upper, lower, value);
+		Predicate predicate = Predicates.notBetween(numberValues.get(0), numberValues.get(1), numberValues.get(2), true,
+				true);
+		return predicate;
+	}
+
+	private static List<Value<?>> genEqualsValues(Object obj1, Object obj2, List<String> params) {
 		if (obj1 instanceof String) {
 			if (StringUtils.isRepresentNumber((String) obj1)) {
 				obj1 = new RawNumberValue(Double.valueOf((String) obj1));
@@ -427,33 +466,45 @@ public class SqlPredicateParser {
 				int paramId = Integer.valueOf(((String) obj1).substring(1));
 				obj1 = new RawStringValue(params.get(paramId));
 			} else {
-				obj1 = new StringAttributeGetter((String) obj1);
+				obj1 = new StringAttributeGetterValue((String) obj1);
 			}
-		} else {
-			throw new SqlPredicateSyntaxException("Syntax error near = operator");
+		} else if (obj1 instanceof Number) {
+			obj1 = new RawNumberValue((Number) obj1);
 		}
 
-		Predicate predicate = new FalsePredicate();
 		if (obj2 instanceof String) {
 			if (StringUtils.isRepresentNumber((String) obj2)) {
 				obj2 = new RawNumberValue(Double.valueOf((String) obj2));
-				if (obj1 instanceof NumberValue) {
-					predicate = new Equals((NumberValue) obj1, (NumberValue) obj2);
-				}
 			} else if (((String) obj2).startsWith("$")) {
 				int paramId = Integer.valueOf(((String) obj2).substring(1));
 				obj2 = new RawStringValue(params.get(paramId));
-				if (obj1 instanceof StringValue) {
-					predicate = new Exactly((StringValue) obj1, (StringValue) obj2);
-				}
 			} else {
-				obj2 = new StringAttributeGetter((String) obj2);
-				if (obj1 instanceof StringValue) {
-					predicate = new Exactly((StringValue) obj1, (StringValue) obj2);
-				}
+				obj2 = new StringAttributeGetterValue((String) obj2);
+			}
+		} else if (obj2 instanceof Number) {
+			obj2 = new RawNumberValue((Number) obj2);
+		}
+
+		if (!(obj1 instanceof StringValue) //
+				&& !(obj1 instanceof NumberValue) //
+				&& !(obj2 instanceof StringValue) //
+				&& !(obj2 instanceof NumberValue)) {
+			throw new SqlPredicateSyntaxException("Syntax error near (not) equals");
+		}
+		return Arrays.asList((Value<?>) obj1, (Value<?>) obj2);
+	}
+
+	private static Predicate genEqualsPredicate(Object obj1, Object obj2, List<String> params) {
+		List<Value<?>> values = genEqualsValues(obj1, obj2, params);
+		Predicate predicate = new FalsePredicate();
+		if (values.get(0) instanceof StringValue) {
+			if (values.get(1) instanceof StringValue) {
+				return new Exactly((StringValue) values.get(0), (StringValue) values.get(1));
 			}
 		} else {
-			throw new SqlPredicateSyntaxException("Syntax error near = operator");
+			if (values.get(1) instanceof NumberValue) {
+				predicate = new Equals((NumberValue) values.get(0), (NumberValue) values.get(1));
+			}
 		}
 		return predicate;
 	}
@@ -463,14 +514,14 @@ public class SqlPredicateParser {
 			if (StringUtils.isRepresentNumber((String) obj1)) {
 				obj1 = new RawNumberValue(Double.valueOf((String) obj1));
 			} else {
-				obj1 = new NumberAttributeGetter((String) obj1);
+				obj1 = new NumberAttributeGetterValue((String) obj1);
 			}
 		}
 
 		if (obj2 instanceof String) {
 			obj2 = new RawNumberValue(Double.valueOf((String) obj2));
 		} else {
-			obj2 = new NumberAttributeGetter((String) obj1);
+			obj2 = new NumberAttributeGetterValue((String) obj1);
 		}
 
 		if (!(obj1 instanceof NumberValue) || !(obj2 instanceof NumberValue)) {
@@ -480,41 +531,16 @@ public class SqlPredicateParser {
 	}
 
 	private static Predicate genNotEqualsPredicate(Object obj1, Object obj2, List<String> params) {
-
-		if (obj1 instanceof String) {
-			if (StringUtils.isRepresentNumber((String) obj1)) {
-				obj1 = new RawNumberValue(Double.valueOf((String) obj1));
-			} else if (((String) obj1).startsWith("$")) {
-				int paramId = Integer.valueOf(((String) obj1).substring(1));
-				obj1 = new RawStringValue(params.get(paramId));
-			} else {
-				obj1 = new StringAttributeGetter((String) obj1);
-			}
-		} else if (!(obj1 instanceof NumberValue) && !(obj1 instanceof StringValue)) {
-			throw new SqlPredicateSyntaxException("Syntax error near != operator");
-		}
-
+		List<Value<?>> values = genEqualsValues(obj1, obj2, params);
 		Predicate predicate = new FalsePredicate();
-		if (obj2 instanceof String) {
-			if (StringUtils.isRepresentNumber((String) obj2)) {
-				obj2 = new RawNumberValue(Double.valueOf((String) obj2));
-				if (obj1 instanceof NumberValue) {
-					predicate = new NotEquals((NumberValue) obj1, (NumberValue) obj2);
-				}
-			} else if (((String) obj2).startsWith("$")) {
-				int paramId = Integer.valueOf(((String) obj2).substring(1));
-				obj2 = new RawStringValue(params.get(paramId));
-				if (obj1 instanceof StringValue) {
-					predicate = new NotExactly((StringValue) obj1, (StringValue) obj2);
-				}
-			} else {
-				obj2 = new StringAttributeGetter((String) obj2);
-				if (obj1 instanceof StringValue) {
-					predicate = new NotExactly((StringValue) obj1, (StringValue) obj2);
-				}
+		if (values.get(0) instanceof StringValue) {
+			if (values.get(1) instanceof StringValue) {
+				return new NotExactly((StringValue) values.get(0), (StringValue) values.get(1));
 			}
 		} else {
-			throw new SqlPredicateSyntaxException("Syntax error near != operator");
+			if (values.get(1) instanceof NumberValue) {
+				predicate = new NotEquals((NumberValue) values.get(0), (NumberValue) values.get(1));
+			}
 		}
 		return predicate;
 	}
@@ -657,35 +683,41 @@ public class SqlPredicateParser {
 			String[] splittedBySpace = sql.split(" ");
 			List<String> results = new ArrayList<>();
 			for (String token : splittedBySpace) {
-				System.out.println("checking token " + token);
-				List<String> localTokens = new ArrayList<>();
-				int lastIndex = 0;
+
 				char[] chars = token.toCharArray();
 
-				if (token.equalsIgnoreCase("4")) {
-					System.out.println("just for test");
-				}
-
+				List<Integer> indexes = new ArrayList<>();
 				for (int i = 0; i < chars.length; i++) {
 					char c = chars[i];
 					if (c == OPENING_PARENTHESES || c == CLOSING_PARENTHESES || c == COMMA) {
-						if (lastIndex < i) {
-							localTokens.add(token.substring(lastIndex, i));
-						}
-						if (c != COMMA) {
-							localTokens.add(String.valueOf(c));
-						}
-						lastIndex = i + 1;
+						indexes.add(i);
 					}
 				}
 
-				if (lastIndex < chars.length - 1) {
-					localTokens.add(token.substring(lastIndex, chars.length));
-				} else if (isOperator(token)) {
+				List<String> localTokens = new ArrayList<>();
+				if (indexes.size() > 0) {
+					int lastIndex = 0;
+					for (int index : indexes) {
+						char c = chars[index];
+						if (index == 0 && lastIndex == 0 && c != COMMA) {
+							localTokens.add(String.valueOf(c));
+							lastIndex = index + 1;
+							if (lastIndex == chars.length - 1) {
+								localTokens.add(String.valueOf(chars[index + 1]));
+							}
+						} else {
+							localTokens.add(token.substring(lastIndex, index));
+							if (c != COMMA) {
+								localTokens.add(String.valueOf(c));
+							}
+							lastIndex = index + 1;
+						}
+					}
+				} else {
 					localTokens.add(token);
-				} else if (localTokens.size() == 0) {
-					results.add(token);
 				}
+
+				logger.debug("Token: {} --> local tokens: {}", token, localTokens);
 
 				for (String str : localTokens) {
 					boolean hasOperator = false;

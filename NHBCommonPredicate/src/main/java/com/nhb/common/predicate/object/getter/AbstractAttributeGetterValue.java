@@ -6,22 +6,22 @@ import com.nhb.common.predicate.object.AttributeGetter;
 import com.nhb.common.predicate.value.Value;
 import com.nhb.common.utils.ObjectUtils;
 
-public class AbstractAttributeGetter<Type> implements AttributeGetter, Value<Type> {
+public class AbstractAttributeGetterValue<Type> implements AttributeGetter, Value<Type> {
 
 	private String attribute;
 	private Object object;
 	private boolean allowMapDetect = true;
 
-	public AbstractAttributeGetter() {
+	public AbstractAttributeGetterValue() {
 		// do nothing
 	}
 
-	public AbstractAttributeGetter(String attribute) {
+	public AbstractAttributeGetterValue(String attribute) {
 		this();
 		this.setAttribute(attribute);
 	}
 
-	public AbstractAttributeGetter(String attribute, Object object) {
+	public AbstractAttributeGetterValue(String attribute, Object object) {
 		this(attribute);
 		this.fill(object);
 	}

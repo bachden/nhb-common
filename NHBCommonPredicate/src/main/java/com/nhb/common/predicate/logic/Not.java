@@ -1,29 +1,22 @@
 package com.nhb.common.predicate.logic;
 
-import com.nhb.common.predicate.Predicate;
-import com.nhb.common.predicate.object.ObjectDependence;
 import com.nhb.common.predicate.value.Value;
 
-public class Not implements Predicate {
+public class Not extends LogicPredicate {
 
 	private static final long serialVersionUID = 1462652965842662052L;
 
-	private Value<Boolean> value;
-
 	public Not(Value<Boolean> value) {
-		this.value = value;
+		super(value);
 	}
 
 	@Override
-	public boolean apply(Object obj) {
-		if (value instanceof ObjectDependence) {
-			((ObjectDependence) value).fill(obj);
-		}
-		return !value.get();
+	public Boolean get() {
+		return !this.getValues().get(0).get();
 	}
 
 	@Override
 	public String toString() {
-		return "not " + this.value;
+		return "not " + this.getValues().get(0).toString();
 	}
 }

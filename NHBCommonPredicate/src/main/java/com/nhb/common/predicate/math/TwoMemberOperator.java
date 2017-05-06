@@ -2,21 +2,17 @@ package com.nhb.common.predicate.math;
 
 import com.nhb.common.predicate.object.AttributeGetter;
 import com.nhb.common.predicate.object.ObjectDependence;
-import com.nhb.common.predicate.object.ObjectDependenceValue;
 import com.nhb.common.predicate.value.NumberValue;
 import com.nhb.common.predicate.value.primitive.RawNumberValue;
 
 import lombok.Getter;
 import lombok.Setter;
 
-public abstract class TwoMemberOperator extends ObjectDependenceValue<Number> implements NumberValue, MathOperator {
+@Setter
+@Getter
+public abstract class TwoMemberOperator extends MathOperator implements NumberValue {
 
-	@Setter
-	@Getter
 	private NumberValue value1;
-
-	@Setter
-	@Getter
 	private NumberValue value2;
 
 	protected TwoMemberOperator() {
@@ -29,13 +25,12 @@ public abstract class TwoMemberOperator extends ObjectDependenceValue<Number> im
 	}
 
 	@Override
-	public void fill(Object object) {
-		super.fill(object);
+	protected void fill() {
 		if (this.value1 instanceof ObjectDependence) {
-			((ObjectDependence) this.value1).fill(object);
+			((ObjectDependence) this.value1).fill(getObject());
 		}
 		if (this.value2 instanceof ObjectDependence) {
-			((ObjectDependence) this.value2).fill(object);
+			((ObjectDependence) this.value2).fill(getObject());
 		}
 	}
 

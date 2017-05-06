@@ -1,8 +1,16 @@
 package com.nhb.common.predicate.math;
 
-import com.nhb.common.predicate.object.ObjectDependence;
+import com.nhb.common.predicate.object.ObjectDependenceValue;
 
-public interface MathOperator extends ObjectDependence {
+public abstract class MathOperator extends ObjectDependenceValue<Number> {
 
-	String getSymbol();
+	@Override
+	public final void fill(Object object) {
+		super.fill(object);
+		this.fill();
+	}
+
+	protected abstract void fill();
+
+	public abstract String getSymbol();
 }

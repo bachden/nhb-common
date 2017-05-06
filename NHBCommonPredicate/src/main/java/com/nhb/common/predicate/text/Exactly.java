@@ -1,26 +1,23 @@
 package com.nhb.common.predicate.text;
 
-import com.nhb.common.predicate.object.ObjectDependence;
 import com.nhb.common.predicate.value.Value;
 
+import lombok.AccessLevel;
+import lombok.Getter;
+
+@Getter(AccessLevel.PROTECTED)
 public class Exactly extends TextPredicate {
 
 	private static final long serialVersionUID = 2233578312936754365L;
 
-	protected Value<String> valueToCompareWith;
-
 	public Exactly(Value<String> value, Value<String> valueToCompareWith) {
-		super(value);
-		this.valueToCompareWith = valueToCompareWith;
+		super(value, valueToCompareWith);
 	}
 
 	@Override
-	public boolean apply(Object object) {
-		if (this.value instanceof ObjectDependence) {
-			((ObjectDependence) this.value).fill(object);
-		}
-		String value = this.value.get();
-		String valueToCompareWith = this.valueToCompareWith.get();
+	public Boolean get() {
+		String value = this.getValue().get();
+		String valueToCompareWith = this.getAnchor().get();
 		if (value != null && valueToCompareWith != null) {
 			return value.equals(valueToCompareWith);
 		}
@@ -29,7 +26,7 @@ public class Exactly extends TextPredicate {
 
 	@Override
 	public String toString() {
-		return this.value.toString() + " = " + valueToCompareWith;
+		return this.getValue().toString() + " = " + getAnchor();
 	}
 
 }
