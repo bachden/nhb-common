@@ -3,10 +3,11 @@ package com.nhb.common.predicate.value.primitive;
 import java.util.Collection;
 
 import com.nhb.common.predicate.object.ObjectDependence;
+import com.nhb.common.predicate.object.ObjectDependenceValue;
 import com.nhb.common.predicate.value.CollectionValue;
 import com.nhb.common.predicate.value.RawValue;
 
-public class RawCollectionValue implements CollectionValue, RawValue, ObjectDependence {
+public class RawCollectionValue extends ObjectDependenceValue<Collection<?>> implements CollectionValue, RawValue {
 
 	private Collection<?> collection;
 
@@ -24,11 +25,11 @@ public class RawCollectionValue implements CollectionValue, RawValue, ObjectDepe
 	}
 
 	@Override
-	public void fill(Object object) {
+	protected void fill() {
 		if (this.collection != null) {
 			for (Object entry : this.collection) {
 				if (entry instanceof ObjectDependence) {
-					((ObjectDependence) entry).fill(object);
+					((ObjectDependence) entry).fill(getObject());
 				}
 			}
 		}
@@ -53,6 +54,6 @@ public class RawCollectionValue implements CollectionValue, RawValue, ObjectDepe
 			}
 		}
 		sb.append(")");
-		return super.toString();
+		return sb.toString();
 	}
 }
