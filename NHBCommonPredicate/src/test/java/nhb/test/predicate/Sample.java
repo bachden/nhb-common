@@ -3,6 +3,7 @@ package nhb.test.predicate;
 import com.nhb.common.predicate.Predicate;
 import com.nhb.common.predicate.Predicates;
 import com.nhb.common.utils.Initializer;
+import com.nhb.common.utils.TimeWatcher;
 
 import lombok.Data;
 
@@ -37,7 +38,7 @@ public class Sample {
 		// Predicate predicate = filteredObject.get("age").between(10,
 		// 20).and(filteredObject.is("female")).build();
 
-		String sql = "age%2+4*age-1*5+6 != 0 and `sqrt` = 'ok' and (not female or name = bar.foo.name) and bar IS NOT NULL and (name in ('noname', -1, bar.foo.name) or bar.foo.name like '[Ms]ario.*') and (sqrt bar.foo.value >= 4)";
+		String sql = "age%2+4*age-1*5+6 != 0 and (1+2^4) % 5 = 1 and `sqrt` = 'ok' and (not female or name = bar.foo.name) and bar IS NOT NULL and (name in ('noname', -1, bar.foo.name) or bar.foo.name like '[Ms]ario.*') and (sqrt bar.foo.value >= 4)";
 		Predicate predicate = Predicates.fromSQL(sql);
 
 		predicate = Predicates.fromSQL(sql);
@@ -59,7 +60,11 @@ public class Sample {
 
 		userVO.setBar(bar);
 
-		System.out.println("Is valid user: " + predicate.apply(userVO));
+		TimeWatcher timeWatcher = new TimeWatcher();
+		timeWatcher.reset();
+		boolean validUser = predicate.apply(userVO);
+		long time = timeWatcher.endLapMillis();
+		System.out.println("Is valid user: " + validUser + " --> time: " + time + "ms");
 	}
 
 }

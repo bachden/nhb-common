@@ -11,6 +11,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.nhb.common.predicate.NumberValues;
 import com.nhb.common.predicate.Predicate;
 import com.nhb.common.predicate.Predicates;
@@ -41,8 +44,7 @@ import com.nhb.common.utils.StringUtils;
 
 public class SqlPredicateParser {
 
-	// private static final Logger logger =
-	// LoggerFactory.getLogger(SqlPredicateParser.class);
+	private static final Logger logger = LoggerFactory.getLogger(SqlPredicateParser.class);
 
 	private static final char ESCAPE = '\\';
 	private static final char APOSTROPHE = '\'';
@@ -163,6 +165,7 @@ public class SqlPredicateParser {
 
 	private static Predicate toPredicate(List<String> prefixTokens, List<String> params) {
 		if (prefixTokens != null) {
+			logger.debug("------------- PREPARE PREDICATE -------------");
 			Stack<Object> stack = new Stack<>();
 			while (prefixTokens.size() > 0) {
 				String token = prefixTokens.remove(0);
@@ -434,8 +437,7 @@ public class SqlPredicateParser {
 						break;
 					}
 					}
-					// logger.debug("Operator [" + token.toUpperCase() + "] -->
-					// " + stack.peek());
+					logger.debug("Operator [" + token.toUpperCase() + "] --> " + stack.peek());
 				}
 			}
 			return (Predicate) stack.pop();
@@ -673,78 +675,70 @@ public class SqlPredicateParser {
 
 	private static List<String> toPrefix(List<String> tokens) {
 		if (tokens != null) {
+			logger.debug("------------- PREPARE PREFIX -------------");
 			Stack<String> stack = new Stack<>();
 			Stack<String> output = new Stack<>();
 			for (String token : tokens) {
-				// logger.debug("**** " + token + " ****");
+				logger.debug("**** [" + token + "] ****");
 				if (token.equals("(")) {
-					// logger.debug("\tFound openParentheses, push to stack");
+					logger.debug("\tFound openParentheses, push to stack");
 					stack.push(token);
 				} else if (token.equals(")")) {
-					// logger.debug("\tFound closing parentheses, pop all from
-					// stack until found open");
+					logger.debug("\tFound closing parentheses, pop all from stack until found open");
 					if (stack.size() > 0) {
 						String stackHead = stack.pop();
 						while (!stackHead.equals("(")) {
-							// logger.debug("\tPop " + stackHead + " from stack
-							// --> add to output");
+							logger.debug("\tPop " + stackHead + " from stack --> add to output");
 							output.push(stackHead);
 							stackHead = stack.pop();
 						}
 					}
 				} else if (isOperator(token)) {
-					// logger.debug("\tFound operator " + token + ", checking
-					// stack head");
+					logger.debug("\tFound operator (" + token + ") --> checking stack head");
 					String stackHead = stack.size() > 0 ? stack.peek() : null;
 					if (isOperator(stackHead)) {
-						// logger.debug("\tStack head (" + stackHead + ") is
-						// operator, checking precedence...");
+						logger.debug("\tStack head (" + stackHead + ") is operator, checking precedence...");
 						if (getOperatorPrecedence(stackHead) >= getOperatorPrecedence(token)) {
 							stackHead = stack.pop();
-							// logger.debug("\tStack head has higher (or equals)
-							// precedence, pop stack (" + stackHead
-							// + ") and push to output, put new token (" + token
-							// + ") to stack");
+							logger.debug("\tStack head has higher (or equals) precedence, pop stack (" + stackHead
+									+ ") and push to output");
 
 							output.push(stackHead);
 							// nếu token hiện tại không phải là math opt và
 							// stackHead lại là math opt --> bốc tất cả
 							// stackHead còn là math opt
 							if (!MATH_OPERATORS.contains(token) && MATH_OPERATORS.contains(stackHead)) {
-								// logger.debug("\tFound non-math operator {},
-								// checking stack head for math operator",
-								// token);
+								logger.debug(
+										"\t({}) is non-math operator, checking stack head for remaining math operators",
+										token);
 								while (stack.size() > 0 && MATH_OPERATORS.contains(stack.peek())) {
 									stackHead = stack.pop();
-									// logger.debug("\tPop {} from stack and
-									// push to output", stackHead);
+									logger.debug("\tPop {} from stack and push to output", stackHead);
 									output.push(stackHead);
 								}
 							}
-
+							logger.debug("\tPut new operator (" + token + ") to stack");
 							stack.push(token);
 						} else {
-							// logger.debug("\tStack head has lower precedence,
-							// push token (" + token + ") to stack...");
+							logger.debug("\tStack head has lower precedence, push token (" + token + ") to stack...");
 							stack.push(token);
 						}
 					} else {
-						// logger.debug("\tStack head (" + stackHead + ") is not
-						// a operator, push token " + token
-						// + " to stack");
+						logger.debug("\tStack head (" + stackHead + ") is not a operator, push token " + token
+								+ " to stack");
 						stack.push(token);
 					}
 				} else {
-					// logger.debug("\tFound operand " + token + " --> push to
-					// output");
+					logger.debug("\tFound operand " + token + " --> push to output");
 					output.push(token);
 				}
-				// logger.debug("\tStack: " + stack);
-				// logger.debug("\tOutput: " + output);
+				logger.debug("\tStack: " + stack);
+				logger.debug("\tOutput: " + output);
 			}
 			while (stack.size() > 0) {
 				output.push(stack.pop());
 			}
+			logger.debug("******** Prefix expression: \n{}", output);
 			return output;
 		}
 		return null;
