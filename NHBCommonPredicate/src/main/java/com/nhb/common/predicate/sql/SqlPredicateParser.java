@@ -786,8 +786,7 @@ public class SqlPredicateParser {
 			if (tokens.get(i).equalsIgnoreCase(IN) || tokens.get(i).equalsIgnoreCase(NOT_IN)) {
 				if (!tokens.get(i + 1).equals("(")) {
 					inIndexes.add(i);
-					inToSizeMap.put(i, i - 2);
-					continue;
+					inToSizeMap.put(i, -1);
 				} else {
 					inIndexes.add(i);
 					for (int j = i + 2; j < tokens.size(); j++) {
@@ -803,7 +802,9 @@ public class SqlPredicateParser {
 		for (int i = inIndexes.size() - 1; i >= 0; i--) {
 			int index = inIndexes.get(i);
 			int listSize = inToSizeMap.get(index);
-			tokens.add(index + listSize + 3, listSize < 0 ? "1*" : String.valueOf(listSize));
+			int position = index + (listSize == -1 ? 2 : (listSize + 3));
+			String listSizeValue = (listSize == -1) ? "1*" : String.valueOf(listSize);
+			tokens.add(position, listSizeValue);
 		}
 	}
 
