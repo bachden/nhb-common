@@ -24,6 +24,7 @@ import com.nhb.common.predicate.numeric.LessOrEquals;
 import com.nhb.common.predicate.numeric.LessThan;
 import com.nhb.common.predicate.numeric.NotEquals;
 import com.nhb.common.predicate.object.getter.BooleanAttributeGetterValue;
+import com.nhb.common.predicate.object.getter.CollectionAttributeGetterValue;
 import com.nhb.common.predicate.object.getter.NumberAttributeGetterValue;
 import com.nhb.common.predicate.object.getter.PointerAttributeGetterValue;
 import com.nhb.common.predicate.object.getter.StringAttributeGetterValue;
@@ -35,9 +36,11 @@ import com.nhb.common.predicate.text.Match;
 import com.nhb.common.predicate.text.NotExactly;
 import com.nhb.common.predicate.text.NotMatch;
 import com.nhb.common.predicate.value.BooleanValue;
+import com.nhb.common.predicate.value.CollectionValue;
 import com.nhb.common.predicate.value.NumberValue;
 import com.nhb.common.predicate.value.StringValue;
 import com.nhb.common.predicate.value.Value;
+import com.nhb.common.predicate.value.primitive.RawCollectionValue;
 import com.nhb.common.predicate.value.primitive.RawNumberValue;
 import com.nhb.common.predicate.value.primitive.RawStringValue;
 import com.nhb.common.utils.StringUtils;
@@ -150,7 +153,7 @@ public class SqlPredicateParser {
 		// logger.debug("Time to split: {}ms", timeWatcher.endLapMillis());
 
 		normalize(tokens);
-		// logger.debug("Time to normalize: {}ms", timeWatcher.endLapMillis());
+		logger.debug("Tokens after normalized: {}", tokens);
 
 		List<String> prefixTokens = toPrefix(tokens);
 		// logger.debug("Time to convert tokens to prefix: {}ms",
@@ -218,29 +221,40 @@ public class SqlPredicateParser {
 					case IN: {
 						Object size = stack.pop();
 						Predicate predicate = null;
-						List<Object> collection = new ArrayList<>();
-						for (int i = 0; i < Integer.valueOf((String) size); i++) {
-							String entry = (String) stack.pop();
-							if (entry.startsWith("$")) {
-								collection.add(0, params.get(Integer.valueOf(entry.substring(1))));
-							} else if (StringUtils.isRepresentNumber(entry)) {
-								collection.add(0, Double.valueOf(entry));
+						CollectionValue collectionValue = null;
+						if (size instanceof String) {
+							String sizeStr = (String) size;
+							if (sizeStr.equalsIgnoreCase("1*")) {
+								collectionValue = new CollectionAttributeGetterValue((String) stack.pop());
 							} else {
-								collection.add(0, new PointerAttributeGetterValue(entry));
+								List<Object> collection = new ArrayList<>();
+								for (int i = 0; i < Integer.valueOf((String) size); i++) {
+									String entry = (String) stack.pop();
+									if (entry.startsWith("$")) {
+										collection.add(0, params.get(Integer.valueOf(entry.substring(1))));
+									} else if (StringUtils.isRepresentNumber(entry)) {
+										collection.add(0, Double.valueOf(entry));
+									} else {
+										collection.add(0, new PointerAttributeGetterValue(entry));
+									}
+								}
+								collectionValue = new RawCollectionValue(collection);
 							}
+						} else {
+							throw new SqlPredicateSyntaxException("Syntax error near IN operator");
 						}
 						Object obj = stack.pop();
 						if (obj instanceof Value) {
-							predicate = Predicates.in((Value<?>) obj, collection);
+							predicate = Predicates.in((Value<?>) obj, collectionValue);
 						} else if (obj instanceof Number) {
-							predicate = Predicates.in((Number) obj, collection);
+							predicate = Predicates.in((Number) obj, collectionValue);
 						} else if (obj instanceof String) {
 							String str = (String) obj;
 							if (str.startsWith("$")) {
 								str = params.get(Integer.valueOf(str.substring(1)));
-								predicate = Predicates.in(new RawStringValue(str), collection);
+								predicate = Predicates.in(new RawStringValue(str), collectionValue);
 							} else {
-								predicate = Predicates.in(new PointerAttributeGetterValue(str), collection);
+								predicate = Predicates.in(new PointerAttributeGetterValue(str), collectionValue);
 							}
 						} else {
 							throw new SqlPredicateSyntaxException("Syntax error near IN operator");
@@ -251,29 +265,40 @@ public class SqlPredicateParser {
 					case NOT_IN: {
 						Object size = stack.pop();
 						Predicate predicate = null;
-						List<Object> collection = new ArrayList<>();
-						for (int i = 0; i < Integer.valueOf((String) size); i++) {
-							String entry = (String) stack.pop();
-							if (entry.startsWith("$")) {
-								collection.add(0, params.get(Integer.valueOf(entry.substring(1))));
-							} else if (StringUtils.isRepresentNumber(entry)) {
-								collection.add(0, Double.valueOf(entry));
+						CollectionValue collectionValue = null;
+						if (size instanceof String) {
+							String sizeStr = (String) size;
+							if (sizeStr.equalsIgnoreCase("1*")) {
+								collectionValue = new CollectionAttributeGetterValue((String) stack.pop());
 							} else {
-								collection.add(0, new PointerAttributeGetterValue(entry));
+								List<Object> collection = new ArrayList<>();
+								for (int i = 0; i < Integer.valueOf((String) size); i++) {
+									String entry = (String) stack.pop();
+									if (entry.startsWith("$")) {
+										collection.add(0, params.get(Integer.valueOf(entry.substring(1))));
+									} else if (StringUtils.isRepresentNumber(entry)) {
+										collection.add(0, Double.valueOf(entry));
+									} else {
+										collection.add(0, new PointerAttributeGetterValue(entry));
+									}
+								}
+								collectionValue = new RawCollectionValue(collection);
 							}
+						} else {
+							throw new SqlPredicateSyntaxException("Syntax error near IN operator");
 						}
 						Object obj = stack.pop();
 						if (obj instanceof Value) {
-							predicate = Predicates.notIn((Value<?>) obj, collection);
+							predicate = Predicates.notIn((Value<?>) obj, collectionValue);
 						} else if (obj instanceof Number) {
-							predicate = Predicates.notIn((Number) obj, collection);
+							predicate = Predicates.notIn((Number) obj, collectionValue);
 						} else if (obj instanceof String) {
 							String str = (String) obj;
 							if (str.startsWith("$")) {
 								str = params.get(Integer.valueOf(str.substring(1)));
-								predicate = Predicates.notIn(new RawStringValue(str), collection);
+								predicate = Predicates.notIn(new RawStringValue(str), collectionValue);
 							} else {
-								predicate = Predicates.notIn(new PointerAttributeGetterValue(str), collection);
+								predicate = Predicates.notIn(new PointerAttributeGetterValue(str), collectionValue);
 							}
 						} else {
 							throw new SqlPredicateSyntaxException("Syntax error near NOT IN operator");
@@ -760,13 +785,16 @@ public class SqlPredicateParser {
 		for (int i = 0; i < tokens.size(); i++) {
 			if (tokens.get(i).equalsIgnoreCase(IN) || tokens.get(i).equalsIgnoreCase(NOT_IN)) {
 				if (!tokens.get(i + 1).equals("(")) {
-					throw new SqlPredicateSyntaxException();
-				}
-				inIndexes.add(i);
-				for (int j = i + 2; j < tokens.size(); j++) {
-					if (tokens.get(j).equals(")")) {
-						inToSizeMap.put(i, j - i - 2);
-						break;
+					inIndexes.add(i);
+					inToSizeMap.put(i, i - 2);
+					continue;
+				} else {
+					inIndexes.add(i);
+					for (int j = i + 2; j < tokens.size(); j++) {
+						if (tokens.get(j).equals(")")) {
+							inToSizeMap.put(i, j - i - 2);
+							break;
+						}
 					}
 				}
 			}
@@ -775,7 +803,7 @@ public class SqlPredicateParser {
 		for (int i = inIndexes.size() - 1; i >= 0; i--) {
 			int index = inIndexes.get(i);
 			int listSize = inToSizeMap.get(index);
-			tokens.add(index + listSize + 3, String.valueOf(listSize));
+			tokens.add(index + listSize + 3, listSize < 0 ? "1*" : String.valueOf(listSize));
 		}
 	}
 

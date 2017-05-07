@@ -11,8 +11,4 @@ public class StringAttributeGetterValue extends AbstractAttributeGetterValue<Str
 	public StringAttributeGetterValue(String attribute) {
 		super(attribute);
 	}
-
-	public StringAttributeGetterValue(String attribute, Object object) {
-		super(attribute, object);
-	}
 }

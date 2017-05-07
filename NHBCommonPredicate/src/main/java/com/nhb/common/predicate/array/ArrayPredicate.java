@@ -5,7 +5,9 @@ import java.util.Collection;
 import com.nhb.common.predicate.object.ObjectDependence;
 import com.nhb.common.predicate.object.ObjectDependencePredicate;
 import com.nhb.common.predicate.utils.NumberComparator;
+import com.nhb.common.predicate.value.CollectionValue;
 import com.nhb.common.predicate.value.Value;
+import com.nhb.common.predicate.value.primitive.RawCollectionValue;
 
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -16,10 +18,14 @@ abstract class ArrayPredicate extends ObjectDependencePredicate {
 	private static final long serialVersionUID = 6508986421609289550L;
 
 	private Value<?> value;
-	protected Collection<?> collection;
+	private CollectionValue collection;
 	private NumberComparator numberComparator = new NumberComparator();
 
 	ArrayPredicate(Value<?> value, Collection<?> collection) {
+		this(value, new RawCollectionValue(collection));
+	}
+
+	public ArrayPredicate(Value<?> value, CollectionValue collection) {
 		this.collection = collection;
 		this.value = value;
 	}
@@ -29,16 +35,14 @@ abstract class ArrayPredicate extends ObjectDependencePredicate {
 		if (this.value instanceof ObjectDependence) {
 			((ObjectDependence) this.value).fill(getObject());
 		}
-		for (Object obj : this.collection) {
-			if (obj instanceof ObjectDependence) {
-				((ObjectDependence) obj).fill(getObject());
-			}
+		if (this.collection instanceof ObjectDependence) {
+			((ObjectDependence) this.collection).fill(getObject());
 		}
 	}
 
 	protected boolean isCollectionContainsValue() {
 		Object value = this.value.get();
-		for (Object entry : this.collection) {
+		for (Object entry : this.collection.get()) {
 			if (entry instanceof Value<?>) {
 				entry = ((Value<?>) entry).get();
 			}

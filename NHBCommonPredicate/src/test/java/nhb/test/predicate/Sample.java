@@ -1,5 +1,8 @@
 package nhb.test.predicate;
 
+import java.util.Arrays;
+import java.util.Collection;
+
 import com.nhb.common.predicate.Predicate;
 import com.nhb.common.predicate.Predicates;
 import com.nhb.common.utils.Initializer;
@@ -17,6 +20,7 @@ public class Sample {
 	public static class Foo {
 		private String name;
 		private int value;
+		private Collection<String> collection;
 	}
 
 	@Data
@@ -38,7 +42,11 @@ public class Sample {
 		// Predicate predicate = filteredObject.get("age").between(10,
 		// 20).and(filteredObject.is("female")).build();
 
-		String sql = "age%2+4*age-1*5+6 != 0 and (1+2^4) % 5 = 1 and `sqrt` = 'ok' and (not female or name = bar.foo.name) and bar IS NOT NULL and (name in ('noname', -1, bar.foo.name) or bar.foo.name like '[Ms]ario.*') and (sqrt bar.foo.value >= 4)";
+		String sql = null;
+
+		sql = "age%2+4*age-1*5+6 != 0 and (1+2^4) % 5 - 8 = 1 and `sqrt` = 'ok' and (not female or name = bar.foo.name) and bar IS NOT NULL and (name in ('noname', -1, bar.foo.name) or bar.foo.name like '[Ms]ario.*') and (sqrt bar.foo.value >= 4)";
+		// sql = "name in bar.foo.collection";
+
 		Predicate predicate = Predicates.fromSQL(sql);
 
 		predicate = Predicates.fromSQL(sql);
@@ -54,17 +62,19 @@ public class Sample {
 		Foo foo = new Foo();
 		foo.setValue(27);
 		foo.setName("bachden");
+		foo.setCollection(Arrays.asList("bachden", "quybu", "tombeo"));
 
 		Bar bar = new Bar();
 		bar.setFoo(foo);
 
 		userVO.setBar(bar);
+		boolean validUser = predicate.apply(userVO);
 
 		TimeWatcher timeWatcher = new TimeWatcher();
 		timeWatcher.reset();
-		boolean validUser = predicate.apply(userVO);
-		long time = timeWatcher.endLapMillis();
-		System.out.println("Is valid user: " + validUser + " --> time: " + time + "ms");
+		validUser = predicate.apply(userVO);
+		long time = timeWatcher.endLapMicro();
+		System.out.println("Is valid user: " + validUser + " --> time: " + time + " microseconds");
 	}
 
 }

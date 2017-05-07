@@ -12,7 +12,4 @@ public class NumberAttributeGetterValue extends AbstractAttributeGetterValue<Num
 		super(attribute);
 	}
 
-	public NumberAttributeGetterValue(String attribute, Object object) {
-		super(attribute, object);
-	}
 }

@@ -11,8 +11,4 @@ public class BooleanAttributeGetterValue extends AbstractAttributeGetterValue<Bo
 	public BooleanAttributeGetterValue(String attribute) {
 		super(attribute);
 	}
-
-	public BooleanAttributeGetterValue(String attribute, Object object) {
-		super(attribute, object);
-	}
 }

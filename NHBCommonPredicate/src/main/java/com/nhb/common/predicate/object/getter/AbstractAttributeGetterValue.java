@@ -1,13 +1,17 @@
 package com.nhb.common.predicate.object.getter;
 
 import com.nhb.common.predicate.object.AttributeGetter;
-import com.nhb.common.predicate.value.Value;
+import com.nhb.common.predicate.object.ObjectDependenceValue;
 import com.nhb.common.utils.ObjectUtils;
 
-public class AbstractAttributeGetterValue<Type> implements AttributeGetter, Value<Type> {
+import lombok.Getter;
+import lombok.Setter;
 
+public class AbstractAttributeGetterValue<Type> extends ObjectDependenceValue<Type> implements AttributeGetter {
+
+	@Setter
+	@Getter
 	private String attribute;
-	private Object object;
 
 	public AbstractAttributeGetterValue() {
 		// do nothing
@@ -18,27 +22,9 @@ public class AbstractAttributeGetterValue<Type> implements AttributeGetter, Valu
 		this.setAttribute(attribute);
 	}
 
-	public AbstractAttributeGetterValue(String attribute, Object object) {
-		this(attribute);
-		this.fill(object);
-	}
-
 	@Override
-	public void fill(Object object) {
-		this.object = object;
-	}
+	protected void fill() {
 
-	@Override
-	public void setAttribute(String attribute) {
-		this.attribute = attribute;
-	}
-
-	protected String getAttribute() {
-		return this.attribute;
-	}
-
-	protected Object getObject() {
-		return this.object;
 	}
 
 	@Override

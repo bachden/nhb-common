@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.nhb.common.annotations.ThreadSafe;
 import com.nhb.common.predicate.array.In;
 import com.nhb.common.predicate.array.NotIn;
 import com.nhb.common.predicate.logic.And;
@@ -24,11 +25,11 @@ import com.nhb.common.predicate.numeric.NotBetweenIncludeBoth;
 import com.nhb.common.predicate.numeric.NotBetweenIncludeLeft;
 import com.nhb.common.predicate.numeric.NotBetweenIncludeRight;
 import com.nhb.common.predicate.numeric.NotEquals;
-import com.nhb.common.predicate.object.ObjectDependenceValue;
 import com.nhb.common.predicate.object.getter.BooleanAttributeGetterValue;
 import com.nhb.common.predicate.object.getter.NumberAttributeGetterValue;
 import com.nhb.common.predicate.object.getter.PointerAttributeGetterValue;
 import com.nhb.common.predicate.object.getter.StringAttributeGetterValue;
+import com.nhb.common.predicate.object.value.PredicateWrapperBooleanValue;
 import com.nhb.common.predicate.pointer.IsNotNull;
 import com.nhb.common.predicate.pointer.IsNull;
 import com.nhb.common.predicate.sql.SqlPredicateThreadLocal;
@@ -37,6 +38,7 @@ import com.nhb.common.predicate.text.Exactly;
 import com.nhb.common.predicate.text.ExactlyIgnoreCase;
 import com.nhb.common.predicate.text.Match;
 import com.nhb.common.predicate.text.NotMatch;
+import com.nhb.common.predicate.value.CollectionValue;
 import com.nhb.common.predicate.value.NumberValue;
 import com.nhb.common.predicate.value.StringValue;
 import com.nhb.common.predicate.value.Value;
@@ -56,35 +58,12 @@ public final class Predicates {
 		if (p1 instanceof Value) {
 			v1 = (Value<Boolean>) p1;
 		} else {
-			v1 = new ObjectDependenceValue<Boolean>() {
-
-				@Override
-				public Boolean get() {
-					return p1.apply(this.getObject());
-				}
-
-				@Override
-				public String toString() {
-					return p1.toString();
-				}
-
-			};
+			v1 = new PredicateWrapperBooleanValue(p1);
 		}
 		if (p2 instanceof Value) {
 			v2 = (Value<Boolean>) p2;
 		} else {
-			v2 = new ObjectDependenceValue<Boolean>() {
-
-				@Override
-				public Boolean get() {
-					return p2.apply(this.getObject());
-				}
-
-				@Override
-				public String toString() {
-					return p2.toString();
-				}
-			};
+			v2 = new PredicateWrapperBooleanValue(p2);
 		}
 		return new And(v1, v2);
 	}
@@ -99,34 +78,12 @@ public final class Predicates {
 		if (p1 instanceof Value) {
 			v1 = (Value<Boolean>) p1;
 		} else {
-			v1 = new ObjectDependenceValue<Boolean>() {
-
-				@Override
-				public Boolean get() {
-					return p1.apply(this.getObject());
-				}
-
-				@Override
-				public String toString() {
-					return p1.toString();
-				}
-			};
+			v1 = new PredicateWrapperBooleanValue(p1);
 		}
 		if (p2 instanceof Value) {
 			v2 = (Value<Boolean>) p2;
 		} else {
-			v2 = new ObjectDependenceValue<Boolean>() {
-
-				@Override
-				public Boolean get() {
-					return p2.apply(this.getObject());
-				}
-
-				@Override
-				public String toString() {
-					return p2.toString();
-				}
-			};
+			v2 = new PredicateWrapperBooleanValue(p2);
 		}
 		return new Or(v1, v2);
 	}
@@ -139,18 +96,7 @@ public final class Predicates {
 		if (predicate instanceof Value) {
 			return new Not((Value<Boolean>) predicate);
 		} else {
-			return new Not(new ObjectDependenceValue<Boolean>() {
-
-				@Override
-				public Boolean get() {
-					return predicate.apply(this.getObject());
-				}
-
-				@Override
-				public String toString() {
-					return predicate.toString();
-				}
-			});
+			return new Not(new PredicateWrapperBooleanValue(predicate));
 		}
 	}
 
@@ -175,13 +121,7 @@ public final class Predicates {
 		if (predicate instanceof Value) {
 			return new Is((Value<Boolean>) predicate);
 		} else {
-			return new Is(new ObjectDependenceValue<Boolean>() {
-
-				@Override
-				public Boolean get() {
-					return predicate.apply(this.getObject());
-				}
-			});
+			return new Is(new PredicateWrapperBooleanValue(predicate));
 		}
 	}
 
@@ -370,7 +310,19 @@ public final class Predicates {
 		return new In(new PointerAttributeGetterValue(attribute), collection);
 	}
 
+	public static Predicate in(String attribute, CollectionValue collection) {
+		return new In(new PointerAttributeGetterValue(attribute), collection);
+	}
+
+	public static Predicate in(Number value, CollectionValue collection) {
+		return new In(new RawNumberValue(value), collection);
+	}
+
 	public static Predicate in(Value<?> value, Collection<?> collection) {
+		return new In(value, collection);
+	}
+
+	public static Predicate in(Value<?> value, CollectionValue collection) {
 		return new In(value, collection);
 	}
 
@@ -380,6 +332,18 @@ public final class Predicates {
 
 	public static Predicate notIn(String attribute, Collection<?> collection) {
 		return new NotIn(new PointerAttributeGetterValue(attribute), collection);
+	}
+
+	public static Predicate notIn(Number attribute, CollectionValue collection) {
+		return new NotIn(new RawNumberValue(attribute), collection);
+	}
+
+	public static Predicate notIn(String attribute, CollectionValue collection) {
+		return new NotIn(new PointerAttributeGetterValue(attribute), collection);
+	}
+
+	public static Predicate notIn(Value<?> value, CollectionValue collection) {
+		return new NotIn(value, collection);
 	}
 
 	public static Predicate notIn(Value<?> value, Collection<?> collection) {
@@ -401,6 +365,7 @@ public final class Predicates {
 		return sqlPredicateThreadLocalBySQL.get(sql);
 	}
 
+	@ThreadSafe
 	public static Predicate fromSQL(String sql) {
 		return getSqlPredicateThreadLocal(sql).get();
 	}

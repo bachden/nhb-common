@@ -12,7 +12,4 @@ public class PointerAttributeGetterValue extends AbstractAttributeGetterValue<Ob
 		super(attribute);
 	}
 
-	public PointerAttributeGetterValue(String attribute, Object object) {
-		super(attribute, object);
-	}
 }

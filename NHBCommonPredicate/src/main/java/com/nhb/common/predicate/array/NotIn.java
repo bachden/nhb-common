@@ -3,6 +3,7 @@ package com.nhb.common.predicate.array;
 import java.util.Collection;
 
 import com.nhb.common.predicate.math.MathOperator;
+import com.nhb.common.predicate.value.CollectionValue;
 import com.nhb.common.predicate.value.Value;
 
 public class NotIn extends ArrayPredicate {
@@ -13,6 +14,10 @@ public class NotIn extends ArrayPredicate {
 		super(value, collection);
 	}
 
+	public NotIn(Value<?> value, CollectionValue collection) {
+		super(value, collection);
+	}
+
 	@Override
 	public Boolean get() {
 		return !this.isCollectionContainsValue();
@@ -20,24 +25,7 @@ public class NotIn extends ArrayPredicate {
 
 	@Override
 	public String toString() {
-		StringBuilder sb = new StringBuilder();
-		sb.append("(");
-		for (Object obj : this.collection) {
-			if (sb.length() > 1) {
-				sb.append(", ");
-			}
-			String element = obj.toString();
-			if (obj instanceof String) {
-				element = element.replaceAll("\\'", "\\\\'");
-				sb.append("'");
-			}
-			sb.append(element);
-			if (obj instanceof String) {
-				sb.append("'");
-			}
-		}
-		sb.append(")");
 		return (this.getValue() instanceof MathOperator ? "(" : "") + this.getValue().toString()
-				+ (this.getValue() instanceof MathOperator ? ")" : "") + " not in " + sb.toString();
+				+ (this.getValue() instanceof MathOperator ? ")" : "") + " not in " + this.getCollection().toString();
 	}
 }

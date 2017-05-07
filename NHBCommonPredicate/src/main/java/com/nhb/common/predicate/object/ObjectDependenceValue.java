@@ -7,9 +7,12 @@ public abstract class ObjectDependenceValue<Type> implements Value<Type>, Object
 	private Object object;
 
 	@Override
-	public void fill(Object object) {
+	public final void fill(Object object) {
 		this.object = object;
+		this.fill();
 	}
+
+	protected abstract void fill();
 
 	protected Object getObject() {
 		return this.object;
