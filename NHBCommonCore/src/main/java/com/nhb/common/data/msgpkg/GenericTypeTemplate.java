@@ -105,6 +105,9 @@ public class GenericTypeTemplate extends AbstractTemplate<Object> {
 			RawValue value = (RawValue) unpacker.readValue();
 			_result = value.getByteArray();
 			break;
+		case STRING:
+			_result = unpacker.readString();
+			break;
 		default:
 			throw new RuntimeException("Value type is not supported or invalid: " + nextValueType);
 		}
