@@ -14,9 +14,4 @@ public class CollectionAttributeGetterValue extends AbstractAttributeGetterValue
 	public CollectionAttributeGetterValue(String attribute) {
 		super(attribute);
 	}
-
-	@Override
-	public String toString() {
-		return this.getAttribute();
-	}
 }
