@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.msgpack.MessageTypeException;
+import org.msgpack.core.MessageFormat;
 import org.msgpack.packer.Packer;
 import org.msgpack.template.AbstractTemplate;
 import org.msgpack.template.ByteArrayTemplate;
@@ -17,8 +17,8 @@ import org.msgpack.type.ValueType;
 import org.msgpack.unpacker.Unpacker;
 
 import com.nhb.common.utils.ArrayUtils;
-import com.nhb.common.utils.PrimitiveTypeUtils;
 import com.nhb.common.utils.ArrayUtils.ForeachCallback;
+import com.nhb.common.utils.PrimitiveTypeUtils;
 
 public class GenericTypeTemplate extends AbstractTemplate<Object> {
 
@@ -72,7 +72,8 @@ public class GenericTypeTemplate extends AbstractTemplate<Object> {
 	@Override
 	public Object read(Unpacker unpacker, Object result, boolean required) throws IOException {
 		Object _result = null;
-		ValueType nextValueType = unpacker.getNextType();
+		MessageFormat format = unpacker.getNextFormat();
+		ValueType nextValueType = format.getValueType();
 		switch (nextValueType) {
 		case NIL:
 			unpacker.readNil();
@@ -88,17 +89,17 @@ public class GenericTypeTemplate extends AbstractTemplate<Object> {
 			_result = unpacker.readBoolean();
 			break;
 		case FLOAT:
-			try {
-				_result = unpacker.readFloat();
-			} catch (MessageTypeException e) {
+			if (format == MessageFormat.FLOAT64) {
 				_result = unpacker.readDouble();
+			} else {
+				_result = unpacker.readFloat();
 			}
 			break;
 		case INTEGER:
-			try {
-				_result = unpacker.readInt();
-			} catch (MessageTypeException e) {
+			if (format == MessageFormat.INT64 || format == MessageFormat.UINT64) {
 				_result = unpacker.readLong();
+			} else {
+				_result = unpacker.readInt();
 			}
 			break;
 		case RAW:
