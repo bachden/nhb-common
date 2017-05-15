@@ -20,7 +20,7 @@ public class RabbitMQQueueConfig {
 
 	// exchange's properties
 	private String exchangeName = "";
-	private String exchangeType = "direct";
+	private String exchangeType = "direct"; // fanout
 	private String routingKey = "";
 
 	// queue's properties
