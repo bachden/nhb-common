@@ -1,9 +1,12 @@
 package com.nhb.common.utils;
 
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -13,9 +16,26 @@ import org.apache.commons.lang.RandomStringUtils;
 
 import com.google.common.base.CaseFormat;
 
+import lombok.Builder;
 import lombok.Data;
 
 public final class StringUtils {
+
+	@Data
+	@Builder
+	public static class StringFormatOption {
+
+		private boolean autoFormatNumber;
+		private DecimalFormat decimalFormat = null;
+
+		public DecimalFormat getDecimalFormat() {
+			if (this.decimalFormat == null) {
+				this.decimalFormat = (DecimalFormat) NumberFormat.getNumberInstance(Locale.US);
+				this.decimalFormat.getDecimalFormatSymbols().setGroupingSeparator(',');
+			}
+			return this.decimalFormat;
+		}
+	}
 
 	private StringUtils() {
 		// just prevent other can create new instance...
@@ -142,7 +162,7 @@ public final class StringUtils {
 		return true;
 	}
 
-	public static String format(String pattern, Object args) {
+	public static String format(String pattern, Object args, StringFormatOption option) {
 		List<String> matches = getAllMatches(pattern, "\\{\\{[a-zA-Z0-9_]+\\}\\}");
 		Set<String> keys = new HashSet<>();
 		for (String matche : matches) {
@@ -151,6 +171,9 @@ public final class StringUtils {
 		String result = new String(pattern);
 		for (String key : keys) {
 			Object value = ObjectUtils.getValueByPath(args, key);
+			if (value instanceof Number && option != null && option.isAutoFormatNumber()) {
+				value = option.getDecimalFormat().format(value);
+			}
 			String valueString = PrimitiveTypeUtils.getStringValueFrom(value);
 			result = result.replaceAll("\\{\\{" + key + "\\}\\}", valueString);
 		}
@@ -168,12 +191,14 @@ public final class StringUtils {
 		TestVO obj = new TestVO();
 		obj.setName("Bách Hoàng Nguyễn");
 		obj.setAge(28);
-		System.out.println("Formatted string: " + format(pattern, obj));
+		System.out.println("Formatted string: "
+				+ format(pattern, obj, StringFormatOption.builder().autoFormatNumber(true).build()));
 
 		Map<String, Object> map = new HashMap<>();
-		map.put("name", "bach");
-		map.put("age", 28);
+		map.put("name", "abc");
+		map.put("age", 280029340);
 
-		System.out.println("Formatted string: " + format(pattern, map));
+		System.out.println("Formatted string: "
+				+ format(pattern, map, StringFormatOption.builder().autoFormatNumber(true).build()));
 	}
 }
