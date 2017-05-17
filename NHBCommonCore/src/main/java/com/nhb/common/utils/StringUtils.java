@@ -1,13 +1,19 @@
 package com.nhb.common.utils;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang.RandomStringUtils;
 
 import com.google.common.base.CaseFormat;
+
+import lombok.Data;
 
 public final class StringUtils {
 
@@ -136,9 +142,38 @@ public final class StringUtils {
 		return true;
 	}
 
+	public static String format(String pattern, Object args) {
+		List<String> matches = getAllMatches(pattern, "\\{\\{[a-zA-Z0-9_]+\\}\\}");
+		Set<String> keys = new HashSet<>();
+		for (String matche : matches) {
+			keys.add(matche.substring(2, matche.length() - 2));
+		}
+		String result = new String(pattern);
+		for (String key : keys) {
+			Object value = ObjectUtils.getValueByPath(args, key);
+			String valueString = PrimitiveTypeUtils.getStringValueFrom(value);
+			result = result.replaceAll("\\{\\{" + key + "\\}\\}", valueString);
+		}
+		return result;
+	}
+
+	@Data
+	static class TestVO {
+		private String name;
+		private int age;
+	}
+
 	public static void main(String[] args) {
-		// System.out.println(getAllMatches("9c10d",
-		// "[123456789(10)jqkat][hdcs]"));
-		System.out.println(isRepresentNumber("123"));
+		String pattern = "Name: {{name}} -> age: {{age}}";
+		TestVO obj = new TestVO();
+		obj.setName("Bách Hoàng Nguyễn");
+		obj.setAge(28);
+		System.out.println("Formatted string: " + format(pattern, obj));
+
+		Map<String, Object> map = new HashMap<>();
+		map.put("name", "bach");
+		map.put("age", 28);
+
+		System.out.println("Formatted string: " + format(pattern, map));
 	}
 }
