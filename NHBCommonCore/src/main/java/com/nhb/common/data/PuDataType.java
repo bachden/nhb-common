@@ -1,5 +1,7 @@
 package com.nhb.common.data;
 
+import java.math.BigDecimal;
+
 import org.msgpack.template.BooleanTemplate;
 import org.msgpack.template.ByteArrayTemplate;
 import org.msgpack.template.ByteTemplate;
@@ -85,7 +87,8 @@ public enum PuDataType {
 					return PuDataType.LONG;
 				} else if (obj.getClass() == Float.class || obj.getClass() == Float.TYPE) {
 					return PuDataType.FLOAT;
-				} else if (obj.getClass() == Double.class || obj.getClass() == Double.TYPE) {
+				} else if (obj.getClass() == Double.class || obj.getClass() == BigDecimal.class
+						|| obj.getClass() == Double.TYPE) {
 					return PuDataType.DOUBLE;
 				} else if (obj.getClass() == String.class) {
 					return PuDataType.STRING;

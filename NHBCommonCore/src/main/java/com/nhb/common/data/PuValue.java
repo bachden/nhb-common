@@ -222,16 +222,9 @@ public class PuValue implements PuElement, Serializable {
 	}
 
 	public void setData(Object data) {
-		this.data = data;
+		// this.data = data;
 		this.type = PuDataType.fromObject(data);
-		// if (data instanceof byte[]) {
-		// String str = new String((byte[]) data);
-		// if (StringUtils.isPrinable(str)) {
-		// System.out.println("string is prinable: " + str);
-		// this.data = str;
-		// this.type = PuDataType.STRING;
-		// }
-		// }
+		this.data = PrimitiveTypeUtils.getValueFrom(this.type.getDataClass(), data);
 	}
 
 	public PuDataType getType() {

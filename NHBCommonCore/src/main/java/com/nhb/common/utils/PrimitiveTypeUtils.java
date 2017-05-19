@@ -1,6 +1,6 @@
 package com.nhb.common.utils;
 
-import java.lang.reflect.Method;
+import java.math.BigDecimal;
 
 public final class PrimitiveTypeUtils {
 
@@ -9,19 +9,36 @@ public final class PrimitiveTypeUtils {
 	}
 
 	public static final boolean isPrimitiveOrWrapperType(Class<?> resultType) {
-		return (resultType == String.class || resultType == Integer.TYPE || resultType == Integer.class
-				|| resultType == Float.TYPE || resultType == Float.class || resultType == Long.TYPE
-				|| resultType == Long.class || resultType == Double.TYPE || resultType == Double.class
-				|| resultType == Short.TYPE || resultType == Short.class || resultType == Byte.TYPE
-				|| resultType == Byte.class || resultType == Character.TYPE || resultType == Character.class
-				|| resultType == Boolean.TYPE || resultType == Boolean.class) && !resultType.isArray();
+		return (resultType == String.class //
+				|| resultType == BigDecimal.class //
+				|| resultType == Integer.TYPE || resultType == Integer.class //
+				|| resultType == Float.TYPE || resultType == Float.class //
+				|| resultType == Long.TYPE || resultType == Long.class //
+				|| resultType == Double.TYPE || resultType == Double.class //
+				|| resultType == Short.TYPE || resultType == Short.class //
+				|| resultType == Byte.TYPE || resultType == Byte.class //
+				|| resultType == Character.TYPE || resultType == Character.class //
+				|| resultType == Boolean.TYPE || resultType == Boolean.class) //
+				&& !resultType.isArray();
 	}
 
 	@SuppressWarnings("unchecked")
 	public static final <T> T getValueFrom(Class<T> resultType, Object obj) {
 		if (resultType != null) {
-			if (resultType == String.class) {
+			if (obj == null) {
+				return null;
+			} else if (obj.getClass() == resultType) {
+				return (T) obj;
+			} else if (resultType == String.class) {
 				return (T) getStringValueFrom(obj);
+			} else if (resultType == BigDecimal.class) {
+				if (obj instanceof Number) {
+					if (obj instanceof BigDecimal) {
+						return (T) (BigDecimal) obj;
+					}
+					return (T) new BigDecimal(((Number) obj).doubleValue());
+				}
+				return (T) new BigDecimal(getStringValueFrom(obj));
 			} else if (resultType == Integer.TYPE || resultType == Integer.class) {
 				return (T) new Integer(getIntegerValueFrom(obj));
 			} else if (resultType == Float.TYPE || resultType == Float.class) {
@@ -60,14 +77,8 @@ public final class PrimitiveTypeUtils {
 
 	public static final int getIntegerValueFrom(Object obj) {
 		if (obj != null) {
-			if (obj instanceof Integer || obj instanceof Long || obj instanceof Float || obj instanceof Double
-					|| obj instanceof Short || obj instanceof Byte) {
-				try {
-					Method intValueMethod = obj.getClass().getDeclaredMethod("intValue");
-					return ((Integer) intValueMethod.invoke(obj)).intValue();
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
+			if (obj instanceof Number) {
+				return ((Number) obj).intValue();
 			} else if (obj instanceof Character) {
 				return ((Character) obj).charValue();
 			} else if (obj instanceof String) {
@@ -83,14 +94,8 @@ public final class PrimitiveTypeUtils {
 
 	public static final long getLongValueFrom(Object obj) {
 		if (obj != null) {
-			if (obj instanceof Integer || obj instanceof Long || obj instanceof Float || obj instanceof Double
-					|| obj instanceof Short || obj instanceof Byte) {
-				try {
-					Method method = obj.getClass().getDeclaredMethod("longValue");
-					return (long) method.invoke(obj);
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
+			if (obj instanceof Number) {
+				return ((Number) obj).longValue();
 			} else if (obj instanceof Character) {
 				return (long) ((Character) obj).charValue();
 			} else if (obj instanceof String) {
@@ -106,14 +111,8 @@ public final class PrimitiveTypeUtils {
 
 	public static final float getFloatValueFrom(Object obj) {
 		if (obj != null) {
-			if (obj instanceof Integer || obj instanceof Long || obj instanceof Float || obj instanceof Double
-					|| obj instanceof Short || obj instanceof Byte) {
-				try {
-					Method method = obj.getClass().getDeclaredMethod("floatValue");
-					return (float) method.invoke(obj);
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
+			if (obj instanceof Number) {
+				return ((Number) obj).floatValue();
 			} else if (obj instanceof Character) {
 				return (float) ((Character) obj).charValue();
 			} else if (obj instanceof String) {
@@ -129,14 +128,8 @@ public final class PrimitiveTypeUtils {
 
 	public static final double getDoubleValueFrom(Object obj) {
 		if (obj != null) {
-			if (obj instanceof Integer || obj instanceof Long || obj instanceof Float || obj instanceof Double
-					|| obj instanceof Short || obj instanceof Byte) {
-				try {
-					Method method = obj.getClass().getDeclaredMethod("doubleValue");
-					return (double) method.invoke(obj);
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
+			if (obj instanceof Number) {
+				return ((Number) obj).doubleValue();
 			} else if (obj instanceof Character) {
 				return (double) ((Character) obj).charValue();
 			} else if (obj instanceof String) {
@@ -152,14 +145,8 @@ public final class PrimitiveTypeUtils {
 
 	public static final short getShortValueFrom(Object obj) {
 		if (obj != null) {
-			if (obj instanceof Integer || obj instanceof Long || obj instanceof Float || obj instanceof Double
-					|| obj instanceof Short || obj instanceof Byte) {
-				try {
-					Method method = obj.getClass().getDeclaredMethod("shortValue");
-					return (short) method.invoke(obj);
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
+			if (obj instanceof Number) {
+				return ((Number) obj).shortValue();
 			} else if (obj instanceof Character) {
 				return (short) ((Character) obj).charValue();
 			} else if (obj instanceof String) {
@@ -175,14 +162,8 @@ public final class PrimitiveTypeUtils {
 
 	public static final byte getByteValueFrom(Object obj) {
 		if (obj != null) {
-			if (obj instanceof Integer || obj instanceof Long || obj instanceof Float || obj instanceof Double
-					|| obj instanceof Short || obj instanceof Byte) {
-				try {
-					Method method = obj.getClass().getDeclaredMethod("byteValue");
-					return (byte) method.invoke(obj);
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
+			if (obj instanceof Number) {
+				return ((Number) obj).byteValue();
 			} else if (obj instanceof Character) {
 				return (byte) ((Character) obj).charValue();
 			} else if (obj instanceof String) {
@@ -206,14 +187,8 @@ public final class PrimitiveTypeUtils {
 	 */
 	public static final char getCharValueFrom(Object obj) {
 		if (obj != null) {
-			if (obj instanceof Integer || obj instanceof Long || obj instanceof Float || obj instanceof Double
-					|| obj instanceof Short || obj instanceof Byte) {
-				try {
-					Method method = obj.getClass().getDeclaredMethod("intValue");
-					return Character.toChars((int) method.invoke(obj))[0];
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
+			if (obj instanceof Number) {
+				return Character.toChars(((Number) obj).intValue())[0];
 			} else if (obj instanceof Character) {
 				return ((Character) obj).charValue();
 			} else if (obj instanceof String) {
@@ -242,14 +217,8 @@ public final class PrimitiveTypeUtils {
 	 * @return
 	 */
 	public static final boolean getBooleanValueFrom(Object obj) {
-		if (obj instanceof Integer || obj instanceof Long || obj instanceof Float || obj instanceof Double
-				|| obj instanceof Short || obj instanceof Byte) {
-			try {
-				Method method = obj.getClass().getDeclaredMethod("longValue");
-				return (long) method.invoke(obj) != 0;
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
+		if (obj instanceof Number) {
+			return ((Number) obj).doubleValue() != 0;
 		} else if (obj instanceof String) {
 			return Boolean.valueOf((String) obj);
 		} else if (obj instanceof Character) {
