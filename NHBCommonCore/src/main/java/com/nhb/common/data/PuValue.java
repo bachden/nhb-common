@@ -202,8 +202,9 @@ public class PuValue implements PuElement, Serializable {
 		return this.getPuArray();
 	}
 
-	public Object getData() {
-		return this.data;
+	@SuppressWarnings("unchecked")
+	public <T> T getData() {
+		return (T) this.data;
 	}
 
 	/**
@@ -224,7 +225,17 @@ public class PuValue implements PuElement, Serializable {
 	public void setData(Object data) {
 		// this.data = data;
 		this.type = PuDataType.fromObject(data);
-		this.data = PrimitiveTypeUtils.getValueFrom(this.type.getDataClass(), data);
+		if (this.type == PuDataType.PUOBJECT) {
+			this.data = PuObject.fromObject(data);
+		} else if (this.type == PuDataType.PUARRAY) {
+			this.data = PuArrayList.fromObject(data);
+		} else if (this.type == PuDataType.RAW) {
+			this.data = (byte[]) data;
+		} else if (this.type == PuDataType.NULL) {
+			this.data = null;
+		} else {
+			this.data = PrimitiveTypeUtils.getValueFrom(this.type.getDataClass(), data);
+		}
 	}
 
 	public PuDataType getType() {

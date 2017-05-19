@@ -164,7 +164,7 @@ public class PuXmlHelper {
 					} else if (entry.getValue().getType() == PuDataType.RAW) {
 						builder.append(entry.getValue().getRawAsBase64());
 					} else {
-						builder.append(entry.getValue().getData());
+						builder.append((Object) entry.getValue().getData());
 					}
 					builder.append("</" + VARIABLE + ">");
 				}
@@ -179,7 +179,7 @@ public class PuXmlHelper {
 					} else if (value.getType() == PuDataType.RAW) {
 						builder.append(value.getRawAsBase64());
 					} else {
-						builder.append(value.getData());
+						builder.append((Object) value.getData());
 					}
 					builder.append("</" + ENTRY + ">");
 				}

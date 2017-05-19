@@ -207,7 +207,7 @@ public class PuArrayList extends ArrayList<PuValue> implements PuArray {
 				PuArrayList puArray = (PuArrayList) value.getData();
 				puArray.append(numTab + 1, sb);
 			} else {
-				sb.append(value.getData());
+				sb.append((Object) value.getData());
 			}
 		}
 		sb.append("]");
