@@ -251,7 +251,7 @@ public class PuArrayList extends ArrayList<PuValue> implements PuArray {
 			} else if (entry.getType() == PuDataType.PUARRAY) {
 				clone.addFrom(entry.getPuArray().deepClone());
 			} else {
-				clone.addFrom(entry.getData());
+				clone.addFrom((Object) entry.getData());
 			}
 		}
 		return clone;
