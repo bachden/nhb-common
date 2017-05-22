@@ -12,8 +12,8 @@ import org.msgpack.packer.Packer;
 
 import com.nhb.common.data.msgpkg.PuArrayTemplate;
 import com.nhb.common.utils.ArrayUtils;
-import com.nhb.common.utils.PrimitiveTypeUtils;
 import com.nhb.common.utils.ArrayUtils.ForeachCallback;
+import com.nhb.common.utils.PrimitiveTypeUtils;
 
 import net.minidev.json.JSONArray;
 import net.minidev.json.parser.JSONParser;
@@ -37,11 +37,7 @@ public class PuArrayList extends ArrayList<PuValue> implements PuArray {
 						"Error occurs while trying to deserialize byte array as message pack to PuArray", e);
 			}
 		} else if (data instanceof PuArray) {
-			PuArray arr = (PuArray) data;
-			for (PuValue value : arr) {
-				arr.add(new PuValue(((PuValue) value).getData(), ((PuValue) value).getType()));
-			}
-			return arr;
+			return ((PuArray) data).deepClone();
 		} else if (ArrayUtils.isArrayOrCollection(data.getClass())) {
 			final PuArray result = new PuArrayList();
 			ArrayUtils.foreach(data, new ForeachCallback<Object>() {
