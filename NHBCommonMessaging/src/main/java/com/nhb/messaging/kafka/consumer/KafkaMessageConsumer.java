@@ -11,6 +11,7 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
@@ -28,6 +29,8 @@ import lombok.Getter;
 import lombok.Setter;
 
 public class KafkaMessageConsumer extends BaseEventDispatcher {
+
+	private static final AtomicInteger idSeed = new AtomicInteger(0);
 
 	private static final long START_OFFSET = -1l;
 	private static final long END_OFFSET = -2l;
@@ -183,10 +186,14 @@ public class KafkaMessageConsumer extends BaseEventDispatcher {
 							dispatchEvent(event);
 						} catch (WakeupException we) {
 							// do nothing
+						} catch (Exception ex) {
+							getLogger().error("********** Polling message from kafka error, Kafka consumer start failed", ex);
+							throw ex;
 						}
 					}
 				}
 			};
+			this.pollingThead.setName("Kafka consumer polling thread #" + idSeed.incrementAndGet());
 			this.pollingThead.start();
 
 			StringBuffer sb = new StringBuffer();
