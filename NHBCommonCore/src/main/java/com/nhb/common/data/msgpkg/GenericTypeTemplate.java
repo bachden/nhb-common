@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.msgpack.MessageTypeException;
 import org.msgpack.core.MessageFormat;
 import org.msgpack.packer.Packer;
 import org.msgpack.template.AbstractTemplate;
@@ -108,7 +109,11 @@ public class GenericTypeTemplate extends AbstractTemplate<Object> {
 			_result = value.getByteArray();
 			break;
 		case STRING:
-			_result = unpacker.readString();
+			try {
+				_result = unpacker.readString();
+			} catch (MessageTypeException e) {
+				_result = unpacker.readByteArray();
+			}
 			break;
 		default:
 			throw new RuntimeException("Value type is not supported or invalid: " + nextValueType);
