@@ -74,6 +74,7 @@ public class GenericTypeTemplate extends AbstractTemplate<Object> {
 		Object _result = null;
 		MessageFormat format = unpacker.getNextFormat();
 		ValueType nextValueType = format.getValueType();
+		System.out.println("Found next value type: " + nextValueType);
 		switch (nextValueType) {
 		case NIL:
 			unpacker.readNil();

@@ -1,6 +1,6 @@
 import com.nhb.common.data.PuArrayList;
 
-public class TestDecode {
+public class TestDecodePuArray {
 
 	public static void main(String[] args) {
 		byte[] bytes = new byte[] { -36, 0, 21, 1, -80, 93, -122, -38, 99, 63, -44, 78, -18, -68, -93, -96, 44, 114,
