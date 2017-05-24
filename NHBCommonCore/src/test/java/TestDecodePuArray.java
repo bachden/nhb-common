@@ -29,7 +29,7 @@ public class TestDecodePuArray {
 
 		PuArray puArray = new PuArrayList();
 		puArray.addFrom(1);
-		puArray.addFrom(new String(new byte[] { 93, -122, -38, 99, 63, -44, 78, -18, -68, -93, -96, 44, 114, -103, -85, 9 }));
+		puArray.addFrom(new byte[] { 93, -122, -38, 99, 63, -44, 78, -18, -68, -93, -96, 44, 114, -103, -85, 9 });
 		puArray.addFrom(new byte[] { -115, -44, 114, -66, 81, -104, 68, -125, -82, -14, -45, 38, -15, 105, 127, -83 });
 		puArray.addFrom(1021);
 		puArray.addFrom(
