@@ -66,7 +66,7 @@ public class NumberValues {
 			value1 = new RawNumberValue((Number) value1);
 		} else if (!(value1 instanceof NumberValue)) {
 			throw new IllegalArgumentException(
-					"Value1 has type " + value1.getClass().getName() + " is not supported by add operator");
+					"Value1 has type " + value1.getClass().getName() + " is not supported by subtract operator");
 		}
 
 		if (value2 instanceof String) {
@@ -79,7 +79,7 @@ public class NumberValues {
 			value2 = new RawNumberValue((Number) value2);
 		} else if (!(value2 instanceof NumberValue)) {
 			throw new IllegalArgumentException(
-					"Value2 has type " + value1.getClass().getName() + " is not supported by add operator");
+					"Value2 has type " + value1.getClass().getName() + " is not supported by subtract operator");
 		}
 
 		return new Subtract((NumberValue) value1, (NumberValue) value2);
@@ -101,7 +101,7 @@ public class NumberValues {
 			value1 = new RawNumberValue((Number) value1);
 		} else if (!(value1 instanceof NumberValue)) {
 			throw new IllegalArgumentException(
-					"Value1 has type " + value1.getClass().getName() + " is not supported by add operator");
+					"Value1 has type " + value1.getClass().getName() + " is not supported by multiply operator");
 		}
 
 		if (value2 instanceof String) {
@@ -114,7 +114,7 @@ public class NumberValues {
 			value2 = new RawNumberValue((Number) value2);
 		} else if (!(value2 instanceof NumberValue)) {
 			throw new IllegalArgumentException(
-					"Value2 has type " + value1.getClass().getName() + " is not supported by add operator");
+					"Value2 has type " + value1.getClass().getName() + " is not supported by multiply operator");
 		}
 
 		return new Multiply((NumberValue) value1, (NumberValue) value2);
@@ -136,7 +136,7 @@ public class NumberValues {
 			value1 = new RawNumberValue((Number) value1);
 		} else if (!(value1 instanceof NumberValue)) {
 			throw new IllegalArgumentException(
-					"Value1 has type " + value1.getClass().getName() + " is not supported by add operator");
+					"Value1 has type " + value1.getClass().getName() + " is not supported by divide operator");
 		}
 
 		if (value2 instanceof String) {
@@ -149,7 +149,7 @@ public class NumberValues {
 			value2 = new RawNumberValue((Number) value2);
 		} else if (!(value2 instanceof NumberValue)) {
 			throw new IllegalArgumentException(
-					"Value2 has type " + value1.getClass().getName() + " is not supported by add operator");
+					"Value2 has type " + value1.getClass().getName() + " is not supported by divide operator");
 		}
 
 		return new Divide((NumberValue) value1, (NumberValue) value2);
@@ -171,7 +171,7 @@ public class NumberValues {
 			value1 = new RawNumberValue((Number) value1);
 		} else if (!(value1 instanceof NumberValue)) {
 			throw new IllegalArgumentException(
-					"Value1 has type " + value1.getClass().getName() + " is not supported by add operator");
+					"Value1 has type " + value1.getClass().getName() + " is not supported by divideToInteger operator");
 		}
 
 		if (value2 instanceof String) {
@@ -184,7 +184,7 @@ public class NumberValues {
 			value2 = new RawNumberValue((Number) value2);
 		} else if (!(value2 instanceof NumberValue)) {
 			throw new IllegalArgumentException(
-					"Value2 has type " + value1.getClass().getName() + " is not supported by add operator");
+					"Value2 has type " + value1.getClass().getName() + " is not supported by divideToInteger operator");
 		}
 
 		return new DivideToInteger((NumberValue) value1, (NumberValue) value2);
@@ -206,7 +206,7 @@ public class NumberValues {
 			value1 = new RawNumberValue((Number) value1);
 		} else if (!(value1 instanceof NumberValue)) {
 			throw new IllegalArgumentException(
-					"Value1 has type " + value1.getClass().getName() + " is not supported by add operator");
+					"Value1 has type " + value1.getClass().getName() + " is not supported by mod operator");
 		}
 
 		if (value2 instanceof String) {
@@ -219,7 +219,7 @@ public class NumberValues {
 			value2 = new RawNumberValue((Number) value2);
 		} else if (!(value2 instanceof NumberValue)) {
 			throw new IllegalArgumentException(
-					"Value2 has type " + value1.getClass().getName() + " is not supported by add operator");
+					"Value2 has type " + value1.getClass().getName() + " is not supported by mod operator");
 		}
 
 		return new Mod((NumberValue) value1, (NumberValue) value2);
@@ -241,7 +241,7 @@ public class NumberValues {
 			value1 = new RawNumberValue((Number) value1);
 		} else if (!(value1 instanceof NumberValue)) {
 			throw new IllegalArgumentException(
-					"Value1 has type " + value1.getClass().getName() + " is not supported by add operator");
+					"Value1 has type " + value1.getClass().getName() + " is not supported by pow operator");
 		}
 
 		if (value2 instanceof String) {
@@ -254,7 +254,7 @@ public class NumberValues {
 			value2 = new RawNumberValue((Number) value2);
 		} else if (!(value2 instanceof NumberValue)) {
 			throw new IllegalArgumentException(
-					"Value2 has type " + value1.getClass().getName() + " is not supported by add operator");
+					"Value2 has type " + value1.getClass().getName() + " is not supported by pow operator");
 		}
 
 		return new Pow((NumberValue) value1, (NumberValue) value2);
@@ -276,7 +276,7 @@ public class NumberValues {
 			value = new RawNumberValue((Number) value);
 		} else if (!(value instanceof NumberValue)) {
 			throw new IllegalArgumentException(
-					"Value1 has type " + value.getClass().getName() + " is not supported by add operator");
+					"Value1 has type " + value.getClass().getName() + " is not supported by sqrt operator");
 		}
 
 		return new Sqrt((NumberValue) value);
