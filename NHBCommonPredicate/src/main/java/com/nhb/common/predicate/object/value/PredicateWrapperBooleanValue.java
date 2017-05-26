@@ -2,13 +2,14 @@ package com.nhb.common.predicate.object.value;
 
 import com.nhb.common.predicate.Predicate;
 import com.nhb.common.predicate.object.ObjectDependence;
+import com.nhb.common.predicate.object.ObjectDependenceValue;
 import com.nhb.common.predicate.value.BooleanValue;
 
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 
-public class PredicateWrapperBooleanValue extends AbstractObjectDependenceValue<Boolean> implements BooleanValue {
+public class PredicateWrapperBooleanValue extends ObjectDependenceValue<Boolean> implements BooleanValue {
 
 	@Setter
 	@Getter(AccessLevel.PROTECTED)
