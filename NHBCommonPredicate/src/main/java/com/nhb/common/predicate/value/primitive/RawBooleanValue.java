@@ -4,7 +4,7 @@ import com.nhb.common.predicate.value.BooleanValue;
 
 import lombok.Setter;
 
-public class RawBooleanValue implements BooleanValue {
+public final class RawBooleanValue implements BooleanValue {
 
 	@Setter
 	private boolean value;

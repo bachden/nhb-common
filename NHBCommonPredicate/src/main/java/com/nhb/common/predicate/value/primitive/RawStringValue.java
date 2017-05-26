@@ -4,7 +4,7 @@ import com.nhb.common.predicate.value.StringValue;
 
 import lombok.Setter;
 
-public class RawStringValue implements StringValue {
+public final class RawStringValue implements StringValue {
 
 	@Setter
 	private String value;

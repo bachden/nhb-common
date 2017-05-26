@@ -7,7 +7,7 @@ import com.nhb.common.predicate.object.ObjectDependenceValue;
 import com.nhb.common.predicate.value.CollectionValue;
 import com.nhb.common.predicate.value.RawValue;
 
-public class RawCollectionValue extends ObjectDependenceValue<Collection<?>> implements CollectionValue, RawValue {
+public final class RawCollectionValue extends ObjectDependenceValue<Collection<?>> implements CollectionValue, RawValue {
 
 	private Collection<?> collection;
 

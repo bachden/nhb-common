@@ -4,7 +4,7 @@ import com.nhb.common.predicate.value.PointerValue;
 
 import lombok.Setter;
 
-public class RawPointerValue implements PointerValue {
+public final class RawPointerValue implements PointerValue {
 
 	@Setter
 	private Object value;

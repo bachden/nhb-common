@@ -2,7 +2,7 @@ package com.nhb.common.predicate.value.primitive;
 
 import com.nhb.common.predicate.value.NumberValue;
 
-public class RawNumberValue implements NumberValue {
+public final class RawNumberValue implements NumberValue {
 
 	private Number value;
 
