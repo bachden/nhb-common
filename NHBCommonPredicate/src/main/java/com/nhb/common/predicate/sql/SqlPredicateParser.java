@@ -629,10 +629,10 @@ public class SqlPredicateParser {
 			}
 		}
 
-		if (obj2 instanceof String) {
+		if (obj2 instanceof String && StringUtils.isRepresentNumber((String) obj2)) {
 			obj2 = new RawNumberValue(Double.valueOf((String) obj2));
 		} else {
-			obj2 = new NumberAttributeGetterValue((String) obj1);
+			obj2 = new NumberAttributeGetterValue((String) obj2);
 		}
 
 		if (!(obj1 instanceof NumberValue) || !(obj2 instanceof NumberValue)) {
