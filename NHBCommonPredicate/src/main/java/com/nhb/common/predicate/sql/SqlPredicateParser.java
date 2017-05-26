@@ -148,12 +148,14 @@ public class SqlPredicateParser {
 		String sql1 = removeUnnecessarySpaces(extracted.get(0));
 		// logger.debug("Time to remove unnecessary spaces: {}ms",
 		// timeWatcher.endLapMillis());
+		// logger.debug("Sql after remove unnecessary spaces: {}", sql1);
 
 		List<String> tokens = split(sql1);
 		// logger.debug("Time to split: {}ms", timeWatcher.endLapMillis());
+		// logger.debug("Token after split: {}", tokens);
 
 		normalize(tokens);
-		logger.debug("Tokens after normalized: {}", tokens);
+		// logger.debug("Tokens after normalized: {}", tokens);
 
 		List<String> prefixTokens = toPrefix(tokens);
 		// logger.debug("Time to convert tokens to prefix: {}ms",
@@ -809,6 +811,7 @@ public class SqlPredicateParser {
 	}
 
 	private static List<String> split(String sql) {
+		// logger.debug("--------- SPLIT SQL --------");
 		if (sql != null) {
 			String[] splittedBySpace = sql.split(" ");
 			List<String> results = new ArrayList<>();
@@ -836,7 +839,9 @@ public class SqlPredicateParser {
 								localTokens.add(String.valueOf(chars[index + 1]));
 							}
 						} else {
-							localTokens.add(token.substring(lastIndex, index));
+							if (lastIndex < index) {
+								localTokens.add(token.substring(lastIndex, index));
+							}
 							if (c != COMMA) {
 								localTokens.add(String.valueOf(c));
 							}
@@ -847,7 +852,11 @@ public class SqlPredicateParser {
 						localTokens.add(token.substring(lastIndex));
 					}
 				} else {
-					localTokens.add(token);
+					if (token.isEmpty()) {
+						logger.warn("Token is empty...");
+					} else {
+						localTokens.add(token);
+					}
 				}
 
 				// logger.debug("Token: {} --> local tokens: {}", token,
