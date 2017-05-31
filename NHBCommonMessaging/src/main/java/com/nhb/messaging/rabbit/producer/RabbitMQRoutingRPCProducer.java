@@ -79,8 +79,7 @@ public class RabbitMQRoutingRPCProducer extends RabbitMQProducer<RPCFuture<PuEle
 				BaseRPCFuture<PuElement> future = futures.get(corrId);
 				if (future != null) {
 					try {
-						future.set(PuElementTemplate.getInstance().read(body));
-						future.done();
+						future.setAndDone(PuElementTemplate.getInstance().read(body));
 					} finally {
 						RabbitMQRoutingRPCProducer.this.futures.remove(corrId);
 					}

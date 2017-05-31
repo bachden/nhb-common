@@ -7,7 +7,9 @@ import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicBoolean;
 
+import com.nhb.common.async.exception.ExecutionCancelledException;
 import com.nhb.eventdriven.impl.BaseEventDispatcher;
 
 public class BaseRPCFuture<V> extends BaseEventDispatcher implements RPCFuture<V> {
@@ -30,70 +32,29 @@ public class BaseRPCFuture<V> extends BaseEventDispatcher implements RPCFuture<V
 		});
 	}
 
-	private Throwable failedCause;
-
-	private volatile Callback<V> callable;
 	private volatile V value;
-	private volatile boolean done = false;
-	private volatile boolean cancelled = false;
+	private Throwable failedCause;
+	private Future<?> sourceFuture;
+	private volatile Callback<V> callable;
 
-	private Future<?> monitorFuture;
-	private Future<?> cancelFuture;
+	private final CountDownLatch doneSignal;
+	private final AtomicBoolean done = new AtomicBoolean(false);
+	private final AtomicBoolean cancelled = new AtomicBoolean(false);
 
-	private boolean timeoutFlag = false;
-
-	private CountDownLatch doneSignal;
+	private Future<?> monitorTimeoutFuture;
+	private AtomicBoolean timeoutFlag = new AtomicBoolean(false);
 
 	public BaseRPCFuture() {
 		this.doneSignal = new CountDownLatch(1);
 	}
 
-	@Override
-	public boolean cancel(boolean mayInterruptIfRunning) {
-		if (this.cancelled) {
-			return true;
+	private void doComplete() {
+		if (monitorTimeoutFuture != null) {
+			this.monitorTimeoutFuture.cancel(true);
+			this.monitorTimeoutFuture = null;
 		}
-		if (this.isDone()) {
-			return false;
-		}
-		try {
-			if (this.cancelFuture != null) {
-				this.cancelled = this.cancelFuture.cancel(mayInterruptIfRunning);
-			} else {
-				this.cancelled = true;
-			}
-			return this.cancelled;
-		} finally {
-			if (this.monitorFuture != null) {
-				this.monitorFuture.cancel(true);
-				this.monitorFuture = null;
-			}
-			this.cancelFuture = null;
-			this.doneSignal.countDown();
-			if (this.getCallback() != null) {
-				this.getCallback().apply(null);
-			}
-		}
-	}
-
-	@Override
-	public boolean isCancelled() {
-		return this.cancelled;
-	}
-
-	public void done() {
-		if (this.done || this.cancelled || this.timeoutFlag) {
-			return;
-		}
-		// System.out.println("operator is done, wake up all waiting
-		// threads...");
-		this.done = true;
-		if (monitorFuture != null) {
-			this.monitorFuture.cancel(false);
-			this.monitorFuture = null;
-		}
-		if (cancelFuture != null) {
-			this.cancelFuture = null;
+		if (sourceFuture != null) {
+			this.sourceFuture = null;
 		}
 		this.doneSignal.countDown();
 		if (this.callable != null) {
@@ -106,19 +67,71 @@ public class BaseRPCFuture<V> extends BaseEventDispatcher implements RPCFuture<V
 	}
 
 	@Override
-	public boolean isDone() {
-		return this.done;
+	public boolean cancel(boolean mayInterruptIfRunning) {
+		if (this.done.compareAndSet(false, true) && this.cancelled.compareAndSet(false, true)) {
+			if (this.sourceFuture != null && !this.sourceFuture.isCancelled()) {
+				this.sourceFuture.cancel(mayInterruptIfRunning);
+			}
+			if (this.getFailedCause() == null) {
+				this.setFailedCause(new ExecutionCancelledException());
+			}
+			doComplete();
+			return true;
+		}
+		return false;
 	}
 
+	@Override
+	public boolean isCancelled() {
+		return this.cancelled.get();
+	}
+
+	@Override
+	public boolean isDone() {
+		return this.done.get();
+	}
+
+	/**
+	 * use setAndDone instead
+	 */
+	@Deprecated
+	public void done() {
+		if (this.done.compareAndSet(false, true)) {
+			this.doComplete();
+		}
+	}
+
+	/**
+	 * use setAndDone instead
+	 */
+	@Deprecated
 	public void set(V value) {
-		this.value = value;
+		if (!this.isDone()) {
+			this.value = value;
+		} else {
+			getLogger().warn("Future has been done, cannot re-set value", new IllegalStateException());
+		}
+	}
+
+	public void setAndDone(V value) {
+		if (this.done.compareAndSet(false, true)) {
+			this.value = value;
+			this.doComplete();
+		}
 	}
 
 	@Override
 	public V get() throws InterruptedException, ExecutionException {
-		if (this.done == false) {
+		if (!this.isDone()) {
 			this.doneSignal.await();
-			if (timeoutFlag || cancelled) {
+			if (timeoutFlag.get() && this.getFailedCause() == null) {
+				synchronized (this) {
+					if (timeoutFlag.get() && this.getFailedCause() == null) {
+						this.setFailedCause(new TimeoutException());
+					}
+				}
+			}
+			if (timeoutFlag.get() || this.isCancelled()) {
 				return null;
 			}
 		}
@@ -129,14 +142,14 @@ public class BaseRPCFuture<V> extends BaseEventDispatcher implements RPCFuture<V
 	public V get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
 		this.setTimeout(timeout, unit);
 		V result = this.get();
-		if (timeoutFlag) {
+		if (timeoutFlag.get()) {
 			if (this.getFailedCause() instanceof TimeoutException) {
 				throw (TimeoutException) this.getFailedCause();
 			} else {
 				throw new TimeoutException();
 			}
 		}
-		if (this.cancelled) {
+		if (this.isCancelled()) {
 			return null;
 		}
 		return result;
@@ -159,11 +172,11 @@ public class BaseRPCFuture<V> extends BaseEventDispatcher implements RPCFuture<V
 	}
 
 	public Future<?> getCancelFuture() {
-		return cancelFuture;
+		return sourceFuture;
 	}
 
 	public void setCancelFuture(Future<?> cancelFuture) {
-		this.cancelFuture = cancelFuture;
+		this.sourceFuture = cancelFuture;
 	}
 
 	public Throwable getFailedCause() {
@@ -176,22 +189,20 @@ public class BaseRPCFuture<V> extends BaseEventDispatcher implements RPCFuture<V
 
 	@Override
 	public void setTimeout(long timeout, TimeUnit unit) {
-		if (this.isDone()) {
+		if (this.isDone() || this.isCancelled()) {
 			return;
 		}
-		if (this.monitorFuture == null) {
+		if (this.monitorTimeoutFuture == null) {
 			synchronized (this) {
-				if (this.monitorFuture == null) {
+				if (this.monitorTimeoutFuture == null) {
 					final TimeoutException exceptionTobeThrown = new TimeoutException();
-					this.monitorFuture = monitoringExecutorService.schedule(new Runnable() {
+					this.monitorTimeoutFuture = monitoringExecutorService.schedule(new Runnable() {
 						@Override
 						public void run() {
-							if (monitorFuture == null) {
-								return;
+							if (timeoutFlag.compareAndSet(false, true)) {
+								setFailedCause(exceptionTobeThrown);
+								cancel(true);
 							}
-							setFailedCause(exceptionTobeThrown);
-							timeoutFlag = true;
-							cancel(true);
 						}
 					}, timeout, unit);
 				}

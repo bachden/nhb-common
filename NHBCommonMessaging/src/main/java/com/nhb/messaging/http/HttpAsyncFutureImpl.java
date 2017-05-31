@@ -37,15 +37,13 @@ class HttpAsyncFutureImpl extends BaseRPCFuture<HttpResponse> implements HttpAsy
 
 	@Override
 	public void completed(HttpResponse httpResponse) {
-		this.set(httpResponse);
-		this.done();
+		this.setAndDone(httpResponse);
 	}
 
 	@Override
 	public void failed(Exception exception) {
 		this.setFailedCause(exception);
-		this.set(null);
-		this.done();
+		this.setAndDone(null);
 	}
 
 	private PuElement handleResponse(HttpResponse response) {

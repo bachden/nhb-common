@@ -72,13 +72,13 @@ public class RabbitMQRPCProducer extends RabbitMQProducer<RPCFuture<PuElement>> 
 				if (future != null) {
 					try {
 						try {
-							future.set(PuElementTemplate.getInstance().read(body));
+							future.setAndDone(PuElementTemplate.getInstance().read(body));
 						} catch (Exception ex) {
 							getLogger().error("Error while deserialize response data, queue name: "
 									+ getQueueConfig().getQueueName(), ex);
 							future.setFailedCause(ex);
+							future.setAndDone(null);
 						}
-						future.done();
 					} finally {
 						RabbitMQRPCProducer.this.futures.remove(corrId);
 					}
