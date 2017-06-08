@@ -359,7 +359,9 @@ public final class Predicates {
 	private static final SqlPredicateThreadLocal getSqlPredicateThreadLocal(String sql) {
 		if (!sqlPredicateThreadLocalBySQL.containsKey(sql)) {
 			synchronized (sqlPredicateThreadLocalBySQL) {
-				sqlPredicateThreadLocalBySQL.put(sql, new SqlPredicateThreadLocal(sql));
+				if (!sqlPredicateThreadLocalBySQL.containsKey(sql)) {
+					sqlPredicateThreadLocalBySQL.put(sql, new SqlPredicateThreadLocal(sql));
+				}
 			}
 		}
 		return sqlPredicateThreadLocalBySQL.get(sql);
