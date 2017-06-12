@@ -179,7 +179,7 @@ public class SqlPredicateParser {
 				} else {
 					// FilteredObject entity =
 					// PredicateBuilder.newFilteredObject();
-					switch (token) {
+					switch (token.toLowerCase()) {
 					case AND: {
 						Object obj2 = stack.pop();
 						Object obj1 = stack.pop();

@@ -2,9 +2,6 @@ import java.util.Arrays;
 
 import com.nhb.common.data.PuArray;
 import com.nhb.common.data.PuArrayList;
-import com.nhb.common.data.PuDataType;
-import com.nhb.common.data.PuValue;
-import com.nhb.common.utils.StringUtils;
 
 public class TestDecodePuArray {
 
@@ -25,54 +22,11 @@ public class TestDecodePuArray {
 				-111, 126, 66, -64, -121, 21, -11, 3, -118, -76, -34, 7, -1, -64, -64, -64, -64, -64, -64, -1, -1, -1,
 				-1 };
 
-		Object objNull = null;
-
-		PuArray puArray = new PuArrayList();
-		puArray.addFrom(1);
-		puArray.addFrom(new byte[] { 93, -122, -38, 99, 63, -44, 78, -18, -68, -93, -96, 44, 114, -103, -85, 9 });
-		puArray.addFrom(new byte[] { -115, -44, 114, -66, 81, -104, 68, -125, -82, -14, -45, 38, -15, 105, 127, -83 });
-		puArray.addFrom(1021);
-		puArray.addFrom(
-				"{\"result\":{\"bonusValue\":4000},\"campaignId\":\"8a013787-c2b8-4913-bef2-c52eea0a5f86\",\"eventCampaignFlatId\":\"daf3d0b1-4379-4a84-9863-c3e95fb25d08\",\"isSandbox\":false,\"campaignName\":\"bonus gold for first card cash in\"}");
-		puArray.addFrom(objNull);
-		puArray.addFrom(objNull);
-		puArray.addFrom(objNull);
-		puArray.addFrom(1495542685361l);
-		puArray.addFrom(new byte[] { -94, 97, 28, 84, -111, 126, 66, -64, -121, 21, -11, 3, -118, -76, -34, 7 });
-		puArray.addFrom(-1);
-		puArray.addFrom(objNull);
-		puArray.addFrom(objNull);
-		puArray.addFrom(objNull);
-		puArray.addFrom(objNull);
-		puArray.addFrom(objNull);
-		puArray.addFrom(objNull);
-		puArray.addFrom(-1);
-		puArray.addFrom(-1);
-		puArray.addFrom(-1);
-		puArray.addFrom(-1);
-
-		bytes1 = puArray.toBytes();
-
 		System.out.println("bytes: \n" + Arrays.toString(bytes1));
 
 		System.out.println("Input data as String: " + new String(bytes1));
 		PuArray array = PuArrayList.fromObject(bytes1);
 		System.out.println("--> " + array);
-
-		for (PuValue val : array) {
-			if (val.getType() == PuDataType.RAW) {
-				String valString = new String(val.getRaw());
-				if (StringUtils.isPrinable(valString)) {
-					System.out.println(valString);
-				} else {
-					System.out.println(Arrays.toString(val.getRaw()));
-				}
-			} else if (val.getType() == PuDataType.NULL) {
-				System.out.println("null");
-			} else {
-				System.out.println(val.getData().toString());
-			}
-		}
 	}
 
 }
