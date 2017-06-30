@@ -576,6 +576,8 @@ public class SqlPredicateParser {
 			} else if (((String) obj1).startsWith("$")) {
 				int paramId = Integer.valueOf(((String) obj1).substring(1));
 				obj1 = new RawStringValue(params.get(paramId));
+			} else if (obj2 instanceof String && StringUtils.isRepresentNumber((String) obj2)) {
+				obj1 = new NumberAttributeGetterValue((String) obj1);
 			} else {
 				obj1 = new StringAttributeGetterValue((String) obj1);
 			}
@@ -589,6 +591,8 @@ public class SqlPredicateParser {
 			} else if (((String) obj2).startsWith("$")) {
 				int paramId = Integer.valueOf(((String) obj2).substring(1));
 				obj2 = new RawStringValue(params.get(paramId));
+			} else if (obj1 instanceof NumberValue) {
+				obj2 = new NumberAttributeGetterValue((String) obj2);
 			} else {
 				obj2 = new StringAttributeGetterValue((String) obj2);
 			}
