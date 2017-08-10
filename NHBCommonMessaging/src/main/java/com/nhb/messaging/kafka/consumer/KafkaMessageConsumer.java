@@ -40,6 +40,9 @@ public class KafkaMessageConsumer extends BaseEventDispatcher {
 	private List<String> topics;
 	private KafkaConsumer<byte[], PuElement> consumer;
 
+	@Getter
+	private KafkaOffsetCommitter offsetCommitter;
+
 	private int pollTimeout = 100;
 	private Thread pollingThead;
 
@@ -68,6 +71,7 @@ public class KafkaMessageConsumer extends BaseEventDispatcher {
 		this.properties = properties;
 
 		this.consumer = new KafkaConsumer<>(properties);
+		this.offsetCommitter = new KafkaOffsetCommitter(this.consumer);
 		this.topics = topics;
 		this.pollTimeout = pollTimeout;
 	}
@@ -187,7 +191,8 @@ public class KafkaMessageConsumer extends BaseEventDispatcher {
 						} catch (WakeupException we) {
 							// do nothing
 						} catch (Exception ex) {
-							getLogger().error("********** Polling message from kafka error, Kafka consumer start failed", ex);
+							getLogger().error(
+									"********** Polling message from kafka error, Kafka consumer start failed", ex);
 							throw ex;
 						}
 					}

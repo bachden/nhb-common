@@ -29,8 +29,10 @@ public class SimpleCalculator implements Loggable {
 
 	private StateMachine generateStateMachine() {
 		StateMachine stateMachine = new IgnoreTransitionStateMachine();
-		stateMachine.addTransition(CalculatorState.ASTERISK, CalculatorState.END);
-		stateMachine.addTransition(CalculatorState.CALCULATE_SUM, CalculatorState.PRINT_RESULT);
+		// stateMachine.addTransition(CalculatorState.ASTERISK,
+		// CalculatorState.END);
+		// stateMachine.addTransition(CalculatorState.CALCULATE_SUM,
+		// CalculatorState.PRINT_RESULT);
 		stateMachine.setFinalState(CalculatorState.END);
 		stateMachine.setStartState(CalculatorState.CALCULATE_SUM);
 		return stateMachine;

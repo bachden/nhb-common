@@ -36,7 +36,7 @@ public class Sample {
 		private String name;
 		private boolean isFemale;
 		private String sqrt;
-		
+
 		private long time;
 	}
 
@@ -52,13 +52,16 @@ public class Sample {
 		// bar.foo.name) and bar IS NOT NULL and (name in ('noname', -1,
 		// bar.foo.name) or bar.foo.name like '[Ms]ario.*') and (sqrt
 		// bar.foo.value >= 4)";
-		// sql = "(age % 2.0) + (((4.0 * age) - ((1.0 * 5.0) + 6.0))) != 0.0 and ((1.0 + (2.0 ^ 4.0)) % 5.0) - 8.0 = 1.0 or age in bar.foo.collection1 and `sqrt` = 'ok' and not female or name = bar.foo.name and bar is not null and name in ('noname', -1.0, bar.foo.name) or bar.foo.name like '[Ms]ario.*' and sqrt(bar.foo.value) >= 4.0";
-		// sql = "time >= 10 And age >=1";
-		sql = "numGames >= 5 and `bet` = 500";
-		
+		// sql = "(age % 2.0) + (((4.0 * age) - ((1.0 * 5.0) + 6.0))) != 0.0 and
+		// ((1.0 + (2.0 ^ 4.0)) % 5.0) - 8.0 = 1.0 or age in bar.foo.collection1
+		// and `sqrt` = 'ok' and not female or name = bar.foo.name and bar is
+		// not null and name in ('noname', -1.0, bar.foo.name) or bar.foo.name
+		// like '[Ms]ario.*' and sqrt(bar.foo.value) >= 4.0";
+		sql = "time >= 10 And age = 7";
+
 		Predicate predicate = Predicates.fromSQL(sql);
 
-		// predicate = Predicates.fromSQL(sql);
+		predicate = Predicates.fromSQL(sql);
 
 		System.out.println("Predicate: " + predicate.toString());
 
@@ -67,7 +70,7 @@ public class Sample {
 		userVO.setAge(7);
 		userVO.setFemale(false);
 		userVO.setSqrt("ok");
-		userVO.setTime(7l);
+		userVO.setTime(20);
 
 		Foo foo = new Foo();
 		foo.setValue(27);
