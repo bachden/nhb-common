@@ -5,6 +5,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import com.nhb.common.async.BaseRPCFuture;
 import com.nhb.common.async.Callback;
 import com.nhb.common.async.RPCCallback;
 import com.nhb.common.async.RPCFuture;
@@ -58,6 +59,46 @@ public abstract class RPCFutureTranslator<FromType, ToType> extends AbstractFutu
 	@Override
 	public void setCallback(Callback<ToType> callable) {
 		this.callback = callable;
+		if (this.getSourceFuture().isDone()) {
+			ToType result = null;
+			try {
+				result = this.get();
+				if (result == null && !this.isAllowNullResult()) {
+					this.setFailedCause(((RPCFuture<FromType>) this.getSourceFuture()).getFailedCause());
+				}
+			} catch (Exception e) {
+				this.setFailedCause(e);
+			}
+			this.callback.apply(result);
+		}
+	}
+
+	public static void main(String[] args) {
+		BaseRPCFuture<String> sourceFuture = new BaseRPCFuture<>();
+		sourceFuture.setFailedCause(new RuntimeException("this is error"));
+		sourceFuture.setAndDone(null);
+
+		final RPCFutureTranslator<String, Integer> futureTranslator = new RPCFutureTranslator<String, Integer>(
+				sourceFuture) {
+
+			@Override
+			protected Integer translate(String sourceResult) throws Exception {
+				return Integer.valueOf(sourceResult);
+			}
+		};
+
+		futureTranslator.setCallback(new Callback<Integer>() {
+
+			@Override
+			public void apply(Integer result) {
+				if (result != null) {
+					System.out.println("Result: " + result);
+				} else {
+					System.out.println("Error...");
+					futureTranslator.getFailedCause().printStackTrace();
+				}
+			}
+		});
 	}
 
 	@Override

@@ -26,7 +26,7 @@ public final class StringUtils {
 	public static class StringFormatOption {
 
 		private boolean autoFormatNumber;
-		private DecimalFormat decimalFormat = null;
+		private DecimalFormat decimalFormat;
 
 		public DecimalFormat getDecimalFormat() {
 			if (this.decimalFormat == null) {

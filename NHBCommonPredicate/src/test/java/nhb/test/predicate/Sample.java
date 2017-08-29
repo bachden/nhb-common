@@ -47,17 +47,17 @@ public class Sample {
 
 		String sql = null;
 
-		// sql = "age%2+4*age-1*5+6 != 0 and (1+2^4) % 5 - 8 = 1 or age in
-		// bar.foo.collection1 and `sqrt` = 'ok' and (not female or name =
-		// bar.foo.name) and bar IS NOT NULL and (name in ('noname', -1,
-		// bar.foo.name) or bar.foo.name like '[Ms]ario.*') and (sqrt
-		// bar.foo.value >= 4)";
-		// sql = "(age % 2.0) + (((4.0 * age) - ((1.0 * 5.0) + 6.0))) != 0.0 and
-		// ((1.0 + (2.0 ^ 4.0)) % 5.0) - 8.0 = 1.0 or age in bar.foo.collection1
-		// and `sqrt` = 'ok' and not female or name = bar.foo.name and bar is
-		// not null and name in ('noname', -1.0, bar.foo.name) or bar.foo.name
-		// like '[Ms]ario.*' and sqrt(bar.foo.value) >= 4.0";
-		sql = "time >= 10 And age = 7";
+		sql = "age%2+4*age-1*5+6 != 0 " //
+				+ "and (1+2^4) % 5 - 8 = 1 " //
+				+ "or age in bar.foo.collection1 " //
+				+ "and `sqrt` = 'ok' " //
+				+ "and (not female or name = bar.foo.name) " //
+				+ "and bar IS NOT NULL " //
+				+ "and (name in ('noname', -1, bar.foo.name) " //
+				+ "or bar.foo.name like '[Ms]ario.*') " //
+				+ "and (sqrt bar.foo.value >= 4)";
+
+		// sql = "time >= 10 And age = 7";
 
 		Predicate predicate = Predicates.fromSQL(sql);
 
