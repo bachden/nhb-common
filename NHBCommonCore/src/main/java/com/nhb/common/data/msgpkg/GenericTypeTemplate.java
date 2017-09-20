@@ -98,7 +98,7 @@ public class GenericTypeTemplate extends AbstractTemplate<Object> {
 			}
 			break;
 		case INTEGER:
-			if (format == MessageFormat.INT64 || format == MessageFormat.UINT64) {
+			if (format == MessageFormat.INT64 || format == MessageFormat.UINT64 || format == MessageFormat.UINT32) {
 				_result = unpacker.readLong();
 			} else {
 				_result = unpacker.readInt();
