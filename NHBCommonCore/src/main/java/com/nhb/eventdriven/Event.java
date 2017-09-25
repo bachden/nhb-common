@@ -2,19 +2,29 @@ package com.nhb.eventdriven;
 
 public interface Event {
 
-	public void setType(String type);
+	void setType(String type);
 
-	public String getType();
+	String getType();
 
-	public void setCallback(Callable callback);
+	void setCallback(Callable callback);
 
-	public Callable getCallback();
+	Callable getCallback();
 
-	public <T extends EventDispatcher> T getTarget();
+	<T extends EventDispatcher> T getTarget();
 
-	public void setTarget(EventDispatcher target);
+	void setTarget(EventDispatcher target);
 
-	public <T extends EventDispatcher> T getCurrentTarget();
+	<T extends EventDispatcher> T getCurrentTarget();
 
-	public void setCurrentTarget(EventDispatcher target);
+	void setCurrentTarget(EventDispatcher target);
+
+	@SuppressWarnings("unchecked")
+	default <T extends Event> T cast() {
+		return (T) this;
+	}
+
+	@SuppressWarnings("unchecked")
+	default <T extends Event> T as(Class<T> cls) {
+		return (T) this;
+	}
 }
