@@ -1,7 +1,6 @@
 package com.nhb.messaging.kafka.producer;
 
 import java.util.Properties;
-import java.util.UUID;
 import java.util.concurrent.Future;
 
 import org.apache.kafka.clients.producer.Callback;
@@ -12,7 +11,7 @@ import org.apache.kafka.common.serialization.ByteArraySerializer;
 
 import com.nhb.common.BaseLoggable;
 import com.nhb.common.data.PuElement;
-import com.nhb.common.utils.Converter;
+import com.nhb.common.utils.UuidUtils;
 import com.nhb.messaging.MessageProducer;
 import com.nhb.messaging.kafka.serialization.KafkaPuElementSerializer;
 
@@ -59,7 +58,7 @@ public class KafkaMessageProducer extends BaseLoggable implements MessageProduce
 
 	@Override
 	public byte[] publish(PuElement data) {
-		byte[] key = Converter.uuidToBytes(UUID.randomUUID());
+		byte[] key = UuidUtils.timebasedUuidAsBytes();
 		this.send(key, data);
 		return key;
 	}
@@ -69,7 +68,7 @@ public class KafkaMessageProducer extends BaseLoggable implements MessageProduce
 		if (topic == null) {
 			throw new IllegalArgumentException("topic cannot be null");
 		}
-		byte[] key = Converter.uuidToBytes(UUID.randomUUID());
+		byte[] key = UuidUtils.timebasedUuidAsBytes();
 		this.send(topic, key, data);
 		return key;
 	}

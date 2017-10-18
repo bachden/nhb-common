@@ -35,6 +35,13 @@ public final class Converter {
 		return new String(hexChars);
 	}
 
+	/**
+	 * Use UuidUtils instead
+	 * 
+	 * @param uuid
+	 * @return
+	 */
+	@Deprecated
 	public static byte[] uuidToBytes(UUID uuid) {
 		ByteBuffer bb = ByteBuffer.wrap(new byte[16]);
 		bb.putLong(uuid.getMostSignificantBits());
@@ -42,10 +49,24 @@ public final class Converter {
 		return bb.array();
 	}
 
+	/**
+	 * Use UuidUtils instead
+	 * 
+	 * @param uuid
+	 * @return
+	 */
+	@Deprecated
 	public static byte[] uuidToBytes(String uuidString) {
 		return uuidToBytes(UUID.fromString(uuidString));
 	}
 
+	/**
+	 * Use UuidUtils instead
+	 * 
+	 * @param uuid
+	 * @return
+	 */
+	@Deprecated
 	public static UUID bytesToUUID(byte[] bytes) {
 		if (bytes.length != 16) {
 			throw new IllegalArgumentException();
@@ -62,6 +83,13 @@ public final class Converter {
 		return new UUID(msl, lsl);
 	}
 
+	/**
+	 * Use UuidUtils instead
+	 * 
+	 * @param uuid
+	 * @return
+	 */
+	@Deprecated
 	public static String bytesToUUIDString(byte[] bytes) {
 		return bytesToUUID(bytes).toString();
 	}

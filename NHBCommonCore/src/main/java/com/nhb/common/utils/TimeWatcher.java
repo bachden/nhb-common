@@ -23,11 +23,11 @@ public class TimeWatcher {
 	}
 
 	public long endLapMillis() {
-		return this.endLapMicro() / 1000l;
+		return this.endLapNano() / 1000000l;
 	}
 
 	public long endLapSeconds() {
-		return this.endLapMillis() / 1000l;
+		return this.endLapNano() / 1000000000l;
 	}
 
 	public long getNano() {
@@ -39,10 +39,10 @@ public class TimeWatcher {
 	}
 
 	public long getMillis() {
-		return this.getMicro() / 1000l;
+		return this.getNano() / 1000000l;
 	}
 
 	public long getSeconds() {
-		return this.getMillis() / 1000l;
+		return this.getNano() / 1000000000l;
 	}
 }

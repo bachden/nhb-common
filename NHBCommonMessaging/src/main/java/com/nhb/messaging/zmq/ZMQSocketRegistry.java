@@ -67,13 +67,35 @@ public class ZMQSocketRegistry implements Loggable {
 		synchronized (registry) {
 			ZMQ.Socket socket = this.getContext().socket(type.getFlag());
 
-			Collection<ZMQ.Socket> openSockets = this.registry.get(addr);
-			if (openSockets == null) {
-				openSockets = new CopyOnWriteArrayList<>();
-				this.registry.put(addr, openSockets);
+			Collection<ZMQ.Socket> openedSockets = this.registry.get(addr);
+			if (openedSockets == null) {
+				openedSockets = new CopyOnWriteArrayList<>();
+				this.registry.put(addr, openedSockets);
 			}
 
-			openSockets.add(socket);
+			openedSockets.add(socket);
+			socketToAddress.put(socket, addr);
+
+			if (type.isClient()) {
+				socket.connect(addr);
+			} else {
+				socket.bind(addr);
+			}
+			return socket;
+		}
+	}
+
+	public ZMQ.Socket openSocket(String addr, ZMQSocketType type, Map<String, Object> options) {
+		synchronized (registry) {
+			ZMQ.Socket socket = this.getContext().socket(type.getFlag());
+
+			Collection<ZMQ.Socket> openedSockets = this.registry.get(addr);
+			if (openedSockets == null) {
+				openedSockets = new CopyOnWriteArrayList<>();
+				this.registry.put(addr, openedSockets);
+			}
+
+			openedSockets.add(socket);
 			socketToAddress.put(socket, addr);
 
 			if (type.isClient()) {

@@ -5,6 +5,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.msgpack.MessagePack;
@@ -203,7 +204,11 @@ public class PuArrayList extends ArrayList<PuValue> implements PuArray {
 				PuArrayList puArray = (PuArrayList) value.getData();
 				puArray.append(numTab + 1, sb);
 			} else {
-				sb.append((Object) value.getData());
+				if (value.getData() instanceof byte[]) {
+					sb.append(Arrays.toString((byte[]) value.getData()));
+				} else {
+					sb.append((Object) value.getData());
+				}
 			}
 		}
 		sb.append("]");

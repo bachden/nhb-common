@@ -29,4 +29,9 @@ public class ZMQSocketPooledObjectFactory extends BasePooledObjectFactory<Socket
 	public PooledObject<Socket> wrap(Socket obj) {
 		return new PooledZMQSocket(obj);
 	}
+
+	@Override
+	public void destroyObject(PooledObject<Socket> p) throws Exception {
+		p.getObject().close();
+	}
 }

@@ -53,7 +53,12 @@ public class PuXmlHelper {
 	}
 
 	private static final void processXMLNode(Node node, PuObject holder) throws Exception {
-		PuDataType type = PuDataType.fromName(node.getAttributes().getNamedItem(TYPE).getNodeValue());
+		PuDataType type = null;
+		try {
+			type = PuDataType.fromName(node.getAttributes().getNamedItem(TYPE).getNodeValue());
+		} catch (NullPointerException ex) {
+			throw new NullPointerException("PuObject's xml variable must specific type");
+		}
 		String name = node.getAttributes().getNamedItem(NAME).getNodeValue();
 		if (type == PuDataType.PUARRAY) {
 			PuArrayList arr = new PuArrayList();
@@ -103,7 +108,8 @@ public class PuXmlHelper {
 					return puo;
 				} else {
 					Node inner = node instanceof Document
-							? (Node) xPath.compile("/" + VARIABLE + "s").evaluate(node, XPathConstants.NODE) : node;
+							? (Node) xPath.compile("/" + VARIABLE + "s").evaluate(node, XPathConstants.NODE)
+							: node;
 					Node typeNode = inner.getAttributes().getNamedItem("type");
 					if (typeNode == null) {
 						return PuNull.EMPTY;
