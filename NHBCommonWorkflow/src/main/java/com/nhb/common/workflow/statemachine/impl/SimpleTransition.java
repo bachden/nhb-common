@@ -11,6 +11,8 @@ import lombok.Getter;
 public class SimpleTransition implements Transition {
 
 	private int id;
+	@Builder.Default
 	private State from = State.ASTERISK;
+	@Builder.Default
 	private State to = State.ASTERISK;
 }
