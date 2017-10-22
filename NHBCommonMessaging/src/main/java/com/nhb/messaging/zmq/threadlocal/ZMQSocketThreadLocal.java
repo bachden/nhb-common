@@ -1,15 +1,13 @@
 package com.nhb.messaging.zmq.threadlocal;
 
-import org.zeromq.ZMQ;
-import org.zeromq.ZMQ.Socket;
-
+import com.nhb.messaging.zmq.ZMQSocket;
 import com.nhb.messaging.zmq.ZMQSocketRegistry;
 import com.nhb.messaging.zmq.ZMQSocketType;
 
 import lombok.Getter;
 
 @Getter
-public class ZMQSocketThreadLocal extends ThreadLocal<ZMQ.Socket> {
+public class ZMQSocketThreadLocal extends ThreadLocal<ZMQSocket> {
 
 	private final ZMQSocketRegistry socketRegistry;
 	private final String address;
@@ -22,7 +20,7 @@ public class ZMQSocketThreadLocal extends ThreadLocal<ZMQ.Socket> {
 	}
 
 	@Override
-	protected Socket initialValue() {
+	protected ZMQSocket initialValue() {
 		return this.socketRegistry.openSocket(getAddress(), getType());
 	}
 

@@ -3,7 +3,7 @@ package com.nhb.common.db.beans;
 import java.util.UUID;
 
 import com.nhb.common.annotations.Transparent;
-import com.nhb.common.utils.UuidUtils;
+import com.nhb.common.utils.UUIDUtils;
 
 public class UUIDBean extends IdBinary16Bean {
 
@@ -17,12 +17,12 @@ public class UUIDBean extends IdBinary16Bean {
 	}
 
 	public UUIDBean(UUID id) {
-		super(UuidUtils.uuidToBytes(id));
+		super(UUIDUtils.uuidToBytes(id));
 	}
 
 	@Transparent
 	public UUID getUuid() {
-		return UuidUtils.bytesToUUID(getId());
+		return UUIDUtils.bytesToUUID(getId());
 	}
 
 	public String getUuidString() {
@@ -34,10 +34,10 @@ public class UUIDBean extends IdBinary16Bean {
 	}
 
 	public void setId(UUID uuid) {
-		this.setId(UuidUtils.uuidToBytes(uuid));
+		this.setId(UUIDUtils.uuidToBytes(uuid));
 	}
 
 	public void autoId() {
-		this.setId(UuidUtils.timebasedUuid());
+		this.setId(UUIDUtils.timebasedUUID());
 	}
 }

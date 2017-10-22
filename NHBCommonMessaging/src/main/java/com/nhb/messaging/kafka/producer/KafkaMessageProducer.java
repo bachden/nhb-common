@@ -11,7 +11,7 @@ import org.apache.kafka.common.serialization.ByteArraySerializer;
 
 import com.nhb.common.BaseLoggable;
 import com.nhb.common.data.PuElement;
-import com.nhb.common.utils.UuidUtils;
+import com.nhb.common.utils.UUIDUtils;
 import com.nhb.messaging.MessageProducer;
 import com.nhb.messaging.kafka.serialization.KafkaPuElementSerializer;
 
@@ -58,7 +58,7 @@ public class KafkaMessageProducer extends BaseLoggable implements MessageProduce
 
 	@Override
 	public byte[] publish(PuElement data) {
-		byte[] key = UuidUtils.timebasedUuidAsBytes();
+		byte[] key = UUIDUtils.timebasedUUIDAsBytes();
 		this.send(key, data);
 		return key;
 	}
@@ -68,7 +68,7 @@ public class KafkaMessageProducer extends BaseLoggable implements MessageProduce
 		if (topic == null) {
 			throw new IllegalArgumentException("topic cannot be null");
 		}
-		byte[] key = UuidUtils.timebasedUuidAsBytes();
+		byte[] key = UUIDUtils.timebasedUUIDAsBytes();
 		this.send(topic, key, data);
 		return key;
 	}
