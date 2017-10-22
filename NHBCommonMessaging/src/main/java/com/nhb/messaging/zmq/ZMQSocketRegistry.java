@@ -5,6 +5,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.zeromq.ZMQ;
 
@@ -55,56 +57,74 @@ public class ZMQSocketRegistry implements Loggable {
 					System.out.println("\t-> Closing socket " + (++count));
 					socket.setLinger(0);
 					socket.close();
+
+					try {
+						Thread.sleep(10);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
 				}
 			}
 			this.registry.clear();
 			this.socketToAddress.clear();
 		}
+		try {
+			Thread.sleep(10);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
 		context.close();
 	}
 
-	public ZMQ.Socket openSocket(String addr, ZMQSocketType type) {
+	public ZMQSocket openSocket(String addr, ZMQSocketType type) {
+		return this.openSocket(addr, type, null);
+	}
+
+	public ZMQSocket openSocket(String address, ZMQSocketType type, ZMQSocketOptions options) {
 		synchronized (registry) {
 			ZMQ.Socket socket = this.getContext().socket(type.getFlag());
 
-			Collection<ZMQ.Socket> openedSockets = this.registry.get(addr);
+			Collection<ZMQ.Socket> openedSockets = this.registry.get(address);
 			if (openedSockets == null) {
 				openedSockets = new CopyOnWriteArrayList<>();
-				this.registry.put(addr, openedSockets);
+				this.registry.put(address, openedSockets);
 			}
 
 			openedSockets.add(socket);
-			socketToAddress.put(socket, addr);
+			socketToAddress.put(socket, address);
 
+			int port = extractPort(address);
 			if (type.isClient()) {
-				socket.connect(addr);
+				socket.connect(address);
 			} else {
-				socket.bind(addr);
+				if (port == -1) {
+					int minPort = options == null ? -1 : options.getMinPort();
+					int maxPort = options == null ? -1 : options.getMaxPort();
+					if (minPort > 0) {
+						if (maxPort > minPort) {
+							port = socket.bindToRandomPort(address, minPort, maxPort);
+						} else {
+							port = socket.bindToRandomPort(address, minPort);
+						}
+					} else {
+						port = socket.bindToRandomPort(address);
+					}
+				} else {
+					socket.bind(address);
+				}
 			}
-			return socket;
+			return new ZMQSocket(socket, port, address, () -> {
+				this.closeSocket(socket);
+			});
 		}
 	}
 
-	public ZMQ.Socket openSocket(String addr, ZMQSocketType type, Map<String, Object> options) {
-		synchronized (registry) {
-			ZMQ.Socket socket = this.getContext().socket(type.getFlag());
-
-			Collection<ZMQ.Socket> openedSockets = this.registry.get(addr);
-			if (openedSockets == null) {
-				openedSockets = new CopyOnWriteArrayList<>();
-				this.registry.put(addr, openedSockets);
-			}
-
-			openedSockets.add(socket);
-			socketToAddress.put(socket, addr);
-
-			if (type.isClient()) {
-				socket.connect(addr);
-			} else {
-				socket.bind(addr);
-			}
-			return socket;
+	private static final int extractPort(String address) {
+		Matcher m = Pattern.compile(":(\\d+)").matcher(address);
+		if (m.find()) {
+			return Integer.valueOf(m.group(1));
 		}
+		return -1;
 	}
 
 	public void closeSocket(ZMQ.Socket socket) {

@@ -14,9 +14,9 @@ public enum ZMQSocketType {
 	DEALER(ZMQ.DEALER),
 	ROUTER(ZMQ.ROUTER),
 	PUSH_PRODUCER(ZMQ.PUSH),
-	PUSH_CONSUMER(ZMQ.PUSH, true),
 	PULL_CONSUMER(ZMQ.PULL, true),
-	PULL_COLLECTOR(ZMQ.PULL),
+	PUSH_RESPONDER(ZMQ.PUSH, true),
+	PULL_RECEIVER(ZMQ.PULL),
 	XPUB(ZMQ.XPUB, true),
 	XSUB(ZMQ.XSUB),
 	STREAM(ZMQ.STREAM);
@@ -34,5 +34,14 @@ public enum ZMQSocketType {
 	private ZMQSocketType(int flag, boolean client) {
 		this.flag = flag;
 		this.client = client;
+	}
+
+	public static ZMQSocketType fromFlag(int flag) {
+		for (ZMQSocketType val : values()) {
+			if (flag == val.getFlag()) {
+				return val;
+			}
+		}
+		return null;
 	}
 }
