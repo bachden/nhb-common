@@ -31,6 +31,14 @@ public class ZMQSocket {
 		this.onCloseCallback = onCloseCallback;
 	}
 
+	public void proxy(ZMQSocket backend) {
+		ZMQ.proxy(this.socket, backend.socket, null);
+	}
+
+	public void proxy(ZMQSocket backend, ZMQSocket capture) {
+		ZMQ.proxy(this.socket, backend.socket, capture.socket);
+	}
+
 	public ZMQSocketType getSocketType() {
 		return ZMQSocketType.fromFlag(this.getType());
 	}
