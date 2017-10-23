@@ -39,6 +39,35 @@ public class ZMQSocket {
 		ZMQ.proxy(this.socket, backend.socket, capture == null ? null : capture.socket);
 	}
 
+	/**
+	 * Start new thread to execute proxy from this socket to backend socket with
+	 * capture socket
+	 * 
+	 * @param backend
+	 *            socket to handle request
+	 * @param capture
+	 *            socket to capture data
+	 * @return forwarding thread
+	 */
+	public Thread asyncForwardTo(ZMQSocket backend, ZMQSocket capture) {
+		Thread result = new Thread(() -> {
+			this.forwardTo(backend, capture);
+		}, "ZMQ Forwarding Thread (" + this.getAddress() + " -> " + backend.address + ")");
+		result.start();
+		return result;
+	}
+
+	/**
+	 * Start new thread to execute proxy from this socket to backend socket
+	 * 
+	 * @param backend
+	 *            socket to handle request
+	 * @return forwarding thread
+	 */
+	public Thread asyncForwardTo(ZMQSocket backend) {
+		return this.asyncForwardTo(backend, null);
+	}
+
 	public ZMQSocketType getSocketType() {
 		return ZMQSocketType.fromFlag(this.getType());
 	}
