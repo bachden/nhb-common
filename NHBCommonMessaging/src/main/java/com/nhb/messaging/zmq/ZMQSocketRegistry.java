@@ -1,8 +1,11 @@
 package com.nhb.messaging.zmq;
 
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.regex.Matcher;
@@ -15,6 +18,7 @@ import com.nhb.common.Loggable;
 import lombok.Getter;
 
 public class ZMQSocketRegistry implements Loggable {
+	private static final Set<String> TCP_UDP = new HashSet<>(Arrays.asList("tcp", "udp"));
 
 	private final Map<String, Collection<ZMQ.Socket>> registry = new ConcurrentHashMap<>();
 	private final Map<ZMQ.Socket, String> socketToAddress = new ConcurrentHashMap<>();
@@ -94,10 +98,11 @@ public class ZMQSocketRegistry implements Loggable {
 			socketToAddress.put(socket, address);
 
 			int port = extractPort(address);
+			String protocol = extractProtocol(address);
 			if (type.isClient()) {
 				socket.connect(address);
 			} else {
-				if (port == -1) {
+				if (port == -1 && TCP_UDP.contains(protocol)) {
 					int minPort = options == null ? -1 : options.getMinPort();
 					int maxPort = options == null ? -1 : options.getMaxPort();
 					if (minPort > 0) {
@@ -125,6 +130,14 @@ public class ZMQSocketRegistry implements Loggable {
 			return Integer.valueOf(m.group(1));
 		}
 		return -1;
+	}
+
+	private static final String extractProtocol(String address) {
+		Matcher m = Pattern.compile("^([a-zA-Z]+)://").matcher(address);
+		if (m.find()) {
+			return m.group(1);
+		}
+		return null;
 	}
 
 	public void closeSocket(ZMQ.Socket socket) {
