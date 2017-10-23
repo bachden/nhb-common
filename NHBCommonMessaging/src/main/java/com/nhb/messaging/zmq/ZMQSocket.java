@@ -31,7 +31,7 @@ public class ZMQSocket {
 		this.onCloseCallback = onCloseCallback;
 	}
 
-	public void proxy(ZMQSocket backend) {
+	public void forwardTo(ZMQSocket backend) {
 		ZMQ.proxy(this.socket, backend.socket, null);
 	}
 
