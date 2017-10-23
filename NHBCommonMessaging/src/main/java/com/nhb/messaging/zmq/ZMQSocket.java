@@ -32,11 +32,11 @@ public class ZMQSocket {
 	}
 
 	public void forwardTo(ZMQSocket backend) {
-		ZMQ.proxy(this.socket, backend.socket, null);
+		this.forwardTo(backend, null);
 	}
 
-	public void proxy(ZMQSocket backend, ZMQSocket capture) {
-		ZMQ.proxy(this.socket, backend.socket, capture.socket);
+	public void forwardTo(ZMQSocket backend, ZMQSocket capture) {
+		ZMQ.proxy(this.socket, backend.socket, capture == null ? null : capture.socket);
 	}
 
 	public ZMQSocketType getSocketType() {
