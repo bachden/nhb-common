@@ -113,7 +113,7 @@ public class ZMQSocketRegistry implements Loggable {
 			if (type.isClient()) {
 				socket.connect(address);
 			} else {
-				if (port == -1 && TCP_UDP.contains(protocol)) {
+				if (port == -1 && TCP_UDP.contains(protocol.toLowerCase())) {
 					int minPort = options == null ? -1 : options.getMinPort();
 					int maxPort = options == null ? -1 : options.getMaxPort();
 					if (minPort > 0) {
