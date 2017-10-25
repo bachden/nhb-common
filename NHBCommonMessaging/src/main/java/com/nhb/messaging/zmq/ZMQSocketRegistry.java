@@ -99,6 +99,17 @@ public class ZMQSocketRegistry implements Loggable {
 
 			int port = extractPort(address);
 			String protocol = extractProtocol(address);
+
+			if (type == ZMQSocketType.SUB || type == ZMQSocketType.XSUB) {
+				if (options == null || options.getTopics() == null || options.getTopics().size() == 0) {
+					socket.subscribe(new byte[0]);
+				} else {
+					for (byte[] topic : options.getTopics()) {
+						socket.subscribe(topic);
+					}
+				}
+			}
+
 			if (type.isClient()) {
 				socket.connect(address);
 			} else {
@@ -116,6 +127,15 @@ public class ZMQSocketRegistry implements Loggable {
 					}
 				} else {
 					socket.bind(address);
+				}
+
+				if (type == ZMQSocketType.PUB || type == ZMQSocketType.XPUB || type == ZMQSocketType.SUB
+						|| type == ZMQSocketType.XSUB) {
+					try {
+						Thread.sleep(options == null ? 200 : options.getPubSubSleepingTime());
+					} catch (InterruptedException e) {
+						throw new RuntimeException("Thead interupted while sleeping because opening pub/xpub socket");
+					}
 				}
 			}
 			return new ZMQSocket(socket, port, address, () -> {

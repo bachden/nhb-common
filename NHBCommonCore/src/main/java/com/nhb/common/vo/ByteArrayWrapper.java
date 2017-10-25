@@ -9,6 +9,8 @@ public class ByteArrayWrapper implements Serializable {
 
 	private final byte[] source;
 
+	private int hashCode = -1;
+
 	public ByteArrayWrapper(byte[] source) {
 		if (source == null) {
 			throw new NullPointerException("Source byte[] cannot be null");
@@ -32,7 +34,10 @@ public class ByteArrayWrapper implements Serializable {
 
 	@Override
 	public int hashCode() {
-		return Arrays.hashCode(source);
+		if (hashCode == -1) {
+			hashCode = Arrays.hashCode(source);
+		}
+		return hashCode;
 	}
 
 }
