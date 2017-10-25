@@ -60,6 +60,12 @@ public class ZMQSocketRegistry implements Loggable {
 				for (ZMQ.Socket socket : entry.getValue()) {
 					System.out.println("\t-> Closing socket " + (++count));
 					socket.setLinger(0);
+					try {
+						Thread.sleep(30);
+					} catch (InterruptedException e1) {
+						getLogger().error("Thread interupted while sleeping aftter socket.setLinger(0)", e1);
+						e1.printStackTrace();
+					}
 					socket.close();
 
 					try {
