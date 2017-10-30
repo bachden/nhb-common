@@ -8,7 +8,7 @@ import static com.nhb.common.hash.BinaryHashCodeCalculator.XXHASH32_JNI;
 import java.io.Serializable;
 import java.util.Arrays;
 
-import com.nhb.common.hash.HashCodeCalculator;
+import com.nhb.common.hash.BinaryHashCodeCalculator;
 
 public class ByteArrayWrapper implements Serializable {
 	private static final long serialVersionUID = 1L;
@@ -17,7 +17,7 @@ public class ByteArrayWrapper implements Serializable {
 		return new ByteArrayWrapper(source);
 	}
 
-	public static final ByteArrayWrapper newInstance(byte[] source, HashCodeCalculator<byte[]> hashCodeCalculator) {
+	public static final ByteArrayWrapper newInstance(byte[] source, BinaryHashCodeCalculator hashCodeCalculator) {
 		return new ByteArrayWrapper(source, hashCodeCalculator);
 	}
 
@@ -37,13 +37,13 @@ public class ByteArrayWrapper implements Serializable {
 
 	private int hashCode = -1;
 
-	private transient final HashCodeCalculator<byte[]> hashCodeCalculator;
+	private transient final BinaryHashCodeCalculator hashCodeCalculator;
 
 	public ByteArrayWrapper(byte[] source) {
 		this(source, DEFAULT);
 	}
 
-	public ByteArrayWrapper(byte[] source, HashCodeCalculator<byte[]> hashCodeCalculator) {
+	public ByteArrayWrapper(byte[] source, BinaryHashCodeCalculator hashCodeCalculator) {
 		if (source == null) {
 			throw new NullPointerException("Source byte[] cannot be null");
 		}
