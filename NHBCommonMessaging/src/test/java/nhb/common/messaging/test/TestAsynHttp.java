@@ -19,14 +19,14 @@ public class TestAsynHttp {
 		HttpAsyncMessageProducer asyncMessageProducer = new HttpAsyncMessageProducer();
 		asyncMessageProducer.setMethod("get");
 
-		asyncMessageProducer.setEndpoint("http://vnexpress.net");
+		asyncMessageProducer.setEndpoint("http://latte.lozi.vn/v1.2/newsfeed/merchants?t=popular&cityId=50&districtId=-1&cats=24");
 		HttpAsyncFuture future = asyncMessageProducer.publish(null);
 
 		future.setCallback(new Callback<HttpResponse>() {
 
 			@Override
 			public void apply(HttpResponse result) {
-				System.out.println(HttpClientHelper.handleResponse(result).toString().trim().substring(0, 1000));
+				System.out.println(HttpClientHelper.handleResponse(result).toString().trim().substring(0, 10000));
 				System.out.println("****************************************************************");
 				doneSignal.countDown();
 			}

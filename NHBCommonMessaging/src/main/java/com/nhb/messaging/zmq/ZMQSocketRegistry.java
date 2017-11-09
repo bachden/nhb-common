@@ -106,7 +106,7 @@ public class ZMQSocketRegistry implements Loggable {
 			int port = extractPort(address);
 			String protocol = extractProtocol(address);
 
-			if (type == ZMQSocketType.SUB_BIND || type == ZMQSocketType.SUB_CONNECT) {
+			if (type.getFlag() == ZMQ.SUB || type.getFlag() == ZMQ.XSUB) {
 				if (options == null || options.getTopics() == null || options.getTopics().size() == 0) {
 					socket.subscribe(new byte[0]);
 				} else {
@@ -135,8 +135,8 @@ public class ZMQSocketRegistry implements Loggable {
 					socket.bind(address);
 				}
 
-				if (type == ZMQSocketType.PUB_BIND || type == ZMQSocketType.PUB_CONNECT || type == ZMQSocketType.SUB_BIND
-						|| type == ZMQSocketType.SUB_CONNECT) {
+				if (type == ZMQSocketType.PUB_BIND || type == ZMQSocketType.PUB_CONNECT
+						|| type == ZMQSocketType.SUB_BIND || type == ZMQSocketType.SUB_CONNECT) {
 					try {
 						Thread.sleep(options == null ? 200 : options.getPubSubSleepingTime());
 					} catch (InterruptedException e) {
