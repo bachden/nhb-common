@@ -21,8 +21,8 @@ import java.util.Arrays;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.IOUtils;
 
-/*
- * to working with keypair created by OpenSSL
+/**
+ * To working with keypair created by OpenSSL
  * 
  * Generate a 2048-bit RSA private key
  * >> $ openssl genrsa -out private_key.pem 2048
@@ -113,7 +113,7 @@ public class KeyPairHelper {
 		this.loadPublicKey(sw.toString());
 	}
 
-	public void loadPublicKey(String base64EncryptdPublicKey) throws GeneralSecurityException, IOException {
+	public void loadPublicKey(String base64EncryptdPublicKey) throws GeneralSecurityException {
 		byte[] data = base64Decode(base64EncryptdPublicKey);
 		X509EncodedKeySpec spec = new X509EncodedKeySpec(data);
 		KeyFactory fact = KeyFactory.getInstance(ALGORITHM);

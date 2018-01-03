@@ -2,6 +2,7 @@ package com.nhb.common.data.msgpkg;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 
 import org.msgpack.MessagePack;
 import org.msgpack.packer.Packer;
@@ -50,8 +51,13 @@ public class PuElementTemplate extends PuTemplate<PuElement> {
 	}
 
 	public PuElement read(byte[] bytes) throws IOException {
-		ByteArrayInputStream in = new ByteArrayInputStream(bytes);
-		Unpacker unpacker = msgpack.createUnpacker(in);
+		try (ByteArrayInputStream in = new ByteArrayInputStream(bytes)) {
+			return this.read(in);
+		}
+	}
+
+	public PuElement read(InputStream is) throws IOException {
+		Unpacker unpacker = msgpack.createUnpacker(is);
 		return this.read(unpacker, null);
 	}
 }

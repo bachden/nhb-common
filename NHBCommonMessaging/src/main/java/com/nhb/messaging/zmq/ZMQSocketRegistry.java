@@ -51,27 +51,29 @@ public class ZMQSocketRegistry implements Loggable {
 	}
 
 	public void destroy() {
-		System.out.println("Shutting down ZMQSocketRegistry instance...");
 		synchronized (registry) {
 			for (Entry<String, Collection<ZMQ.Socket>> entry : registry.entrySet()) {
-				System.out.println(
-						"There are " + entry.getValue().size() + " opened sockets with same addr: " + entry.getKey());
-				int count = 0;
-				for (ZMQ.Socket socket : entry.getValue()) {
-					System.out.println("\t-> Closing socket " + (++count));
-					socket.setLinger(0);
-					try {
-						Thread.sleep(30);
-					} catch (InterruptedException e1) {
-						getLogger().error("Thread interupted while sleeping aftter socket.setLinger(0)", e1);
-						e1.printStackTrace();
-					}
-					socket.close();
+				if (entry.getValue().size() > 0) {
+					System.out.println("There are " + entry.getValue().size() + " opened sockets with same addr: "
+							+ entry.getKey());
 
-					try {
-						Thread.sleep(10);
-					} catch (InterruptedException e) {
-						e.printStackTrace();
+					int count = 0;
+					for (ZMQ.Socket socket : entry.getValue()) {
+						System.out.println("\t-> Closing socket " + (++count));
+						socket.setLinger(0);
+						try {
+							Thread.sleep(30);
+						} catch (InterruptedException e1) {
+							getLogger().error("Thread interupted while sleeping aftter socket.setLinger(0)", e1);
+							e1.printStackTrace();
+						}
+						socket.close();
+
+						try {
+							Thread.sleep(10);
+						} catch (InterruptedException e) {
+							e.printStackTrace();
+						}
 					}
 				}
 			}
@@ -84,6 +86,7 @@ public class ZMQSocketRegistry implements Loggable {
 			e.printStackTrace();
 		}
 		context.close();
+		System.out.println("ZMQSocketRegistry instance shutted down");
 	}
 
 	public ZMQSocket openSocket(String addr, ZMQSocketType type) {

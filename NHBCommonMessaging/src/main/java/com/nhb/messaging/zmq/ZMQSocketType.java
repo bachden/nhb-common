@@ -37,7 +37,11 @@ public enum ZMQSocketType {
 	PULL_CONNECT(ZMQ.PULL, true),
 
 	STREAM_BIND(ZMQ.STREAM),
-	STREAM_CONNECT(ZMQ.STREAM, true);
+	STREAM_CONNECT(ZMQ.STREAM, true),
+
+	SERVER(12),
+	
+	CLIENT(13, true);
 
 	@Getter
 	private final int flag;

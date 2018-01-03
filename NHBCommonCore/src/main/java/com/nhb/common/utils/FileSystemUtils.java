@@ -84,8 +84,10 @@ public class FileSystemUtils {
 
 	public static final String createAbsolutePathFrom(String... elements) {
 		StringBuilder sb = new StringBuilder();
-		sb.append(getBasePath());
 		if (elements != null && elements.length > 0) {
+			if (!elements[0].startsWith("/")) {
+				sb.append(getBasePath());
+			}
 			boolean flag = true;
 			for (String ele : elements) {
 				if (flag) {

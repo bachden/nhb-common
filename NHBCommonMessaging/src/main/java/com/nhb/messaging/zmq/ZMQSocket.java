@@ -5,6 +5,7 @@ import java.nio.charset.Charset;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.zeromq.ZMQ;
+import org.zeromq.ZMQ.Msg;
 import org.zeromq.ZMQException;
 
 import lombok.Getter;
@@ -16,6 +17,7 @@ public class ZMQSocket {
 	@Getter
 	private final String address;
 
+	@Getter
 	private final ZMQ.Socket socket;
 
 	private final AtomicBoolean closed = new AtomicBoolean(false);
@@ -78,9 +80,11 @@ public class ZMQSocket {
 	 */
 	public void close() {
 		if (this.closed.compareAndSet(false, true)) {
-			socket.close();
 			if (this.onCloseCallback != null) {
 				this.onCloseCallback.run();
+			} else {
+				socket.setLinger(0);
+				socket.close();
 			}
 		}
 	}
@@ -1015,5 +1019,13 @@ public class ZMQSocket {
 	 */
 	public void setBytesSockopt(int option, byte[] optval) {
 		socket.setBytesSockopt(option, optval);
+	}
+
+	public boolean sendMsg(Msg msg, int flags) {
+		return socket.sendMsg(msg, flags);
+	}
+
+	public Object recvMsg(int flags) {
+		return socket.recvMsg(flags);
 	}
 }

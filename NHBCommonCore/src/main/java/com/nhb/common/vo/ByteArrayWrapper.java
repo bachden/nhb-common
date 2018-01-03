@@ -76,4 +76,9 @@ public class ByteArrayWrapper implements Serializable {
 		return hashCode;
 	}
 
+	@Override
+	public String toString() {
+		return Arrays.toString(this.source);
+	}
+
 }

@@ -186,8 +186,10 @@ public class KafkaMessageConsumer extends BaseEventDispatcher {
 					while (!closer.get()) {
 						try {
 							ConsumerRecords<byte[], PuElement> records = consumer.poll(pollTimeout);
-							KafkaEvent event = KafkaEvent.newInstance(records);
-							dispatchEvent(event);
+							if (!records.isEmpty()) {
+								KafkaEvent event = KafkaEvent.newInstance(records);
+								dispatchEvent(event);
+							}
 						} catch (WakeupException we) {
 							// do nothing
 						} catch (Exception ex) {

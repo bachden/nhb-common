@@ -10,13 +10,17 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.nhb.common.async.exception.ExecutionCancelledException;
+import com.nhb.common.async.executor.DisruptorAsyncTaskExecutor;
 import com.nhb.eventdriven.impl.BaseEventDispatcher;
 
 public class BaseRPCFuture<V> extends BaseEventDispatcher implements RPCFuture<V> {
 
-	private static ScheduledExecutorService monitoringExecutorService = Executors.newScheduledThreadPool(4);
+	private static final ScheduledExecutorService monitoringExecutorService = Executors.newScheduledThreadPool(1);
+	private static DisruptorAsyncTaskExecutor executor = DisruptorAsyncTaskExecutor.createSingleProducerExecutor(2048,
+			4, "RPCFuture Timeout Callback Thread #%d");
 
 	static {
+		executor.start();
 		Runtime.getRuntime().addShutdownHook(new Thread() {
 			@Override
 			public void run() {
@@ -25,8 +29,14 @@ public class BaseRPCFuture<V> extends BaseEventDispatcher implements RPCFuture<V
 					if (monitoringExecutorService.awaitTermination(2, TimeUnit.SECONDS)) {
 						monitoringExecutorService.shutdownNow();
 					}
-				} catch (Exception ex) {
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
 
+				try {
+					executor.shutdown();
+				} catch (Exception e) {
+					e.printStackTrace();
 				}
 			}
 		});
@@ -200,8 +210,10 @@ public class BaseRPCFuture<V> extends BaseEventDispatcher implements RPCFuture<V
 						@Override
 						public void run() {
 							if (timeoutFlag.compareAndSet(false, true)) {
-								setFailedCause(exceptionTobeThrown);
-								cancel(true);
+								executor.execute(() -> {
+									setFailedCause(exceptionTobeThrown);
+									cancel(false);
+								});
 							}
 						}
 					}, timeout, unit);

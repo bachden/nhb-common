@@ -11,7 +11,7 @@ import com.nhb.messaging.zmq.ZMQSocketType;
 import lombok.AllArgsConstructor;
 
 @AllArgsConstructor
-public class ZMQSocketPooledObjectFactory extends BasePooledObjectFactory<ZMQSocket> {
+class ZMQSocketPooledObjectFactory extends BasePooledObjectFactory<ZMQSocket> {
 
 	@NotNullable
 	private final ZMQSocketRegistry socketRegistry;
