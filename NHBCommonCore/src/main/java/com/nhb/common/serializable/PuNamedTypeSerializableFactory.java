@@ -1,12 +1,11 @@
 package com.nhb.common.serializable;
 
 import java.util.Map.Entry;
+import java.util.Properties;
 
 import com.nhb.common.exception.CreateInstanceErrorException;
 import com.nhb.common.serializable.exception.ClassForTypeNotFoundException;
 import com.nhb.common.utils.PrimitiveTypeUtils;
-
-import java.util.Properties;
 
 public interface PuNamedTypeSerializableFactory extends PuSerializableFactory {
 

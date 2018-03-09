@@ -1,7 +1,6 @@
 package com.nhb.common.data;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
@@ -219,13 +218,6 @@ public class PuArrayList extends ArrayList<PuValue> implements PuArray {
 		StringBuilder sb = new StringBuilder();
 		append(0, sb);
 		return sb.toString();
-	}
-
-	@Override
-	public byte[] toBytes() {
-		ByteArrayOutputStream out = new ByteArrayOutputStream();
-		this.writeTo(out);
-		return out.toByteArray();
 	}
 
 	@Override

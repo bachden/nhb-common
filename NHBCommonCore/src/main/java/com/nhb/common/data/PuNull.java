@@ -19,11 +19,6 @@ public class PuNull implements PuElement {
 	}
 
 	@Override
-	public byte[] toBytes() {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
 	public String toJSON() {
 		throw new UnsupportedOperationException();
 	}

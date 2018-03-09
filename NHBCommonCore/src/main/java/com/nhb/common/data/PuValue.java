@@ -1,6 +1,5 @@
 package com.nhb.common.data;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.Serializable;
@@ -360,13 +359,6 @@ public class PuValue implements PuElement, Serializable {
 			return str;
 		}
 		return this.getData() == null ? null : this.getData().toString();
-	}
-
-	@Override
-	public byte[] toBytes() {
-		ByteArrayOutputStream out = new ByteArrayOutputStream();
-		this.writeTo(out);
-		return out.toByteArray();
 	}
 
 	@Override

@@ -1,7 +1,6 @@
 package com.nhb.common.data;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -461,13 +460,6 @@ public class PuObject extends BaseEventDispatcher implements PuObjectRW, Iterabl
 		StringBuilder sb = new StringBuilder();
 		this.append(0, sb);
 		return sb.toString();
-	}
-
-	@Override
-	public byte[] toBytes() {
-		ByteArrayOutputStream out = new ByteArrayOutputStream();
-		this.writeTo(out);
-		return out.toByteArray();
 	}
 
 	@Override
