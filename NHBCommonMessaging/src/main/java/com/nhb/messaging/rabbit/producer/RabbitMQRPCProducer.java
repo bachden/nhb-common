@@ -71,19 +71,30 @@ public class RabbitMQRPCProducer extends RabbitMQProducer<RPCFuture<PuElement>> 
 				BaseRPCFuture<PuElement> future = futures.get(corrId);
 				if (future != null) {
 					try {
+						PuElement response = null;
+
 						try {
-							future.setAndDone(PuElementTemplate.getInstance().read(body));
-						} catch (Exception ex) {
+							response = PuElementTemplate.getInstance().read(body);
+						} catch (Exception e) {
 							getLogger().error("Error while deserialize response data, queue name: "
-									+ getQueueConfig().getQueueName(), ex);
-							future.setFailedCause(ex);
-							future.setAndDone(null);
+									+ getQueueConfig().getQueueName(), e);
+							future.setFailedCause(e);
+							response = null;
 						}
+
+						try {
+							future.setAndDone(response);
+						} catch (Exception e) {
+							getLogger().error("Error while setAndDone RPC future " + getQueueConfig().getQueueName(),
+									e);
+						}
+
 					} finally {
 						RabbitMQRPCProducer.this.futures.remove(corrId);
 					}
 				} else {
-					getLogger().debug("Future not found for corrId: " + corrId);
+					getLogger().error("RPCFuture cannot be found for corrId: " + corrId + ", queue: "
+							+ getQueueConfig().getQueueName());
 				}
 			}
 		};
