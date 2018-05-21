@@ -448,7 +448,11 @@ public final class ObjectUtils {
 			} else if (PrimitiveTypeUtils.isPrimitiveOrWrapperType(value.getClass())) {
 				map.put(field, value);
 			} else if (ArrayUtils.isArrayOrCollection(value.getClass())) {
-				map.put(field, toList(value));
+				if (value.getClass() == byte[].class) {
+					map.put(field, value);
+				} else {
+					map.put(field, toList(value));
+				}
 			} else if (value instanceof Map<?, ?>) {
 				Map<String, Object> childMap = new HashMap<String, Object>();
 				for (Entry<?, ?> entry : ((Map<?, ?>) value).entrySet()) {
@@ -457,7 +461,8 @@ public final class ObjectUtils {
 					} else if (PrimitiveTypeUtils.isPrimitiveOrWrapperType(((Object) entry.getValue()).getClass())) {
 						childMap.put(String.valueOf(entry.getKey()), (Object) entry.getValue());
 					} else if (ArrayUtils.isArrayOrCollection(entry.getValue().getClass())) {
-						childMap.put(String.valueOf(entry.getKey()), toList(entry.getValue()));
+						childMap.put(String.valueOf(entry.getKey()),
+								entry.getValue() instanceof byte[] ? entry.getValue() : toList(entry.getValue()));
 					} else if (entry.getValue() instanceof Date) {
 						map.put(field, df.format(entry.getValue()));
 					} else {

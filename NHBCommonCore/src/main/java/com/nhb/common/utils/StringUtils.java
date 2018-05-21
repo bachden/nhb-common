@@ -18,7 +18,9 @@ import com.google.common.base.CaseFormat;
 
 import lombok.Builder;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public final class StringUtils {
 
 	@Data
@@ -174,8 +176,13 @@ public final class StringUtils {
 			if (value instanceof Number && option != null && option.isAutoFormatNumber()) {
 				value = option.getDecimalFormat().format(value);
 			}
-			String valueString = PrimitiveTypeUtils.getStringValueFrom(value);
-			result = result.replaceAll("\\{\\{" + key + "\\}\\}", valueString);
+			try {
+				String valueString = PrimitiveTypeUtils.getStringValueFrom(value);
+				result = result.replaceAll("\\{\\{" + key + "\\}\\}", valueString);
+			} catch (Exception ex) {
+				log.error("Error while inject value for key: `{}`, value={}", key, value);
+				throw ex;
+			}
 		}
 		return result;
 	}
