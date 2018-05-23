@@ -101,5 +101,10 @@
 			<version>2.4.2</version>
 		</dependency>
 
+		<dependency>
+			<groupId>com.boundary</groupId>
+			<artifactId>high-scale-lib</artifactId>
+			<version>1.0.6</version>
+		</dependency>
 	</dependencies>
 </project>
