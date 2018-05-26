@@ -6,6 +6,7 @@ import com.nhb.common.annotations.NotThreadSafe;
 public class TimeWatcher {
 
 	private long startTime;
+	private long lastResult = 0;
 
 	public TimeWatcher reset() {
 		this.startTime = System.nanoTime();
@@ -13,36 +14,52 @@ public class TimeWatcher {
 	}
 
 	public long endLapNano() {
-		long result = this.getNano();
+		lastResult = this.getElapsedNano();
 		this.reset();
-		return result;
+		return lastResult;
 	}
 
-	public long endLapMicro() {
-		return this.endLapNano() / 1000l;
+	public double endLapMicro() {
+		return Double.valueOf(this.endLapNano()) / 1e3;
 	}
 
-	public long endLapMillis() {
-		return this.endLapNano() / 1000000l;
+	public double endLapMillis() {
+		return Double.valueOf(this.endLapNano()) / 1e6;
 	}
 
-	public long endLapSeconds() {
-		return this.endLapNano() / 1000000000l;
+	public double endLapSeconds() {
+		return Double.valueOf(this.endLapNano()) / 1e9;
 	}
 
-	public long getNano() {
+	public long getLastResultNano() {
+		return lastResult;
+	}
+
+	public double getLastResultMicro() {
+		return Double.valueOf(lastResult) / 1e3;
+	}
+
+	public double getLastResultMillis() {
+		return Double.valueOf(lastResult) / 1e6;
+	}
+
+	public double getLastResultSeconds() {
+		return Double.valueOf(lastResult) / 1e6;
+	}
+
+	public long getElapsedNano() {
 		return System.nanoTime() - startTime;
 	}
 
-	public long getMicro() {
-		return this.getNano() / 1000l;
+	public double getElapsedMicro() {
+		return Double.valueOf(this.getElapsedNano()) / 1e3;
 	}
 
-	public long getMillis() {
-		return this.getNano() / 1000000l;
+	public double getElapsedMillis() {
+		return this.getElapsedNano() / 1e6;
 	}
 
-	public long getSeconds() {
-		return this.getNano() / 1000000000l;
+	public double getElapsedSeconds() {
+		return this.getElapsedNano() / 1e9;
 	}
 }

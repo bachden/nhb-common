@@ -4,7 +4,7 @@ import com.nhb.common.utils.UUIDUtils;
 
 public interface ZMQIdGenerator {
 
-	static ZMQIdGenerator newDefault() {
+	static ZMQIdGenerator newTimebasedUUIDGenerator() {
 		return new ZMQIdGenerator() {
 
 			@Override

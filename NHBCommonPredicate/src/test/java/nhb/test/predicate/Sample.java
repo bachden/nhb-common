@@ -87,7 +87,7 @@ public class Sample {
 		TimeWatcher timeWatcher = new TimeWatcher();
 		timeWatcher.reset();
 		validUser = predicate.apply(userVO);
-		long time = timeWatcher.endLapMicro();
+		double time = timeWatcher.endLapMicro();
 		System.out.println("Is valid user: " + validUser + " --> time: " + time + " microseconds");
 	}
 

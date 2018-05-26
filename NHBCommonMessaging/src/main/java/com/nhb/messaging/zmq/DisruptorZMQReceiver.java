@@ -18,6 +18,7 @@ import com.nhb.common.data.msgpkg.PuElementTemplate;
 import com.nhb.common.vo.ByteBufferInputStream;
 
 import lombok.AllArgsConstructor;
+import lombok.Getter;
 
 public class DisruptorZMQReceiver implements ZMQReceiver, Loggable {
 
@@ -27,12 +28,21 @@ public class DisruptorZMQReceiver implements ZMQReceiver, Loggable {
 		private final ZMQReceivedMessageHandler handler;
 
 		@Override
-		public void onEvent(ZMQEvent message) throws Exception {
-			this.handler.onReceive(message);
+		public void onEvent(ZMQEvent event) throws Exception {
+			if (event.isSuccess()) {
+				this.handler.onReceive(event);
+			}
 		}
 	}
 
-	private final AtomicBoolean running = new AtomicBoolean(false);
+	@Getter
+	private volatile boolean initialized = false;
+	private final AtomicBoolean initializedCheckpoint = new AtomicBoolean(false);
+
+	@Getter
+	private volatile boolean running = false;
+	private final AtomicBoolean runningCheckpoint = new AtomicBoolean(false);
+
 	private ZMQSocket socket;
 	private Thread pollingThread;
 	private ZMQSocketRegistry socketRegistry;
@@ -40,11 +50,27 @@ public class DisruptorZMQReceiver implements ZMQReceiver, Loggable {
 	private Disruptor<ZMQEvent> disruptor;
 
 	private ZMQPayloadExtractor payloadExtractor;
+	private ExceptionHandler<ZMQEvent> exceptionHandler = new ExceptionHandler<ZMQEvent>() {
 
-	@Override
-	public boolean isRunning() {
-		return this.running.get();
-	}
+		@Override
+		public void handleEventException(Throwable ex, long sequence, ZMQEvent event) {
+			getLogger().error("Error while handling ZMQEvent: {}", event.getPayload(), ex);
+			if (event.getFuture() != null && !event.getFuture().isDone()) {
+				event.getFuture().setFailedCause(ex);
+				event.getFuture().setAndDone(null);
+			}
+		}
+
+		@Override
+		public void handleOnStartException(Throwable ex) {
+			getLogger().error("Error while starting sender disruptor", ex);
+		}
+
+		@Override
+		public void handleOnShutdownException(Throwable ex) {
+			getLogger().error("Error while shutting down sender disruptor", ex);
+		}
+	};;
 
 	@Override
 	public String getEndpoint() {
@@ -56,51 +82,40 @@ public class DisruptorZMQReceiver implements ZMQReceiver, Loggable {
 
 	@Override
 	public void init(ZMQSocketRegistry registry, ZMQReceiverConfig config) {
-		if (registry == null) {
-			throw new NullPointerException("Socket registry cannot be null");
-		} else if (config == null) {
-			throw new NullPointerException("Config cannot be null");
+		if (this.initializedCheckpoint.compareAndSet(false, true)) {
+			if (registry == null) {
+				throw new NullPointerException("Socket registry cannot be null");
+			} else if (config == null) {
+				throw new NullPointerException("Config cannot be null");
+			}
+			config.validate();
+
+			this.config = config;
+			this.socketRegistry = registry;
+			this.payloadExtractor = config.getPayloadExtractor();
+
+			ThreadFactory threadFactory = new ThreadFactoryBuilder().setNameFormat(config.getThreadNamePattern())
+					.build();
+			disruptor = new Disruptor<>(ZMQEvent.EVENT_FACTORY, config.getQueueSize(), threadFactory,
+					ProducerType.SINGLE, new BlockingWaitStrategy());
+
+			final ZMQReceivedMessageHandler receivedMessageHandler = config.getReceivedMessageHandler();
+
+			MessageReceivingWorker[] workers = new MessageReceivingWorker[config.getPoolSize()];
+			for (int i = 0; i < workers.length; i++) {
+				workers[i] = new MessageReceivingWorker(receivedMessageHandler);
+			}
+
+			this.disruptor.handleEventsWithWorkerPool(workers);
+			disruptor.setDefaultExceptionHandler(this.exceptionHandler);
+
+			this.initialized = true;
 		}
-		config.validate();
-
-		this.socketRegistry = registry;
-		this.config = config;
-		this.payloadExtractor = config.getPayloadExtractor();
-
-		ThreadFactory threadFactory = new ThreadFactoryBuilder().setNameFormat(config.getThreadNamePattern()).build();
-		disruptor = new Disruptor<>(ZMQEvent.EVENT_FACTORY, config.getQueueSize(), threadFactory, ProducerType.SINGLE,
-				new BlockingWaitStrategy());
-
-		final ZMQReceivedMessageHandler handler = config.getReceivedMessageHandler();
-
-		MessageReceivingWorker[] workers = new MessageReceivingWorker[config.getPoolSize()];
-		for (int i = 0; i < workers.length; i++) {
-			workers[i] = new MessageReceivingWorker(handler);
-		}
-
-		this.disruptor.handleEventsWithWorkerPool(workers);
-		disruptor.setDefaultExceptionHandler(new ExceptionHandler<ZMQEvent>() {
-
-			@Override
-			public void handleEventException(Throwable ex, long sequence, ZMQEvent event) {
-				getLogger().error("Error while handling ZMQEvent: {}", event.getPayload(), ex);
-			}
-
-			@Override
-			public void handleOnStartException(Throwable ex) {
-				getLogger().error("Error while starting sender disruptor", ex);
-			}
-
-			@Override
-			public void handleOnShutdownException(Throwable ex) {
-				getLogger().error("Error while shutting down sender disruptor", ex);
-			}
-		});
 	}
 
 	@Override
 	public void start() {
-		if (this.running.compareAndSet(false, true)) {
+		if (this.runningCheckpoint.compareAndSet(false, true)) {
 			this.socket = this.socketRegistry.openSocket(config.getEndpoint(), config.getSocketType());
 			this.pollingThread = new Thread(() -> {
 				final ByteBuffer buffer = ByteBuffer.allocateDirect(config.getBufferCapacity());
@@ -131,15 +146,17 @@ public class DisruptorZMQReceiver implements ZMQReceiver, Loggable {
 			});
 			this.disruptor.start();
 			this.pollingThread.start();
+			this.running = true;
 		}
 	}
 
 	@Override
 	public void stop() {
-		if (this.running.compareAndSet(true, false)) {
+		if (this.runningCheckpoint.compareAndSet(true, false)) {
 			this.pollingThread.interrupt();
 			this.disruptor.halt();
 			this.socket.close();
+			this.running = false;
 		}
 	}
 

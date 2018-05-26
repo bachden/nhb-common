@@ -74,7 +74,7 @@ public class ZMQTaskProducer implements MessageProducer<ZMQFuture> {
 
 	}
 
-	protected ZMQSenderConfig extractSenderConfig(ZMQProducerConfig config) {
+	private ZMQSenderConfig extractSenderConfig(ZMQProducerConfig config) {
 		return ZMQSenderConfig.builder()//
 				.threadNamePattern("sender-" + config.getThreadNamePattern()) //
 				.sendWorkerSize(config.getSendWorkerSize()) //

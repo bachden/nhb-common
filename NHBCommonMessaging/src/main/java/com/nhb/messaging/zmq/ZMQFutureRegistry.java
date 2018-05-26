@@ -1,11 +1,10 @@
-package com.nhb.messaging.zmq.producer;
+package com.nhb.messaging.zmq;
 
 import java.util.Map;
 
 import org.cliffc.high_scale_lib.NonBlockingHashMap;
 
 import com.nhb.common.vo.ByteArrayWrapper;
-import com.nhb.messaging.zmq.DefaultZMQFuture;
 
 public class ZMQFutureRegistry {
 

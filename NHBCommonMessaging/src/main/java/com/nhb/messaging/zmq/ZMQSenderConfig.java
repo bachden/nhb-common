@@ -35,6 +35,9 @@ public class ZMQSenderConfig {
 	@Builder.Default
 	private ZMQSocketWriter socketWriter = ZMQSocketWriter.newDefaultWriter();
 
+	@Builder.Default
+	private ZMQIdGenerator idGenerator = ZMQIdGenerator.newTimebasedUUIDGenerator();
+
 	public void validate() {
 		if (endpoint == null) {
 			throw new NullPointerException("Endpoint cannot be null");

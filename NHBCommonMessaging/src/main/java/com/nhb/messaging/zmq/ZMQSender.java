@@ -5,6 +5,8 @@ import com.nhb.common.data.PuElement;
 public interface ZMQSender {
 
 	boolean isRunning();
+	
+	boolean isInitialized();
 
 	void init(ZMQSocketRegistry registry, ZMQSenderConfig config);
 

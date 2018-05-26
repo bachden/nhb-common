@@ -3,6 +3,7 @@ package com.nhb.messaging.zmq;
 import com.nhb.common.data.PuArray;
 import com.nhb.common.data.PuDataType;
 import com.nhb.common.data.PuElement;
+import com.nhb.common.data.PuObject;
 import com.nhb.common.data.PuValue;
 import com.nhb.common.data.exception.InvalidDataException;
 
@@ -30,6 +31,33 @@ public interface ZMQPayloadExtractor {
 					throw new InvalidDataException("PuArray payload must have atleast 1 element");
 				}
 				throw new InvalidDataException("Payload must be instance of PuArray");
+			}
+			throw new NullPointerException("Cannot extract payload from null event");
+		}
+	};
+
+	static ZMQPayloadExtractor DEFAULT_PUOBJECT_PAYLOAD_EXTRACTOR = new ZMQPayloadExtractor() {
+
+		@Override
+		public void extractPayload(ZMQEvent event) {
+			if (event != null) {
+				PuElement payload = event.getPayload();
+				if (payload instanceof PuObject) {
+					PuObject obj = (PuObject) payload;
+					if (obj.size() > 0) {
+						PuValue value = obj.get("data");
+						if (value.getType() == PuDataType.PUARRAY) {
+							event.setData(value.getPuArray());
+						} else if (value.getType() == PuDataType.PUOBJECT) {
+							event.setData(value.getPuObject());
+						} else {
+							event.setData(value);
+						}
+						return;
+					}
+					throw new InvalidDataException("PuObject payload must have atleast 1 element");
+				}
+				throw new InvalidDataException("Payload must be instance of PuObject");
 			}
 			throw new NullPointerException("Cannot extract payload from null event");
 		}

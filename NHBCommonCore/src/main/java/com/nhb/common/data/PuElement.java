@@ -30,4 +30,14 @@ public interface PuElement extends Serializable {
 	 * @param out
 	 */
 	void writeTo(OutputStream out);
+
+	@SuppressWarnings("unchecked")
+	default <T extends PuElement> T cast() {
+		return (T) this;
+	};
+
+	@SuppressWarnings("unchecked")
+	default <T extends PuElement> T cast(Class<T> clazz) {
+		return (T) this;
+	}
 }

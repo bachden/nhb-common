@@ -18,18 +18,22 @@ public final class ZMQEvent {
 		}
 	};
 
+	private byte[] messageId;
+	private String responseEndpoint;
+
 	private PuElement data;
 	private PuElement payload;
 	private DefaultZMQFuture future;
 
-	private boolean success;
+	private boolean success = true;
 	private Throwable failedCause;
 
 	public void clear() {
+		this.messageId = null;
 		this.payload = null;
 		this.data = null;
 		this.future = null;
-		this.success = false;
+		this.success = true;
 		this.failedCause = null;
 	}
 }

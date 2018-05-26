@@ -8,6 +8,7 @@ import com.nhb.common.data.PuValue;
 import com.nhb.messaging.zmq.DefaultZMQFuture;
 import com.nhb.messaging.zmq.DisruptorZMQReceiver;
 import com.nhb.messaging.zmq.ZMQEvent;
+import com.nhb.messaging.zmq.ZMQFutureRegistry;
 import com.nhb.messaging.zmq.ZMQIdGenerator;
 import com.nhb.messaging.zmq.ZMQPayloadBuilder;
 import com.nhb.messaging.zmq.ZMQPayloadExtractor;
@@ -46,7 +47,7 @@ public class ZMQRPCProducer extends ZMQTaskProducer {
 	};
 
 	public ZMQRPCProducer() {
-		this(ZMQIdGenerator.newDefault());
+		this(ZMQIdGenerator.newTimebasedUUIDGenerator());
 	}
 
 	public ZMQRPCProducer(ZMQIdGenerator idGenerator) {
@@ -84,8 +85,7 @@ public class ZMQRPCProducer extends ZMQTaskProducer {
 
 	@Override
 	protected void onSendingSuccess(ZMQEvent event) {
-		PuArray payload = (PuArray) event.getPayload();
-		byte[] messageId = payload.get(0).getRaw();
+		byte[] messageId = event.getMessageId();
 		this.futureRegistry.put(messageId, event.getFuture());
 	}
 
@@ -117,11 +117,14 @@ public class ZMQRPCProducer extends ZMQTaskProducer {
 	}
 
 	private void buildPayload(ZMQEvent event) {
+		byte[] messageId = this.idGenerator.generateId();
+
 		PuArray payload = new PuArrayList();
-		payload.addFrom(this.idGenerator.generateId());
+		payload.addFrom(messageId);
 		payload.addFrom(this.receiver.getEndpoint());
 		payload.addFrom(event.getData());
 
 		event.setPayload(payload);
+		event.setMessageId(messageId);
 	}
 }
