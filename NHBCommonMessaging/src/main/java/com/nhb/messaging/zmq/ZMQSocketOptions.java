@@ -19,4 +19,13 @@ public class ZMQSocketOptions {
 
 	@Builder.Default
 	private long pubSubSleepingTime = 200;
+
+	@Builder.Default
+	private long hwm = -1;
+
+	@Builder.Default
+	private long sndHWM = -1;
+
+	@Builder.Default
+	private long rcvHWM = -1;
 }

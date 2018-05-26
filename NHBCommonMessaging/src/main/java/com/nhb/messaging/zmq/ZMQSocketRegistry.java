@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -69,7 +70,6 @@ public class ZMQSocketRegistry implements Loggable {
 			e.printStackTrace();
 		}
 		context.close();
-		System.out.println("ZMQSocketRegistry instance shutted down");
 	}
 
 	public ZMQSocket openSocket(String addr, ZMQSocketType type) {
@@ -92,11 +92,18 @@ public class ZMQSocketRegistry implements Loggable {
 			}
 		}
 
+		Function<Integer, Void> onCloseCallback = new Function<Integer, Void>() {
+
+			@Override
+			public Void apply(Integer linger) {
+				ZMQSocketRegistry.this.closeSocket(socket, linger);
+				return null;
+			}
+		};
+
 		if (type.isClient()) {
 			socket.connect(address);
-			return new ZMQSocket(socket, -1, address, () -> {
-				this.closeSocket(socket);
-			});
+			return new ZMQSocket(socket, -1, address, onCloseCallback);
 		} else {
 			int port = extractPort(address);
 			if (port == -1 && TCP_UDP.contains(protocol.toLowerCase())) {
@@ -126,9 +133,7 @@ public class ZMQSocketRegistry implements Loggable {
 				}
 			}
 
-			return new ZMQSocket(socket, port, address, () -> {
-				this.closeSocket(socket);
-			});
+			return new ZMQSocket(socket, port, address, onCloseCallback);
 		}
 	}
 
@@ -148,15 +153,19 @@ public class ZMQSocketRegistry implements Loggable {
 		return null;
 	}
 
-	public void closeSocket(ZMQ.Socket socket) {
+	public void closeSocket(ZMQ.Socket socket, int linger) {
 		if (this.openedSockets.contains(socket)) {
 			synchronized (this.openedSockets) {
 				if (this.openedSockets.contains(socket)) {
-					socket.setLinger(0);
-					socket.close();
 					openedSockets.remove(socket);
+					socket.setLinger(linger);
+					socket.close();
 				}
 			}
 		}
+	}
+
+	public void closeSocket(ZMQ.Socket socket) {
+		this.closeSocket(socket, 0);
 	}
 }

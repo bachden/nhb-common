@@ -13,7 +13,7 @@ import com.nhb.common.async.exception.ExecutionCancelledException;
 import com.nhb.common.async.executor.DisruptorAsyncTaskExecutor;
 import com.nhb.eventdriven.impl.BaseEventDispatcher;
 
-public class BaseRPCFuture<V> extends BaseEventDispatcher implements RPCFuture<V> {
+public class BaseRPCFuture<V> extends BaseEventDispatcher implements RPCFuture<V>, CompletableFuture<V> {
 
 	private static final ScheduledExecutorService monitoringExecutorService = Executors.newScheduledThreadPool(1);
 	private static DisruptorAsyncTaskExecutor executor = DisruptorAsyncTaskExecutor.createSingleProducerExecutor(2048,
@@ -123,6 +123,7 @@ public class BaseRPCFuture<V> extends BaseEventDispatcher implements RPCFuture<V
 		}
 	}
 
+	@Override
 	public void setAndDone(V value) {
 		if (this.done.compareAndSet(false, true)) {
 			this.value = value;

@@ -3,6 +3,7 @@ package com.nhb.messaging.zmq;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Function;
 
 import org.zeromq.ZMQ;
 import org.zeromq.ZMQ.Msg;
@@ -21,9 +22,9 @@ public class ZMQSocket {
 	private final ZMQ.Socket socket;
 
 	private final AtomicBoolean closed = new AtomicBoolean(false);
-	private final Runnable onCloseCallback;
+	private final Function<Integer, Void> onCloseCallback;
 
-	ZMQSocket(ZMQ.Socket socket, int port, String address, Runnable onCloseCallback) {
+	ZMQSocket(ZMQ.Socket socket, int port, String address, Function<Integer, Void> onCloseCallback) {
 		if (socket == null) {
 			throw new NullPointerException("ZMQ.Socket cannot be null");
 		}
@@ -78,15 +79,19 @@ public class ZMQSocket {
 	 * 
 	 * @see org.zeromq.ZMQ.Socket#close()
 	 */
-	public void close() {
+	public void close(int linger) {
 		if (this.closed.compareAndSet(false, true)) {
 			if (this.onCloseCallback != null) {
-				this.onCloseCallback.run();
+				this.onCloseCallback.apply(linger);
 			} else {
-				socket.setLinger(0);
+				socket.setLinger(linger);
 				socket.close();
 			}
 		}
+	}
+
+	public void close() {
+		this.close(0);
 	}
 
 	/**
@@ -977,8 +982,14 @@ public class ZMQSocket {
 
 	/**
 	 * @param buffer
+	 *            must be direct ByteBuffer
 	 * @param flags
 	 * @return
+	 *         <ul>
+	 *         <li>-1 if ByteBuffer is not direct</li>
+	 *         <li>0 if nothing received (sometime mean socket closed)</li>
+	 *         <li>> 0 received bytes</li>
+	 *         </ul>
 	 * @see org.zeromq.ZMQ.Socket#recvByteBuffer(java.nio.ByteBuffer, int)
 	 */
 	public int recvByteBuffer(ByteBuffer buffer, int flags) {
