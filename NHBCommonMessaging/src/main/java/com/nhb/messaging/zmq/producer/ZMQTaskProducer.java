@@ -55,7 +55,7 @@ public class ZMQTaskProducer implements MessageProducer<ZMQFuture> {
 	public final void init(ZMQProducerConfig config) {
 		if (this.initialized.compareAndSet(false, true)) {
 			if (this.payloadBuilder == null) {
-				this.payloadBuilder = ZMQPayloadBuilder.defaultPuArrayPayloadBuilder();
+				this.payloadBuilder = ZMQPayloadBuilder.DEFAULT_PUARRAY_PAYLOAD_BUILDER;
 			}
 
 			this.config = config;
@@ -80,12 +80,12 @@ public class ZMQTaskProducer implements MessageProducer<ZMQFuture> {
 				.sendWorkerSize(config.getSendWorkerSize()) //
 				.sendingDoneHandlerSize(config.getSendingDoneHandlerSize()) //
 				.queueSize(config.getQueueSize()) //
-				.bufferCapacity(config.getBufferCapacity()) //
 				.endpoint(config.getSendEndpoint()) //
 				.socketType(config.getSendSocketType()) //
 				.socketOptions(config.getSendSocketOptions()) //
 				.payloadBuilder(this.payloadBuilder) //
 				.sendingDoneHandler(this.sendingDoneHandler) //
+				.socketWriter(config.getSocketWriter()) //
 				.build();
 	}
 

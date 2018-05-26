@@ -5,11 +5,10 @@ import java.nio.ByteBuffer;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.zeromq.ZMQ;
-
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.lmax.disruptor.BlockingWaitStrategy;
 import com.lmax.disruptor.EventTranslator;
+import com.lmax.disruptor.ExceptionHandler;
 import com.lmax.disruptor.WorkHandler;
 import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.dsl.ProducerType;
@@ -29,9 +28,7 @@ public class DisruptorZMQReceiver implements ZMQReceiver, Loggable {
 
 		@Override
 		public void onEvent(ZMQEvent message) throws Exception {
-			if (this.handler != null) {
-				this.handler.onReceive(message);
-			}
+			this.handler.onReceive(message);
 		}
 	}
 
@@ -82,6 +79,23 @@ public class DisruptorZMQReceiver implements ZMQReceiver, Loggable {
 		}
 
 		this.disruptor.handleEventsWithWorkerPool(workers);
+		disruptor.setDefaultExceptionHandler(new ExceptionHandler<ZMQEvent>() {
+
+			@Override
+			public void handleEventException(Throwable ex, long sequence, ZMQEvent event) {
+				getLogger().error("Error while handling ZMQEvent: {}", event.getPayload(), ex);
+			}
+
+			@Override
+			public void handleOnStartException(Throwable ex) {
+				getLogger().error("Error while starting sender disruptor", ex);
+			}
+
+			@Override
+			public void handleOnShutdownException(Throwable ex) {
+				getLogger().error("Error while shutting down sender disruptor", ex);
+			}
+		});
 	}
 
 	@Override
@@ -89,21 +103,17 @@ public class DisruptorZMQReceiver implements ZMQReceiver, Loggable {
 		if (this.running.compareAndSet(false, true)) {
 			this.socket = this.socketRegistry.openSocket(config.getEndpoint(), config.getSocketType());
 			this.pollingThread = new Thread(() -> {
-				ByteBuffer buffer = ByteBuffer.allocateDirect(config.getBufferCapacity());
+				final ByteBuffer buffer = ByteBuffer.allocateDirect(config.getBufferCapacity());
 				while (this.isRunning() && !Thread.currentThread().isInterrupted()) {
-					int recv = this.socket.recvZeroCopy(buffer, buffer.capacity(), ZMQ.NOBLOCK);
-					switch (recv) {
-					case -1:
-						getLogger().error("Error while receive zero copy");
+					buffer.clear();
+					if (this.socket.recvZeroCopy(buffer, buffer.capacity(), 0) == -1) {
+						getLogger().error("Error while receive zero copy", new Exception());
 						return;
-					case 0:
-						getLogger().error("Received empty data, ignore...");
-						break;
-					default:
+					} else {
+						buffer.flip();
 						try {
 							final PuElement payload = PuElementTemplate.getInstance()
 									.read(new ByteBufferInputStream(buffer));
-
 							this.disruptor.publishEvent(new EventTranslator<ZMQEvent>() {
 
 								@Override
@@ -116,7 +126,6 @@ public class DisruptorZMQReceiver implements ZMQReceiver, Loggable {
 						} catch (IOException e) {
 							getLogger().error("Cannot parse as puElement", e);
 						}
-						break;
 					}
 				}
 			});

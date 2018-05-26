@@ -61,7 +61,8 @@ public class ZMQRPCProducer extends ZMQTaskProducer {
 	}
 
 	private ZMQReceiverConfig extractReceiverConfig(ZMQProducerConfig config) {
-		return ZMQReceiverConfig.builder()//
+		return ZMQReceiverConfig.builder() //
+				.threadNamePattern("receiver-" + config.getThreadNamePattern()) //
 				.endpoint(config.getReceiveEndpoint()) //
 				.socketType(config.getReceiveSocketType()) //
 				.bufferCapacity(config.getBufferCapacity()) //

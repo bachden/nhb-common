@@ -8,27 +8,27 @@ public interface ZMQPayloadBuilder {
 
 	void buildPayload(ZMQEvent event);
 
-	static ZMQPayloadBuilder defaultPuArrayPayloadBuilder() {
-		return new ZMQPayloadBuilder() {
+	static ZMQPayloadBuilder DEFAULT_PUARRAY_PAYLOAD_BUILDER = new ZMQPayloadBuilder() {
 
-			@Override
-			public void buildPayload(ZMQEvent event) {
+		@Override
+		public void buildPayload(ZMQEvent event) {
+			if (event != null) {
 				PuArray payload = new PuArrayList();
 				payload.addFrom(event.getData());
 				event.setPayload(payload);
 			}
-		};
-	}
+		}
+	};
 
-	static ZMQPayloadBuilder defaultPuObjectPayloadBuilder() {
-		return new ZMQPayloadBuilder() {
+	static ZMQPayloadBuilder DEFAULT_PUOBJECT_PAYLOAD_BUILDER = new ZMQPayloadBuilder() {
 
-			@Override
-			public void buildPayload(ZMQEvent event) {
+		@Override
+		public void buildPayload(ZMQEvent event) {
+			if (event != null) {
 				PuObject payload = new PuObject();
 				payload.set("data", event.getData());
 				event.setPayload(payload);
 			}
-		};
-	}
+		}
+	};
 }

@@ -1,53 +1,47 @@
 package com.nhb.messaging.zmq;
 
-import java.nio.ByteBuffer;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicBoolean;
-
-import org.zeromq.ZMQ;
-import org.zeromq.ZMQException;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.lmax.disruptor.BlockingWaitStrategy;
 import com.lmax.disruptor.EventTranslator;
+import com.lmax.disruptor.ExceptionHandler;
 import com.lmax.disruptor.WorkHandler;
 import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.dsl.ProducerType;
+import com.nhb.common.Loggable;
 import com.nhb.common.data.PuElement;
-import com.nhb.common.vo.ByteBufferOutputStream;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
-public class DisruptorZMQSender implements ZMQSender {
+public class DisruptorZMQSender implements ZMQSender, Loggable {
 
-	private static class ZeroCopySender implements WorkHandler<ZMQEvent> {
+	private static class SendingWorker implements WorkHandler<ZMQEvent> {
 
+		private final ZMQSocketWriter socketWriter;
 		private final ZMQSocket socket;
-		private final ByteBuffer buffer;
 		private final ZMQPayloadBuilder payloadBuilder;
 
-		private ZeroCopySender(ZMQSocket socket, int bufferSize, ZMQPayloadBuilder payloadBuilder) {
+		private SendingWorker(ZMQSocket socket, ZMQSocketWriter socketWriter, ZMQPayloadBuilder payloadBuilder) {
 			if (socket == null) {
 				throw new NullPointerException("Socket cannot be null");
 			}
 			this.socket = socket;
-			this.buffer = ByteBuffer.allocateDirect(bufferSize);
+			this.socketWriter = socketWriter;
 			this.payloadBuilder = payloadBuilder;
 		}
 
 		@Override
 		public void onEvent(ZMQEvent event) throws Exception {
 			if (event.getData() != null) {
-				this.buffer.clear();
-				this.payloadBuilder.buildPayload(event);
-				event.getPayload().writeTo(new ByteBufferOutputStream(buffer));
-				this.buffer.flip();
 				try {
-					event.setSuccess(this.socket.sendZeroCopy(buffer, buffer.remaining(), ZMQ.NOBLOCK));
+					this.payloadBuilder.buildPayload(event);
+					event.setSuccess(this.socketWriter.write(event.getPayload(), this.socket));
 					if (!event.isSuccess()) {
-						event.setFailedCause(new ZMQException("Cannot send message", -1));
+						event.setFailedCause(new ZMQSendingException("Cannot send message, unknown exception"));
 					}
 				} catch (Throwable ex) {
 					event.setSuccess(false);
@@ -106,9 +100,9 @@ public class DisruptorZMQSender implements ZMQSender {
 		this.disruptor = new Disruptor<>(ZMQEvent.EVENT_FACTORY, config.getQueueSize(), threadFactory,
 				ProducerType.MULTI, new BlockingWaitStrategy());
 
-		ZeroCopySender[] senders = new ZeroCopySender[config.getSendWorkerSize()];
+		SendingWorker[] senders = new SendingWorker[config.getSendWorkerSize()];
 		for (int i = 0; i < senders.length; i++) {
-			senders[i] = new ZeroCopySender(socketFactory.newSocket(), config.getBufferCapacity(), this.payloadBuilder);
+			senders[i] = new SendingWorker(socketFactory.newSocket(), config.getSocketWriter(), this.payloadBuilder);
 		}
 
 		SendingDoneWorker[] sendingDoneHandlers = new SendingDoneWorker[config.getSendingDoneHandlerSize()];
@@ -117,6 +111,23 @@ public class DisruptorZMQSender implements ZMQSender {
 		}
 
 		disruptor.handleEventsWithWorkerPool(senders).thenHandleEventsWithWorkerPool(sendingDoneHandlers);
+		disruptor.setDefaultExceptionHandler(new ExceptionHandler<ZMQEvent>() {
+
+			@Override
+			public void handleEventException(Throwable ex, long sequence, ZMQEvent event) {
+				getLogger().error("Error while handling ZMQEvent: {}", event.getPayload(), ex);
+			}
+
+			@Override
+			public void handleOnStartException(Throwable ex) {
+				getLogger().error("Error while starting sender disruptor", ex);
+			}
+
+			@Override
+			public void handleOnShutdownException(Throwable ex) {
+				getLogger().error("Error while shutting down sender disruptor", ex);
+			}
+		});
 	}
 
 	@Override
