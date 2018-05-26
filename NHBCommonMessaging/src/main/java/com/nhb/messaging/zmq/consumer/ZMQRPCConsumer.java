@@ -122,7 +122,8 @@ public class ZMQRPCConsumer extends ZMQTaskConsumer {
 					public void apply(PuElement res) {
 						if (res == null) {
 							getLogger().error("Error while sending response: messageId="
-									+ Arrays.toString(result.getMessageId()) + ", data=" + result.getResult(),
+									+ Arrays.toString(result.getMessageId()) + ", responseEndpoint="
+									+ result.getResponseEndpoint() + ", data=" + result.getResult(),
 									future.getFailedCause());
 						}
 					}
