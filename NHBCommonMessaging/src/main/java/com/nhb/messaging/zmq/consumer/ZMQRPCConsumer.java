@@ -1,5 +1,6 @@
 package com.nhb.messaging.zmq.consumer;
 
+import java.util.Arrays;
 import java.util.Map;
 
 import org.cliffc.high_scale_lib.NonBlockingHashMap;
@@ -118,9 +119,11 @@ public class ZMQRPCConsumer extends ZMQTaskConsumer {
 				future.setCallback(new Callback<PuElement>() {
 
 					@Override
-					public void apply(PuElement result) {
-						if (result == null) {
-							getLogger().error("Error while sending response: ", future.getFailedCause());
+					public void apply(PuElement res) {
+						if (res == null) {
+							getLogger().error("Error while sending response: messageId="
+									+ Arrays.toString(result.getMessageId()) + ", data=" + result.getResult(),
+									future.getFailedCause());
 						}
 					}
 				});
