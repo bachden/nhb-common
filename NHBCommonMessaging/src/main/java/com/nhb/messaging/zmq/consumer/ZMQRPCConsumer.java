@@ -77,7 +77,7 @@ public class ZMQRPCConsumer extends ZMQTaskConsumer {
 
 	private ZMQSenderConfig extractSenderConfig(String endpoint, ZMQConsumerConfig config) {
 		return ZMQSenderConfig.builder()//
-				.threadNamePattern("sender-" + config.getThreadNamePattern()) //
+				.threadNamePattern("responder-" + config.getThreadNamePattern()) //
 				.sendWorkerSize(config.getSendWorkerSize()) //
 				.sendingDoneHandlerSize(config.getSendingDoneHandlerSize()) //
 				.queueSize(config.getQueueSize()) //
