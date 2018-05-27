@@ -65,7 +65,8 @@ public class TestZMQRPC {
 		AtomicInteger sentCounter = new AtomicInteger(0);
 		CountDownLatch doneSignal = new CountDownLatch(numMessages);
 		Thread monitor = new Thread(() -> {
-			DecimalFormat df = new DecimalFormat("0.##%");
+			DecimalFormat dfP = new DecimalFormat("0.##%");
+			DecimalFormat df = new DecimalFormat("###,###.##");
 			while (!Thread.currentThread().isInterrupted()) {
 				try {
 					Thread.sleep(500);
@@ -74,9 +75,9 @@ public class TestZMQRPC {
 				}
 				long doneCount = doneSignal.getCount();
 				int sentCount = sentCounter.get();
-				log.debug("Sent: {} ({}) Remaining: {} / {} --> done {}", sentCount,
-						df.format(Double.valueOf(sentCount) / numMessages), doneCount, numMessages,
-						df.format(Double.valueOf(numMessages - doneCount) / numMessages));
+				log.debug("Sent: {} ({}), waiting for response: {}, total: {} --> done {}", df.format(sentCount),
+						dfP.format(Double.valueOf(sentCount) / numMessages), df.format(doneCount),
+						df.format(numMessages), dfP.format(Double.valueOf(numMessages - doneCount) / numMessages));
 			}
 		}, "monitor");
 		monitor.start();
