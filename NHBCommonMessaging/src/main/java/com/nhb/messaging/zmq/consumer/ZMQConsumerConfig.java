@@ -21,13 +21,13 @@ public class ZMQConsumerConfig {
 
 	private int sendWorkerSize = 1;
 	private int sendingDoneHandlerSize = 1;
-	private ZMQSocketType sendSocketType;
+	private ZMQSocketType sendSocketType = ZMQSocketType.PUSH_CONNECT;
 	private ZMQSocketOptions sendSocketOptions;
-	private ZMQSocketWriter socketWriter;
+	private ZMQSocketWriter socketWriter = ZMQSocketWriter.newDefaultWriter();
 
 	private String receiveEndpoint;
-	private ZMQSocketType receiveSocketType;
+	private ZMQSocketType receiveSocketType = ZMQSocketType.PULL_BIND;
 	private int receiveWorkerSize = 1;
 
-	private ZMQMessageProcessor messageProcessor;
+	private ZMQMessageProcessor messageProcessor = ZMQMessageProcessor.DEBUG_MESSAGE_PROCESSOR;
 }

@@ -2,6 +2,7 @@ package com.nhb.messaging.zmq.producer;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import com.nhb.common.Loggable;
 import com.nhb.common.data.PuElement;
 import com.nhb.common.data.PuNull;
 import com.nhb.messaging.MessageProducer;
@@ -19,7 +20,7 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 
-public class ZMQTaskProducer implements MessageProducer<ZMQFuture> {
+public class ZMQTaskProducer implements MessageProducer<ZMQFuture>, Loggable {
 
 	private final ZMQSendingDoneHandler sendingDoneHandler = new ZMQSendingDoneHandler() {
 

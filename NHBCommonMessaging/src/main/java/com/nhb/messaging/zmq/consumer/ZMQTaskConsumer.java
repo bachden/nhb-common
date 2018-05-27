@@ -45,6 +45,7 @@ public class ZMQTaskConsumer implements ZMQConsumer, Loggable {
 	private void onReceive(ZMQEvent message) {
 		if (this.messageProcessor != null) {
 			final DefaultZMQFuture future = new DefaultZMQFuture();
+			final byte[] messageId = message.getMessageId();
 			final String responseEndpoint = message.getResponseEndpoint();
 			future.setCallback(new Callback<PuElement>() {
 
@@ -60,7 +61,7 @@ public class ZMQTaskConsumer implements ZMQConsumer, Loggable {
 					} else {
 						builder.success(true).result(result);
 					}
-					onProcessComplete(builder.responseEndpoint(responseEndpoint).build());
+					onProcessComplete(builder.responseEndpoint(responseEndpoint).messageId(messageId).build());
 				}
 			});
 			this.messageProcessor.process(message.getData(), future);

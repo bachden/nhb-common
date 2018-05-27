@@ -35,20 +35,27 @@ public class ZMQRPCConsumer extends ZMQTaskConsumer {
 		public void extractPayload(ZMQEvent event) {
 			if (event.getPayload() instanceof PuArray) {
 				PuArray puArray = (PuArray) event.getPayload();
-				event.setMessageId(puArray.getRaw(0));
-				String responseEndpoint = puArray.getString(1);
-				if (!responderRegistry.containsKey(responseEndpoint)) {
-					ZMQSender sender = new DisruptorZMQSender();
-					responderRegistry.put(responseEndpoint, sender);
-				}
-				event.setResponseEndpoint(responseEndpoint);
-				PuValue value = puArray.get(2);
-				if (value.getType() == PuDataType.PUARRAY) {
-					event.setData(value.getPuArray());
-				} else if (value.getType() == PuDataType.PUOBJECT) {
-					event.setData(value.getPuObject());
+				if (puArray.size() > 2) {
+					event.setMessageId(puArray.getRaw(0));
+					String responseEndpoint = puArray.getString(1);
+					if (!responderRegistry.containsKey(responseEndpoint)) {
+						ZMQSender sender = new DisruptorZMQSender();
+						responderRegistry.put(responseEndpoint, sender);
+					}
+
+					event.setResponseEndpoint(responseEndpoint);
+					PuValue value = puArray.get(2);
+					if (value.getType() == PuDataType.PUARRAY) {
+						event.setData(value.getPuArray());
+					} else if (value.getType() == PuDataType.PUOBJECT) {
+						event.setData(value.getPuObject());
+					} else {
+						event.setData(value);
+					}
 				} else {
-					event.setData(value);
+					event.setSuccess(false);
+					event.setFailedCause(new InvalidDataException(
+							"PuArray payload must have atleast 3 elements, got " + puArray.size()));
 				}
 			} else {
 				event.setSuccess(false);

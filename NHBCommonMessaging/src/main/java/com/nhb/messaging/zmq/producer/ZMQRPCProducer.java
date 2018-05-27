@@ -92,27 +92,42 @@ public class ZMQRPCProducer extends ZMQTaskProducer {
 	private void onReceive(ZMQEvent event) {
 		DefaultZMQFuture future = event.getFuture();
 		if (future != null) {
-			future.setAndDone(event.getData());
+			if (event.isSuccess()) {
+				future.setAndDone(event.getData());
+			} else {
+				future.setFailedCause(event.getFailedCause());
+				future.setAndDone(null);
+			}
 		}
 	}
 
 	private void extractReceivedPayload(ZMQEvent event) {
 		PuElement payload = event.getPayload();
-		if (payload instanceof PuArray && ((PuArray) payload).size() == 2) {
+		if (payload instanceof PuArray && ((PuArray) payload).size() >= 2) {
 			PuArray puArray = (PuArray) payload;
 			byte[] messageId = puArray.getRaw(0);
-			event.setFuture(this.futureRegistry.remove(messageId));
+			DefaultZMQFuture future = this.futureRegistry.remove(messageId);
 
-			PuValue value = puArray.get(1);
-			if (value.getType() == PuDataType.PUARRAY) {
-				event.setData(value.getPuArray());
-			} else if (value.getType() == PuDataType.PUOBJECT) {
-				event.setData(value.getPuObject());
-			} else {
-				event.setData(value);
+			event.setSuccess(puArray.getBoolean(1));
+			event.setFuture(future);
+
+			if (puArray.size() > 2) {
+				PuValue value = puArray.get(2);
+				if (value.getType() == PuDataType.PUARRAY) {
+					event.setData(value.getPuArray());
+				} else if (value.getType() == PuDataType.PUOBJECT) {
+					event.setData(value.getPuObject());
+				} else {
+					event.setData(value);
+				}
+			}
+
+			if (!event.isSuccess()) {
+				event.setFailedCause(new Exception("Internal server error, message: " + event.getData()));
 			}
 		} else {
-			throw new IllegalArgumentException("Cannot extract payload: " + payload);
+			event.setSuccess(false);
+			event.setFailedCause(new IllegalArgumentException("Cannot extract payload: " + payload));
 		}
 	}
 

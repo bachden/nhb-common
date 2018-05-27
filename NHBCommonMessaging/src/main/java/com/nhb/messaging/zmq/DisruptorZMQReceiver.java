@@ -29,9 +29,7 @@ public class DisruptorZMQReceiver implements ZMQReceiver, Loggable {
 
 		@Override
 		public void onEvent(ZMQEvent event) throws Exception {
-			if (event.isSuccess()) {
-				this.handler.onReceive(event);
-			}
+			this.handler.onReceive(event);
 		}
 	}
 

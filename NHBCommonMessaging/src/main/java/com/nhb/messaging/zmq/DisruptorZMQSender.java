@@ -86,7 +86,7 @@ public class DisruptorZMQSender implements ZMQSender, Loggable {
 			if (config == null) {
 				throw new NullPointerException("Config cannot be null");
 			} else if (socketRegistry == null) {
-				throw new NullPointerException("socketFactory cannot be null");
+				throw new NullPointerException("socketRegistry cannot be null");
 			}
 
 			config.validate();
