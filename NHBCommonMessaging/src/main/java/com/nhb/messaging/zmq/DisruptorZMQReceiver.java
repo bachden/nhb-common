@@ -5,6 +5,8 @@ import java.nio.ByteBuffer;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.zeromq.ZMQException;
+
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.lmax.disruptor.BlockingWaitStrategy;
 import com.lmax.disruptor.EventTranslator;
@@ -119,7 +121,15 @@ public class DisruptorZMQReceiver implements ZMQReceiver, Loggable {
 				final ByteBuffer buffer = ByteBuffer.allocateDirect(config.getBufferCapacity());
 				while (this.isRunning() && !Thread.currentThread().isInterrupted()) {
 					buffer.clear();
-					if (this.socket.recvZeroCopy(buffer, buffer.capacity(), 0) == -1) {
+					int recv = 0;
+					try {
+						recv = this.socket.recvZeroCopy(buffer, buffer.capacity(), 0);
+					} catch (ZMQException e) {
+						if (e.getMessage().contains("Context was terminated")) {
+							return;
+						}
+					}
+					if (recv == -1) {
 						getLogger().error("Error while receive zero copy", new Exception());
 						return;
 					} else {
@@ -151,7 +161,9 @@ public class DisruptorZMQReceiver implements ZMQReceiver, Loggable {
 	@Override
 	public void stop() {
 		if (this.runningCheckpoint.compareAndSet(true, false)) {
-			this.pollingThread.interrupt();
+			if (!this.pollingThread.isInterrupted()) {
+				this.pollingThread.interrupt();
+			}
 			this.disruptor.halt();
 			this.socket.close();
 			this.running = false;

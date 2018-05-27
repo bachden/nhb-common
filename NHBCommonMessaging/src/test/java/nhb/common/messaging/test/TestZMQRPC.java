@@ -3,10 +3,13 @@ package nhb.common.messaging.test;
 import java.text.DecimalFormat;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import com.nhb.common.async.Callback;
 import com.nhb.common.data.PuElement;
 import com.nhb.common.data.PuObject;
+import com.nhb.common.data.PuValue;
 import com.nhb.common.utils.TimeWatcher;
 import com.nhb.messaging.zmq.ZMQSocketOptions;
 import com.nhb.messaging.zmq.ZMQSocketRegistry;
@@ -34,6 +37,15 @@ public class TestZMQRPC {
 		consumer.start();
 		producer.start();
 
+		int count = 10;
+		while (count-- > 0) {
+			try {
+				producer.publish(PuValue.fromObject("ping")).get(10, TimeUnit.MILLISECONDS);
+				break;
+			} catch (TimeoutException e) {
+			}
+		}
+
 		int numMessages = (int) 1e6;
 		PuObject[] messages = new PuObject[numMessages];
 		for (int i = 0; i < messages.length; i++) {
@@ -46,6 +58,18 @@ public class TestZMQRPC {
 
 		log.debug("Start sending....");
 		CountDownLatch doneSignal = new CountDownLatch(numMessages);
+		Thread monitor = new Thread(() -> {
+			while (!Thread.currentThread().isInterrupted()) {
+				try {
+					Thread.sleep(500);
+				} catch (InterruptedException e) {
+					return;
+				}
+				log.debug("Remaining: {}", doneSignal.getCount());
+			}
+		}, "monitor");
+		monitor.start();
+
 		TimeWatcher timeWatcher = new TimeWatcher();
 		timeWatcher.reset();
 		for (PuObject message : messages) {
@@ -54,11 +78,15 @@ public class TestZMQRPC {
 				@Override
 				public void apply(PuElement result) {
 					doneSignal.countDown();
+					// log.debug("Got response: " + result + " --> remaining: " +
+					// doneSignal.getCount());
 				}
 			});
 		}
 		doneSignal.await();
 		double totalTimeSeconds = timeWatcher.endLapSeconds();
+
+		monitor.interrupt();
 
 		double avgMessageSize = Double
 				.valueOf(messages[0].toBytes().length + messages[numMessages - 1].toBytes().length) / 2;
@@ -66,6 +94,7 @@ public class TestZMQRPC {
 
 		DecimalFormat df = new DecimalFormat("###,###.##");
 
+		log.info("************** STATISIC **************");
 		log.info("Num senders: {}", numSenders);
 		log.info("Num msgs: {}", df.format(numMessages));
 		log.info("Elapsed: {} seconds", df.format(totalTimeSeconds));
@@ -77,16 +106,19 @@ public class TestZMQRPC {
 				df.format(totalMessageBytes / 1024 / totalTimeSeconds),
 				df.format(totalMessageBytes / 1024 / 1024 / totalTimeSeconds));
 
+		log.info("*************** DONE ***************");
+		System.exit(0);
 	}
 
 	private static ZMQRPCConsumer initConsumer(ZMQSocketRegistry socketRegistry, int numSenders) {
 		ZMQRPCConsumer consumer = new ZMQRPCConsumer();
 		ZMQConsumerConfig config = new ZMQConsumerConfig();
-		config.setSendSocketOptions(ZMQSocketOptions.builder().hwm((long) 1e5).sndHWM((long) 1e5).build());
+		config.setSendSocketOptions(
+				ZMQSocketOptions.builder().hwm((long) 1e5).sndHWM((long) 1e5).rcvHWM((long) 1e5).build());
 		config.setSendWorkerSize(numSenders);
 		config.setReceiveEndpoint(ENDPOINT);
 		config.setSocketRegistry(socketRegistry);
-		config.setMessageProcessor(ZMQMessageProcessor.DEBUG_MESSAGE_PROCESSOR);
+		config.setMessageProcessor(ZMQMessageProcessor.SIMPLE_RESPONSE_MESSAGE_PROCESSOR);
 
 		consumer.init(config);
 		return consumer;
@@ -95,7 +127,8 @@ public class TestZMQRPC {
 	private static ZMQRPCProducer initProducer(ZMQSocketRegistry socketRegistry, int numSenders) {
 		ZMQRPCProducer producer = new ZMQRPCProducer();
 		ZMQProducerConfig config = new ZMQProducerConfig();
-		config.setSendSocketOptions(ZMQSocketOptions.builder().hwm((long) 1e5).sndHWM((long) 1e5).build());
+		config.setSendSocketOptions(
+				ZMQSocketOptions.builder().hwm((long) 1e5).sndHWM((long) 1e5).rcvHWM((long) 1e5).build());
 		config.setSocketRegistry(socketRegistry);
 		config.setSendEndpoint(ENDPOINT);
 		config.setReceiveEndpoint(PRODUCER_RECEIVE_ENDPOINT);

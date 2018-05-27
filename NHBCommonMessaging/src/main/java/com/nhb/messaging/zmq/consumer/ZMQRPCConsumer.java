@@ -110,6 +110,12 @@ public class ZMQRPCConsumer extends ZMQTaskConsumer {
 							responder.init(getSocketRegistry(), extractSenderConfig(responseEndpoint, getConfig()));
 						}
 						responder.start();
+						try {
+							Thread.sleep(10);
+						} catch (InterruptedException e) {
+							throw new RuntimeException("Error while starting responder for " + responseEndpoint, e);
+						}
+						getLogger().debug("Responder for {} started...", responseEndpoint);
 					}
 				}
 
