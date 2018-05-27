@@ -5,6 +5,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import com.nhb.common.async.Callback;
 import com.nhb.common.data.PuElement;
@@ -61,6 +62,7 @@ public class TestZMQRPC {
 		}
 
 		log.debug("Start sending....");
+		AtomicInteger sentCounter = new AtomicInteger(0);
 		CountDownLatch doneSignal = new CountDownLatch(numMessages);
 		Thread monitor = new Thread(() -> {
 			DecimalFormat df = new DecimalFormat("0.##%");
@@ -71,7 +73,9 @@ public class TestZMQRPC {
 					return;
 				}
 				long doneCount = doneSignal.getCount();
-				log.debug("Remaining: {} / {} --> done {}", doneCount, numMessages,
+				int sentCount = sentCounter.get();
+				log.debug("Sent: {} ({}) Remaining: {} / {} --> done {}", sentCount,
+						df.format(Double.valueOf(sentCount) / numMessages), doneCount, numMessages,
 						df.format(Double.valueOf(numMessages - doneCount) / numMessages));
 			}
 		}, "monitor");
@@ -89,6 +93,7 @@ public class TestZMQRPC {
 					// doneSignal.getCount());
 				}
 			});
+			sentCounter.incrementAndGet();
 		}
 		doneSignal.await();
 		double totalTimeSeconds = timeWatcher.endLapSeconds();
