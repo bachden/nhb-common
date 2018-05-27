@@ -40,9 +40,13 @@ public class TestZMQRPC {
 		int count = 10;
 		while (count-- > 0) {
 			try {
-				producer.publish(PuValue.fromObject("ping")).get(10, TimeUnit.MILLISECONDS);
+				producer.publish(PuValue.fromObject("ping")).get(100, TimeUnit.MILLISECONDS);
 				break;
 			} catch (TimeoutException e) {
+			}
+			
+			if (count == 0) {
+				throw new RuntimeException("Cannot establish bi-direction communication to consumer");
 			}
 		}
 
