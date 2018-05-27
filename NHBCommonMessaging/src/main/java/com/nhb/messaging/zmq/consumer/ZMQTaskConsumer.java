@@ -23,7 +23,14 @@ public class ZMQTaskConsumer implements ZMQConsumer, Loggable {
 	@Getter(AccessLevel.PROTECTED)
 	private ZMQSocketRegistry socketRegistry;
 
-	private final AtomicBoolean running = new AtomicBoolean(false);
+	@Getter
+	private volatile boolean running = false;
+	private final AtomicBoolean runningChecker = new AtomicBoolean(false);
+
+	@Getter
+	private volatile boolean initialized = false;
+	private final AtomicBoolean initializedChecker = new AtomicBoolean(false);
+
 	private ZMQReceiver receiver;
 
 	@Setter(AccessLevel.PROTECTED)
@@ -73,16 +80,19 @@ public class ZMQTaskConsumer implements ZMQConsumer, Loggable {
 	}
 
 	public final void init(ZMQConsumerConfig config) {
-		this.config = config;
-		this.socketRegistry = config.getSocketRegistry();
-		this.receiver = new DisruptorZMQReceiver();
-		this.messageProcessor = config.getMessageProcessor();
-		this.receiver.init(getSocketRegistry(), this.extractReceiverConfig(config));
-		this.onInit();
+		if (this.initializedChecker.compareAndSet(false, true)) {
+			this.config = config;
+			this.socketRegistry = config.getSocketRegistry();
+			this.receiver = new DisruptorZMQReceiver();
+			this.messageProcessor = config.getMessageProcessor();
+			this.receiver.init(getSocketRegistry(), this.extractReceiverConfig(config));
+			this.onInit();
+			this.initialized = true;
+		}
 	}
 
 	protected void onInit() {
-
+		// should be overrided in sub class
 	}
 
 	private ZMQReceiverConfig extractReceiverConfig(ZMQConsumerConfig config) {
@@ -97,15 +107,11 @@ public class ZMQTaskConsumer implements ZMQConsumer, Loggable {
 				.build();
 	}
 
-	@Override
-	public boolean isRunning() {
-		return this.running.get();
-	}
-
 	public void start() {
-		if (this.running.compareAndSet(false, true)) {
+		if (this.runningChecker.compareAndSet(false, true)) {
 			this.receiver.start();
 			this.onStart();
+			this.running = true;
 		}
 	}
 
@@ -115,8 +121,10 @@ public class ZMQTaskConsumer implements ZMQConsumer, Loggable {
 
 	@Override
 	public void stop() {
-		if (this.running.compareAndSet(true, false)) {
+		if (this.runningChecker.compareAndSet(true, false)) {
+			this.receiver.stop();
 			this.onStop();
+			this.running = false;
 		}
 
 	}

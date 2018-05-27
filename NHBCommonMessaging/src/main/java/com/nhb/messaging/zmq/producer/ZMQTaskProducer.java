@@ -43,8 +43,12 @@ public class ZMQTaskProducer implements MessageProducer<ZMQFuture>, Loggable {
 	@Getter(AccessLevel.PROTECTED)
 	private ZMQSocketRegistry socketRegistry;
 
-	private final AtomicBoolean running = new AtomicBoolean(false);
-	private final AtomicBoolean initialized = new AtomicBoolean(false);
+	@Getter
+	private volatile boolean running = false;
+	private final AtomicBoolean runningChecker = new AtomicBoolean(false);
+	@Getter
+	private volatile boolean initialized = false;
+	private final AtomicBoolean initializedChecker = new AtomicBoolean(false);
 
 	@Getter(AccessLevel.PROTECTED)
 	private ZMQProducerConfig config;
@@ -54,7 +58,7 @@ public class ZMQTaskProducer implements MessageProducer<ZMQFuture>, Loggable {
 	private ZMQPayloadBuilder payloadBuilder;
 
 	public final void init(ZMQProducerConfig config) {
-		if (this.initialized.compareAndSet(false, true)) {
+		if (this.initializedChecker.compareAndSet(false, true)) {
 			if (this.payloadBuilder == null) {
 				this.payloadBuilder = ZMQPayloadBuilder.DEFAULT_PUARRAY_PAYLOAD_BUILDER;
 			}
@@ -66,9 +70,8 @@ public class ZMQTaskProducer implements MessageProducer<ZMQFuture>, Loggable {
 			this.sender.init(this.socketRegistry, this.extractSenderConfig(config));
 
 			this.onInit();
-		} else {
-			throw new IllegalStateException("Instance has been started");
-		}
+			this.initialized = true;
+		} 
 	}
 
 	protected void onInit() {
@@ -91,9 +94,10 @@ public class ZMQTaskProducer implements MessageProducer<ZMQFuture>, Loggable {
 	}
 
 	public final void start() {
-		if (this.running.compareAndSet(false, true)) {
+		if (this.runningChecker.compareAndSet(false, true)) {
 			this.sender.start();
 			this.onStart();
+			this.running = true;
 		}
 	}
 
@@ -102,22 +106,15 @@ public class ZMQTaskProducer implements MessageProducer<ZMQFuture>, Loggable {
 	}
 
 	public final void stop() {
-		if (this.running.compareAndSet(true, false)) {
+		if (this.runningChecker.compareAndSet(true, false)) {
 			this.sender.stop();
 			this.onStop();
+			this.running = false;
 		}
 	}
 
 	protected void onStop() {
 
-	}
-
-	public boolean isRunning() {
-		return this.running.get();
-	}
-
-	public boolean isInitialized() {
-		return this.initialized.get();
 	}
 
 	@Override
