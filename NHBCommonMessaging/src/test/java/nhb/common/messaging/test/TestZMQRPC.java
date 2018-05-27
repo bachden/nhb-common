@@ -44,7 +44,7 @@ public class TestZMQRPC {
 				break;
 			} catch (TimeoutException e) {
 			}
-			
+
 			if (count == 0) {
 				throw new RuntimeException("Cannot establish bi-direction communication to consumer");
 			}
@@ -63,13 +63,16 @@ public class TestZMQRPC {
 		log.debug("Start sending....");
 		CountDownLatch doneSignal = new CountDownLatch(numMessages);
 		Thread monitor = new Thread(() -> {
+			DecimalFormat df = new DecimalFormat("0.##%");
 			while (!Thread.currentThread().isInterrupted()) {
 				try {
 					Thread.sleep(500);
 				} catch (InterruptedException e) {
 					return;
 				}
-				log.debug("Remaining: {}", doneSignal.getCount());
+				long doneCount = doneSignal.getCount();
+				log.debug("Remaining: {} / {} --> done {}", doneCount, numMessages,
+						df.format(Double.valueOf(numMessages - doneCount) / numMessages));
 			}
 		}, "monitor");
 		monitor.start();
