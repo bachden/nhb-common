@@ -61,14 +61,14 @@ public class BaseRPCFuture<V> extends BaseEventDispatcher implements RPCFuture<V
 	private Future<?> monitorTimeoutFuture;
 	private final CountDownLatch doneSignal = new CountDownLatch(1);
 
-	private final AtomicBoolean isInDoneProcessing = new AtomicBoolean(false);
-	private final AtomicBoolean hasCallback = new AtomicBoolean(false);
+	private volatile boolean complete = false;
 	private final AtomicBoolean done = new AtomicBoolean(false);
 	private final AtomicBoolean cancelled = new AtomicBoolean(false);
+	private final AtomicBoolean hasCallback = new AtomicBoolean(false);
 	private final AtomicBoolean timeoutFlag = new AtomicBoolean(false);
 
 	private void waitForDoneProgress() {
-		while (isInDoneProcessing.get()) {
+		while (this.done.get() && !this.complete) {
 			LockSupport.parkNanos(10);
 		}
 	}
@@ -81,35 +81,31 @@ public class BaseRPCFuture<V> extends BaseEventDispatcher implements RPCFuture<V
 
 	@Override
 	public boolean isCancelled() {
-		waitForDoneProgress();
+		this.waitForDoneProgress();
 		return this.cancelled.get();
 	}
 
 	private void doComplete(V value) {
-		if (isInDoneProcessing.compareAndSet(false, true)) {
-			this.value = value;
-			if (monitorTimeoutFuture != null) {
-				this.monitorTimeoutFuture.cancel(true);
-				this.monitorTimeoutFuture = null;
-			}
-
-			if (cancelFuture != null) {
-				this.cancelFuture = null;
-			}
-
-			this.doneSignal.countDown();
-			if (this.callback != null) {
-				try {
-					this.callback.apply(this.value);
-				} catch (Exception e) {
-					getLogger().error("Error while execute callback", e);
-				}
-			}
-
-			isInDoneProcessing.set(false);
-		} else {
-			throw new IllegalStateException("Future is in done processing");
+		this.value = value;
+		if (monitorTimeoutFuture != null) {
+			this.monitorTimeoutFuture.cancel(true);
+			this.monitorTimeoutFuture = null;
 		}
+
+		if (cancelFuture != null) {
+			this.cancelFuture = null;
+		}
+
+		this.doneSignal.countDown();
+		if (this.callback != null) {
+			try {
+				this.callback.apply(this.value);
+			} catch (Exception e) {
+				getLogger().error("Error while execute callback", e);
+			}
+		}
+
+		this.complete = true;
 	}
 
 	@Override
@@ -172,12 +168,12 @@ public class BaseRPCFuture<V> extends BaseEventDispatcher implements RPCFuture<V
 	}
 
 	@Override
-	public void setCallback(Callback<V> callback) {
+	public final void setCallback(Callback<V> callback) {
 		if (callback != null && this.hasCallback.compareAndSet(false, true)) {
-			this.callback = callback;
 			if (this.isDone()) {
-				this.callback.apply(this.value);
+				callback.apply(this.value);
 			}
+			this.callback = callback;
 		}
 	}
 
