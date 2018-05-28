@@ -8,6 +8,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.locks.LockSupport;
 
 import com.nhb.common.async.exception.ExecutionCancelledException;
 import com.nhb.common.async.executor.DisruptorAsyncTaskExecutor;
@@ -65,23 +66,30 @@ public class BaseRPCFuture<V> extends BaseEventDispatcher implements RPCFuture<V
 		this.doneSignal = new CountDownLatch(1);
 	}
 
+	private final AtomicBoolean isInDoneProcessing = new AtomicBoolean(false);
+
 	private void doComplete() {
-		if (monitorTimeoutFuture != null) {
-			this.monitorTimeoutFuture.cancel(true);
-			this.monitorTimeoutFuture = null;
-		}
-		if (sourceFuture != null) {
-			this.sourceFuture = null;
-		}
-		this.doneSignal.countDown();
-		if (this.callback != null) {
-			try {
-				this.callback.apply(this.value);
-			} catch (Exception e) {
-				getLogger().error("Error while execute callback", e);
+		if (isInDoneProcessing.compareAndSet(false, true)) {
+			if (monitorTimeoutFuture != null) {
+				this.monitorTimeoutFuture.cancel(true);
+				this.monitorTimeoutFuture = null;
 			}
+			if (sourceFuture != null) {
+				this.sourceFuture = null;
+			}
+			this.doneSignal.countDown();
+			if (this.callback != null) {
+				try {
+					this.callback.apply(this.value);
+				} catch (Exception e) {
+					getLogger().error("Error while execute callback", e);
+				}
+			}
+			this.done = true;
+			isInDoneProcessing.set(false);
+		} else {
+			throw new IllegalStateException("Future is in done processing");
 		}
-		this.done = true;
 	}
 
 	@Override
@@ -151,7 +159,11 @@ public class BaseRPCFuture<V> extends BaseEventDispatcher implements RPCFuture<V
 	public void setCallback(Callback<V> callable) {
 		if (callable != null && callable != this.callback && this.hasCallback.compareAndSet(false, true)) {
 			this.callback = callable;
-			if (this.isDone()) {
+			// waiting if this is in complete processing
+			while (isInDoneProcessing.get()) {
+				LockSupport.parkNanos(10);
+			}
+			if (!isInDoneProcessing.get() && this.isDone()) {
 				this.callback.apply(this.value);
 			}
 		}
