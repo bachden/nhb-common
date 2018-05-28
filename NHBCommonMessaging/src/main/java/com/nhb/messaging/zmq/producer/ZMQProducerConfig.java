@@ -16,18 +16,18 @@ public class ZMQProducerConfig {
 
 	private int bufferCapacity = 1024;
 
-	private String threadNamePattern = "worker-%d";
 	private int queueSize = 1024;
+	private String threadNamePattern = "worker-%d";
 
 	private String sendEndpoint;
 	private int sendWorkerSize = 1;
 	private int sendingDoneHandlerSize = 1;
 	private ZMQSocketType sendSocketType = ZMQSocketType.PUSH_CONNECT;
 	private ZMQSocketOptions sendSocketOptions;
-	private ZMQSocketWriter socketWriter = ZMQSocketWriter.newDefaultWriter();
+	private ZMQSocketWriter socketWriter = ZMQSocketWriter.newNonBlockingWriter();
 
 	private String receiveEndpoint;
-	private ZMQSocketType receiveSocketType = ZMQSocketType.PULL_BIND;
 	private int receiveWorkerSize = 1;
+	private ZMQSocketType receiveSocketType = ZMQSocketType.PULL_BIND;
 
 }

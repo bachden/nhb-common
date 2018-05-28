@@ -2,13 +2,15 @@ package com.nhb.messaging.rabbit.producer;
 
 import com.nhb.common.data.PuElement;
 import com.nhb.messaging.MessageProducer;
+import com.nhb.messaging.StartableProducer;
 import com.nhb.messaging.rabbit.RabbitMQChannelWrapper;
 import com.nhb.messaging.rabbit.RabbitMQQueueConfig;
 import com.nhb.messaging.rabbit.connection.RabbitMQConnection;
 import com.nhb.messaging.rabbit.connection.RabbitMQConnectionPool;
 import com.rabbitmq.client.AMQP.BasicProperties;
 
-public abstract class RabbitMQProducer<T> extends RabbitMQChannelWrapper implements MessageProducer<T> {
+public abstract class RabbitMQProducer<T> extends RabbitMQChannelWrapper
+		implements MessageProducer<T>, StartableProducer {
 
 	private RabbitMQQueueConfig queueConfig;
 
