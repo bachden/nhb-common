@@ -8,4 +8,5 @@ public interface ZMQFuture extends RPCFuture<PuElement> {
 	static DefaultZMQFuture newDefault() {
 		return new DefaultZMQFuture();
 	}
+	
 }

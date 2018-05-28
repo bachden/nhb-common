@@ -71,7 +71,7 @@ public class ZMQTaskProducer implements MessageProducer<ZMQFuture>, Loggable {
 
 			this.onInit();
 			this.initialized = true;
-		} 
+		}
 	}
 
 	protected void onInit() {

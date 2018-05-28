@@ -33,54 +33,65 @@ public class ZMQRPCConsumer extends ZMQTaskConsumer {
 		@Override
 		@NotThreadSafe
 		public void extractPayload(ZMQEvent event) {
-			if (event.getPayload() instanceof PuArray) {
-				PuArray puArray = (PuArray) event.getPayload();
-				if (puArray.size() > 2) {
-					event.setMessageId(puArray.getRaw(0));
-					String responseEndpoint = puArray.getString(1);
-					if (!responderRegistry.containsKey(responseEndpoint)) {
-						ZMQSender sender = new DisruptorZMQSender();
-						responderRegistry.put(responseEndpoint, sender);
-					}
-
-					event.setResponseEndpoint(responseEndpoint);
-					PuValue value = puArray.get(2);
-					if (value.getType() == PuDataType.PUARRAY) {
-						event.setData(value.getPuArray());
-					} else if (value.getType() == PuDataType.PUOBJECT) {
-						event.setData(value.getPuObject());
-					} else {
-						event.setData(value);
-					}
-				} else {
-					event.setSuccess(false);
-					event.setFailedCause(new InvalidDataException(
-							"PuArray payload must have atleast 3 elements, got " + puArray.size()));
-				}
-			} else {
-				event.setSuccess(false);
-				event.setFailedCause(new InvalidDataException("Expected for PuArray, got: " + event.getPayload()));
-			}
+			ZMQRPCConsumer.this.extractReceivedPayload(event);
 		}
 	};
-	private ZMQPayloadBuilder payloadBuilder = new ZMQPayloadBuilder() {
+	private ZMQPayloadBuilder responsePayloadBuilder = new ZMQPayloadBuilder() {
 
 		@Override
 		public void buildPayload(ZMQEvent event) {
-			if (event.getData() instanceof PuResult) {
-				PuResult dummyResult = event.getData().cast();
-
-				PuArray payload = new PuArrayList();
-				payload.addFrom(dummyResult.getMessageId());
-				payload.addFrom(dummyResult.isSuccess());
-				payload.addFrom(dummyResult.getResult());
-				event.setPayload(payload);
-			}
+			ZMQRPCConsumer.this.buildResponsePayload(event);
 		}
 	};
 
 	public ZMQRPCConsumer() {
 		this.setPayloadExtractor(payloadExtractor);
+	}
+
+	protected void extractReceivedPayload(ZMQEvent event) {
+		if (event.getPayload() instanceof PuArray) {
+			PuArray puArray = (PuArray) event.getPayload();
+			if (puArray.size() > 2) {
+				event.setMessageId(puArray.getRaw(0));
+				String responseEndpoint = puArray.getString(1);
+				if (!responderRegistry.containsKey(responseEndpoint)) {
+					ZMQSender sender = new DisruptorZMQSender();
+					responderRegistry.put(responseEndpoint, sender);
+				}
+
+				event.setResponseEndpoint(responseEndpoint);
+				PuValue value = puArray.get(2);
+				if (value.getType() == PuDataType.PUARRAY) {
+					event.setData(value.getPuArray());
+				} else if (value.getType() == PuDataType.PUOBJECT) {
+					event.setData(value.getPuObject());
+				} else {
+					event.setData(value);
+				}
+			} else {
+				event.setSuccess(false);
+				event.setFailedCause(new InvalidDataException(
+						"PuArray payload must have atleast 3 elements, got " + puArray.size()));
+			}
+		} else {
+			event.setSuccess(false);
+			event.setFailedCause(new InvalidDataException("Expected for PuArray, got: " + event.getPayload()));
+		}
+	}
+
+	protected void buildResponsePayload(ZMQEvent event) {
+		if (event.getData() instanceof PuResult) {
+			PuResult dummyResult = event.getData().cast();
+			PuArray payload = new PuArrayList();
+			payload.addFrom(dummyResult.getMessageId());
+			payload.addFrom(dummyResult.isSuccess());
+			payload.addFrom(dummyResult.getResult());
+			event.setPayload(payload);
+			event.setSuccess(true);
+		} else {
+			event.setFailedCause(new InvalidDataException("Expected PuResult instance"));
+			event.setSuccess(false);
+		}
 	}
 
 	private ZMQSenderConfig extractSenderConfig(String endpoint, ZMQConsumerConfig config) {
@@ -92,7 +103,7 @@ public class ZMQRPCConsumer extends ZMQTaskConsumer {
 				.endpoint(endpoint) //
 				.socketType(config.getSendSocketType()) //
 				.socketOptions(config.getSendSocketOptions()) //
-				.payloadBuilder(this.payloadBuilder) //
+				.payloadBuilder(this.responsePayloadBuilder) //
 				.sendingDoneHandler(ZMQSendingDoneHandler.DEFAULT) //
 				.socketWriter(config.getSocketWriter()) //
 				.build();
@@ -129,10 +140,12 @@ public class ZMQRPCConsumer extends ZMQTaskConsumer {
 					@Override
 					public void apply(PuElement res) {
 						if (res == null) {
-							getLogger().error("Error while sending response: messageId="
+							String msg = "Error while sending response: messageId="
 									+ Arrays.toString(result.getMessageId()) + ", responseEndpoint="
-									+ result.getResponseEndpoint() + ", data=" + result.getResult(),
-									future.getFailedCause());
+									+ result.getResponseEndpoint() + ", data=" + result.getResult();
+
+							getLogger().error(msg, future.getFailedCause() != null ? future.getFailedCause()
+									: new Exception("Unknown error"));
 						}
 					}
 				});

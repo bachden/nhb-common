@@ -142,4 +142,8 @@ public class ZMQRPCProducer extends ZMQTaskProducer {
 		event.setPayload(payload);
 		event.setMessageId(messageId);
 	}
+
+	public int remaining() {
+		return this.futureRegistry.remaining();
+	}
 }

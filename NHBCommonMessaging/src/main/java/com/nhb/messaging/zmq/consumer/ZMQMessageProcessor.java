@@ -27,5 +27,13 @@ public interface ZMQMessageProcessor {
 		}
 	};
 
+	static ZMQMessageProcessor ECHO_MESSAGE_PROCESSOR = new ZMQMessageProcessor() {
+
+		@Override
+		public void process(PuElement data, CompletableFuture<PuElement> future) {
+			future.setAndDone(data);
+		}
+	};
+
 	void process(PuElement data, CompletableFuture<PuElement> future);
 }

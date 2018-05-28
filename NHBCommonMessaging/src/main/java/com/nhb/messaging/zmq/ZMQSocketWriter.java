@@ -43,17 +43,68 @@ public interface ZMQSocketWriter {
 		};
 	}
 
+	/**
+	 * return default sending blocking mode writer (using flags 0) with default
+	 * puElement buffer size
+	 * 
+	 * @return
+	 */
 	static ZMQSocketWriter newDefaultWriter() {
+
+		return newDefaultWriter(PuElement.DEFAULT_BUFFER_SIZE);
+	}
+
+	/**
+	 * return default sending blocking mode writer (using flags 0) with custom
+	 * puElement buffer size
+	 * 
+	 * @param puElementBufferSize
+	 * @return
+	 */
+	static ZMQSocketWriter newDefaultWriter(final int puElementBufferSize) {
 
 		return new ZMQSocketWriter() {
 
 			@Override
 			public boolean write(PuElement payload, ZMQSocket socket) {
 				if (payload != null && socket != null) {
-					return socket.send(payload.toBytes(), ZMQ.NOBLOCK);
+					return socket.send(payload.toBytes(puElementBufferSize), 0);
 				}
 				throw new NullPointerException("Payload and socket cannot be null");
 			}
 		};
 	}
+
+	/**
+	 * return default sending non-blocking mode writer (using flags 0) with custom
+	 * puElement buffer size
+	 * 
+	 * @param puElementBufferSize
+	 * @return
+	 */
+	static ZMQSocketWriter newNonBlockingWriter(final int puElementBufferSize) {
+
+		return new ZMQSocketWriter() {
+
+			@Override
+			public boolean write(PuElement payload, ZMQSocket socket) {
+				if (payload != null && socket != null) {
+					return socket.send(payload.toBytes(puElementBufferSize), ZMQ.NOBLOCK);
+				}
+				throw new NullPointerException("Payload and socket cannot be null");
+			}
+		};
+	}
+
+	/**
+	 * return default sending blocking mode writer (using flags 0) with default
+	 * puElement buffer size
+	 * 
+	 * @return
+	 */
+	static ZMQSocketWriter newNonBlockingWriter() {
+
+		return newNonBlockingWriter(PuElement.DEFAULT_BUFFER_SIZE);
+	}
+
 }

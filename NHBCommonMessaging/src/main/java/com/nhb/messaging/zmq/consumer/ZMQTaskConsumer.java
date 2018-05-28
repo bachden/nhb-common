@@ -71,6 +71,9 @@ public class ZMQTaskConsumer implements ZMQConsumer, Loggable {
 					onProcessComplete(builder.responseEndpoint(responseEndpoint).messageId(messageId).build());
 				}
 			});
+			if (message.getData() == null) {
+				getLogger().warn("data null...", new NullPointerException());
+			}
 			this.messageProcessor.process(message.getData(), future);
 		}
 	}

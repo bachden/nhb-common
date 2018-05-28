@@ -4,6 +4,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.nhb.common.async.BaseRPCFuture;
 import com.nhb.common.async.Callback;
@@ -37,6 +38,7 @@ public abstract class RPCFutureTranslator<FromType, ToType> extends AbstractFutu
 		return monitoringExecutorService;
 	}
 
+	private final AtomicBoolean hasCallback = new AtomicBoolean(false);
 	private Callback<ToType> callback;
 	private Object monitorFuture;
 
@@ -58,18 +60,20 @@ public abstract class RPCFutureTranslator<FromType, ToType> extends AbstractFutu
 
 	@Override
 	public void setCallback(Callback<ToType> callable) {
-		this.callback = callable;
-		if (this.getSourceFuture().isDone()) {
-			ToType result = null;
-			try {
-				result = this.get();
-				if (result == null && !this.isAllowNullResult()) {
-					this.setFailedCause(((RPCFuture<FromType>) this.getSourceFuture()).getFailedCause());
+		if (callable != callback && this.hasCallback.compareAndSet(false, true)) {
+			this.callback = callable;
+			if (this.getSourceFuture().isDone()) {
+				ToType result = null;
+				try {
+					result = this.get();
+					if (result == null && !this.isAllowNullResult()) {
+						this.setFailedCause(((RPCFuture<FromType>) this.getSourceFuture()).getFailedCause());
+					}
+				} catch (Exception e) {
+					this.setFailedCause(e);
 				}
-			} catch (Exception e) {
-				this.setFailedCause(e);
+				this.callback.apply(result);
 			}
-			this.callback.apply(result);
 		}
 	}
 

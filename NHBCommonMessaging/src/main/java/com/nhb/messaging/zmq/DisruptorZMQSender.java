@@ -16,16 +16,18 @@ import com.nhb.common.data.PuElement;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 public class DisruptorZMQSender implements ZMQSender, Loggable {
 
-	private static class SendingWorker implements WorkHandler<ZMQEvent> {
+	@Slf4j
+	private static class SendToSocketWorker implements WorkHandler<ZMQEvent> {
 
 		private final ZMQSocketWriter socketWriter;
 		private final ZMQSocket socket;
 		private final ZMQPayloadBuilder payloadBuilder;
 
-		private SendingWorker(ZMQSocket socket, ZMQSocketWriter socketWriter, ZMQPayloadBuilder payloadBuilder) {
+		private SendToSocketWorker(ZMQSocket socket, ZMQSocketWriter socketWriter, ZMQPayloadBuilder payloadBuilder) {
 			if (socket == null) {
 				throw new NullPointerException("Socket cannot be null");
 			}
@@ -39,9 +41,13 @@ public class DisruptorZMQSender implements ZMQSender, Loggable {
 			if (event.getData() != null) {
 				try {
 					this.payloadBuilder.buildPayload(event);
-					event.setSuccess(this.socketWriter.write(event.getPayload(), this.socket));
-					if (!event.isSuccess()) {
-						event.setFailedCause(new ZMQSendingException("Cannot send message, unknown exception"));
+					if (event.isSuccess()) {
+						event.setSuccess(this.socketWriter.write(event.getPayload(), this.socket));
+						if (!event.isSuccess()) {
+							event.setFailedCause(new ZMQSendingException("Cannot send message, unknown exception"));
+						}
+					} else {
+						log.warn("cannot build payload: {}", event.getData());
 					}
 				} catch (Throwable ex) {
 					event.setSuccess(false);
@@ -102,9 +108,9 @@ public class DisruptorZMQSender implements ZMQSender, Loggable {
 			this.disruptor = new Disruptor<>(ZMQEvent.EVENT_FACTORY, config.getQueueSize(), threadFactory,
 					ProducerType.MULTI, new BlockingWaitStrategy());
 
-			SendingWorker[] senders = new SendingWorker[config.getSendWorkerSize()];
+			SendToSocketWorker[] senders = new SendToSocketWorker[config.getSendWorkerSize()];
 			for (int i = 0; i < senders.length; i++) {
-				senders[i] = new SendingWorker(socketFactory.newSocket(), config.getSocketWriter(),
+				senders[i] = new SendToSocketWorker(socketFactory.newSocket(), config.getSocketWriter(),
 						this.payloadBuilder);
 			}
 

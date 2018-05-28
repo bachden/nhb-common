@@ -8,12 +8,14 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import com.nhb.common.async.Callback;
+import com.nhb.common.data.PuDataType;
 import com.nhb.common.data.PuElement;
-import com.nhb.common.data.PuObject;
 import com.nhb.common.data.PuValue;
 import com.nhb.common.utils.TimeWatcher;
+import com.nhb.messaging.zmq.ZMQFuture;
 import com.nhb.messaging.zmq.ZMQSocketOptions;
 import com.nhb.messaging.zmq.ZMQSocketRegistry;
+import com.nhb.messaging.zmq.ZMQSocketWriter;
 import com.nhb.messaging.zmq.consumer.ZMQConsumerConfig;
 import com.nhb.messaging.zmq.consumer.ZMQMessageProcessor;
 import com.nhb.messaging.zmq.consumer.ZMQRPCConsumer;
@@ -23,17 +25,18 @@ import com.nhb.messaging.zmq.producer.ZMQRPCProducer;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class TestZMQRPC {
+public class TestZmqRPC {
 
-	private static final String ENDPOINT = "tcp://127.0.0.1:6789";
 	private static final String PRODUCER_RECEIVE_ENDPOINT = "tcp://127.0.0.1";
+	private static final String ENDPOINT = PRODUCER_RECEIVE_ENDPOINT + ":6789";
 
 	public static void main(String[] args) throws InterruptedException, ExecutionException {
 		ZMQSocketRegistry socketRegistry = new ZMQSocketRegistry();
 
+		final int messageSize = 1024;
 		final int numSenders = 4;
-		ZMQRPCProducer producer = initProducer(socketRegistry, numSenders);
-		ZMQRPCConsumer consumer = initConsumer(socketRegistry, numSenders);
+		ZMQRPCProducer producer = initProducer(socketRegistry, numSenders, messageSize);
+		ZMQRPCConsumer consumer = initConsumer(socketRegistry, numSenders, messageSize);
 
 		consumer.start();
 		producer.start();
@@ -52,14 +55,7 @@ public class TestZMQRPC {
 		}
 
 		int numMessages = (int) 1e6;
-		PuObject[] messages = new PuObject[numMessages];
-		for (int i = 0; i < messages.length; i++) {
-			PuObject data = new PuObject();
-			data.set("name", "Nguyễn Hoàng Bách");
-			data.set("age", "unknown");
-			data.set("id", i);
-			messages[i] = data;
-		}
+		PuValue data = new PuValue(new byte[messageSize - 3 /* for msgpack meta */], PuDataType.RAW);
 
 		log.debug("Start sending....");
 		AtomicInteger sentCounter = new AtomicInteger(0);
@@ -73,25 +69,28 @@ public class TestZMQRPC {
 				} catch (InterruptedException e) {
 					return;
 				}
-				long doneCount = doneSignal.getCount();
+				long remainingCount = doneSignal.getCount();
 				int sentCount = sentCounter.get();
-				log.debug("Sent: {} ({}), waiting for response: {}, total: {} --> done {}", df.format(sentCount),
-						dfP.format(Double.valueOf(sentCount) / numMessages), df.format(doneCount),
-						df.format(numMessages), dfP.format(Double.valueOf(numMessages - doneCount) / numMessages));
+				log.debug("Sent: {} ({}), waiting for response: {} (remaining in producer: {}), total: {} --> done {}",
+						df.format(sentCount), dfP.format(Double.valueOf(sentCount) / numMessages),
+						df.format(remainingCount), df.format(producer.remaining()), df.format(numMessages),
+						dfP.format(Double.valueOf(numMessages - remainingCount) / numMessages));
 			}
 		}, "monitor");
 		monitor.start();
 
 		TimeWatcher timeWatcher = new TimeWatcher();
 		timeWatcher.reset();
-		for (PuObject message : messages) {
-			producer.publish(message).setCallback(new Callback<PuElement>() {
+		for (int i = 0; i < numMessages; i++) {
+			final ZMQFuture future = producer.publish(data);
+			future.setCallback(new Callback<PuElement>() {
 
 				@Override
 				public void apply(PuElement result) {
+					if (result == null) {
+						log.error("Error: ", future.getFailedCause());
+					}
 					doneSignal.countDown();
-					// log.debug("Got response: " + result + " --> remaining: " +
-					// doneSignal.getCount());
 				}
 			});
 			sentCounter.incrementAndGet();
@@ -101,49 +100,57 @@ public class TestZMQRPC {
 
 		monitor.interrupt();
 
-		double avgMessageSize = Double
-				.valueOf(messages[0].toBytes().length + messages[numMessages - 1].toBytes().length) / 2;
-		double totalMessageBytes = avgMessageSize * numMessages;
+		double avgMessageSize = data.toBytes().length;
+		double totalSentBytes = avgMessageSize * numMessages;
+		double totalIOBytes = totalSentBytes * 2;
 
 		DecimalFormat df = new DecimalFormat("###,###.##");
 
-		log.info("************** STATISIC **************");
+		log.info("************** STATISTIC **************");
 		log.info("Num senders: {}", numSenders);
 		log.info("Num msgs: {}", df.format(numMessages));
 		log.info("Elapsed: {} seconds", df.format(totalTimeSeconds));
 		log.info("Avg msg size: {} bytes", df.format(avgMessageSize));
-		log.info("Msg Rate: {} msg/s", df.format(Double.valueOf(numMessages) / totalTimeSeconds));
-		log.info("Total sent bytes: {} bytes == {} KB == {} MB", df.format(totalMessageBytes),
-				df.format(totalMessageBytes / 1024), df.format(totalMessageBytes / 1024 / 1024));
-		log.info("Throughput: {} bytes/s == {} KB/s == {} MB/s", df.format(totalMessageBytes / totalTimeSeconds),
-				df.format(totalMessageBytes / 1024 / totalTimeSeconds),
-				df.format(totalMessageBytes / 1024 / 1024 / totalTimeSeconds));
+		log.info("Msg rate: {} msg/s", df.format(Double.valueOf(numMessages) / totalTimeSeconds));
+		log.info("Total sent bytes: {} bytes == {} KB == {} MB", df.format(totalSentBytes),
+				df.format(totalSentBytes / 1024), df.format(totalSentBytes / 1024 / 1024));
 
-		log.info("*************** DONE ***************");
+		log.info("Sending throughput: {} bytes/s == {} KB/s == {} MB/s", df.format(totalSentBytes / totalTimeSeconds),
+				df.format(totalSentBytes / 1024 / totalTimeSeconds),
+				df.format(totalSentBytes / 1024 / 1024 / totalTimeSeconds));
+		log.info("Total I/O throughput: {} bytes/s == {} KB/s == {} MB/s", df.format(totalIOBytes / totalTimeSeconds),
+				df.format(totalIOBytes / 1024 / totalTimeSeconds),
+				df.format(totalIOBytes / 1024 / 1024 / totalTimeSeconds));
+
+		log.info("**************** DONE ****************");
 		System.exit(0);
 	}
 
-	private static ZMQRPCConsumer initConsumer(ZMQSocketRegistry socketRegistry, int numSenders) {
+	private static ZMQRPCConsumer initConsumer(ZMQSocketRegistry socketRegistry, int numSenders, int messageSize) {
 		ZMQRPCConsumer consumer = new ZMQRPCConsumer();
 		ZMQConsumerConfig config = new ZMQConsumerConfig();
 		config.setSendSocketOptions(
-				ZMQSocketOptions.builder().hwm((long) 1e5).sndHWM((long) 1e5).rcvHWM((long) 1e5).build());
+				ZMQSocketOptions.builder().hwm((long) 1e6).sndHWM((long) 1e6).rcvHWM((long) 1e6).build());
 		config.setSendWorkerSize(numSenders);
 		config.setReceiveEndpoint(ENDPOINT);
+		config.setBufferCapacity(messageSize * 2);
+		config.setSocketWriter(ZMQSocketWriter.newNonBlockingWriter(messageSize + 32));
 		config.setSocketRegistry(socketRegistry);
-		config.setMessageProcessor(ZMQMessageProcessor.SIMPLE_RESPONSE_MESSAGE_PROCESSOR);
+		config.setMessageProcessor(ZMQMessageProcessor.ECHO_MESSAGE_PROCESSOR);
 
 		consumer.init(config);
 		return consumer;
 	}
 
-	private static ZMQRPCProducer initProducer(ZMQSocketRegistry socketRegistry, int numSenders) {
+	private static ZMQRPCProducer initProducer(ZMQSocketRegistry socketRegistry, int numSenders, int messageSize) {
 		ZMQRPCProducer producer = new ZMQRPCProducer();
 		ZMQProducerConfig config = new ZMQProducerConfig();
 		config.setSendSocketOptions(
-				ZMQSocketOptions.builder().hwm((long) 1e5).sndHWM((long) 1e5).rcvHWM((long) 1e5).build());
+				ZMQSocketOptions.builder().hwm((long) 1e6).sndHWM((long) 1e6).rcvHWM((long) 1e6).build());
 		config.setSocketRegistry(socketRegistry);
 		config.setSendEndpoint(ENDPOINT);
+		config.setBufferCapacity(messageSize * 2);
+		config.setSocketWriter(ZMQSocketWriter.newNonBlockingWriter(messageSize + 32));
 		config.setReceiveEndpoint(PRODUCER_RECEIVE_ENDPOINT);
 		config.setSendWorkerSize(numSenders);
 

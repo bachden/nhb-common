@@ -29,4 +29,8 @@ public class ZMQFutureRegistry {
 	public DefaultZMQFuture get(byte[] key) {
 		return this.registry.get(wrap(key));
 	}
+
+	public int remaining() {
+		return this.registry.size();
+	}
 }
