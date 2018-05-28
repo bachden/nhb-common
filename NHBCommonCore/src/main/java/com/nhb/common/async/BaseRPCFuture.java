@@ -14,6 +14,9 @@ import com.nhb.common.async.exception.ExecutionCancelledException;
 import com.nhb.common.async.executor.DisruptorAsyncTaskExecutor;
 import com.nhb.eventdriven.impl.BaseEventDispatcher;
 
+import lombok.Getter;
+import lombok.Setter;
+
 public class BaseRPCFuture<V> extends BaseEventDispatcher implements RPCFuture<V>, CompletableFuture<V> {
 
 	private static final ScheduledExecutorService monitoringExecutorService = Executors.newScheduledThreadPool(1);
@@ -43,45 +46,57 @@ public class BaseRPCFuture<V> extends BaseEventDispatcher implements RPCFuture<V
 		});
 	}
 
-	private final AtomicBoolean hasCallback = new AtomicBoolean(false);
-
 	private volatile V value;
+
+	@Getter
+	@Setter // setter should be removed...
+	private Future<?> cancelFuture;
+
+	@Getter
 	private Throwable failedCause;
-	private Future<?> sourceFuture;
+
+	@Getter
 	private volatile Callback<V> callback;
 
-	private final CountDownLatch doneSignal;
+	private Future<?> monitorTimeoutFuture;
+	private final CountDownLatch doneSignal = new CountDownLatch(1);
 
+	private final AtomicBoolean isInDoneProcessing = new AtomicBoolean(false);
+	private final AtomicBoolean hasCallback = new AtomicBoolean(false);
 	private final AtomicBoolean done = new AtomicBoolean(false);
 	private final AtomicBoolean cancelled = new AtomicBoolean(false);
+	private final AtomicBoolean timeoutFlag = new AtomicBoolean(false);
 
-	private Future<?> monitorTimeoutFuture;
-	private AtomicBoolean timeoutFlag = new AtomicBoolean(false);
-
-	public BaseRPCFuture() {
-		this.doneSignal = new CountDownLatch(1);
+	private void waitForDoneProgress() {
+		while (isInDoneProcessing.get()) {
+			LockSupport.parkNanos(10);
+		}
 	}
 
 	@Override
 	public boolean isDone() {
-		// prevent race condition
-		while (this.isInDoneProcessing.get()) {
-			LockSupport.parkNanos(10);
-		}
+		this.waitForDoneProgress();
 		return this.done.get();
 	}
 
-	private final AtomicBoolean isInDoneProcessing = new AtomicBoolean(false);
+	@Override
+	public boolean isCancelled() {
+		waitForDoneProgress();
+		return this.cancelled.get();
+	}
 
-	private void doComplete() {
+	private void doComplete(V value) {
 		if (isInDoneProcessing.compareAndSet(false, true)) {
+			this.value = value;
 			if (monitorTimeoutFuture != null) {
 				this.monitorTimeoutFuture.cancel(true);
 				this.monitorTimeoutFuture = null;
 			}
-			if (sourceFuture != null) {
-				this.sourceFuture = null;
+
+			if (cancelFuture != null) {
+				this.cancelFuture = null;
 			}
+
 			this.doneSignal.countDown();
 			if (this.callback != null) {
 				try {
@@ -90,6 +105,7 @@ public class BaseRPCFuture<V> extends BaseEventDispatcher implements RPCFuture<V
 					getLogger().error("Error while execute callback", e);
 				}
 			}
+
 			isInDoneProcessing.set(false);
 		} else {
 			throw new IllegalStateException("Future is in done processing");
@@ -99,28 +115,24 @@ public class BaseRPCFuture<V> extends BaseEventDispatcher implements RPCFuture<V
 	@Override
 	public boolean cancel(boolean mayInterruptIfRunning) {
 		if (this.done.compareAndSet(false, true) && this.cancelled.compareAndSet(false, true)) {
-			if (this.sourceFuture != null && !this.sourceFuture.isCancelled()) {
-				this.sourceFuture.cancel(mayInterruptIfRunning);
+			if (this.cancelFuture != null && !this.cancelFuture.isCancelled()) {
+				this.cancelFuture.cancel(mayInterruptIfRunning);
 			}
 			if (this.getFailedCause() == null) {
 				this.setFailedCause(new ExecutionCancelledException());
 			}
-			doComplete();
+			doComplete(null);
 			return true;
 		}
-		return false;
-	}
-
-	@Override
-	public boolean isCancelled() {
-		return this.cancelled.get();
+		return this.isCancelled();
 	}
 
 	@Override
 	public void setAndDone(V value) {
 		if (this.done.compareAndSet(false, true)) {
-			this.value = value;
-			this.doComplete();
+			this.doComplete(value);
+		} else {
+			throw new IllegalStateException("Future were done or in-done-progress");
 		}
 	}
 
@@ -160,9 +172,9 @@ public class BaseRPCFuture<V> extends BaseEventDispatcher implements RPCFuture<V
 	}
 
 	@Override
-	public void setCallback(Callback<V> callable) {
-		if (callable != null && callable != this.callback && this.hasCallback.compareAndSet(false, true)) {
-			this.callback = callable;
+	public void setCallback(Callback<V> callback) {
+		if (callback != null && this.hasCallback.compareAndSet(false, true)) {
+			this.callback = callback;
 			if (this.isDone()) {
 				this.callback.apply(this.value);
 			}
@@ -170,24 +182,11 @@ public class BaseRPCFuture<V> extends BaseEventDispatcher implements RPCFuture<V
 	}
 
 	@Override
-	public Callback<V> getCallback() {
-		return this.callback;
-	}
-
-	public Future<?> getCancelFuture() {
-		return sourceFuture;
-	}
-
-	public void setCancelFuture(Future<?> cancelFuture) {
-		this.sourceFuture = cancelFuture;
-	}
-
-	public Throwable getFailedCause() {
-		return failedCause;
-	}
-
-	public void setFailedCause(Throwable failedCause) {
-		this.failedCause = failedCause;
+	public void setFailedCause(Throwable cause) {
+		if (this.isDone() || this.isCancelled()) {
+			throw new IllegalStateException("Cannot set failedCause for done or cancelled future");
+		}
+		this.failedCause = cause;
 	}
 
 	@Override
