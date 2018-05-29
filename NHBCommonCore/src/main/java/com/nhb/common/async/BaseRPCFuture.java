@@ -120,7 +120,7 @@ public class BaseRPCFuture<V> extends BaseEventDispatcher implements RPCFuture<V
 			doComplete(null);
 			return true;
 		}
-		return this.isCancelled();
+		return false;
 	}
 
 	@Override

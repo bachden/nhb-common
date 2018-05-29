@@ -117,11 +117,13 @@ public class ZMQRPCConsumer extends ZMQTaskConsumer {
 			if (responder != null) {
 				if (!responder.isRunning()) {
 					synchronized (responder) {
-						if (!responder.isInitialized()) {
-							responder.init(getSocketRegistry(), extractSenderConfig(responseEndpoint, getConfig()));
+						if (!responder.isRunning()) {
+							if (!responder.isInitialized()) {
+								responder.init(getSocketRegistry(), extractSenderConfig(responseEndpoint, getConfig()));
+							}
+							responder.start();
+							getLogger().debug("Responder for {} started...", responseEndpoint);
 						}
-						responder.start();
-						getLogger().debug("Responder for {} started...", responseEndpoint);
 					}
 				}
 

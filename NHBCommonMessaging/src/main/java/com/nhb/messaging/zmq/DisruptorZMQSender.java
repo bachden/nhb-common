@@ -2,6 +2,7 @@ package com.nhb.messaging.zmq;
 
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.locks.LockSupport;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.lmax.disruptor.BlockingWaitStrategy;
@@ -75,7 +76,6 @@ public class DisruptorZMQSender implements ZMQSender, Loggable {
 
 	private Disruptor<ZMQEvent> disruptor;
 
-	@Getter
 	private volatile boolean running = false;
 	private final AtomicBoolean runningCheckpoint = new AtomicBoolean(false);
 
@@ -138,6 +138,14 @@ public class DisruptorZMQSender implements ZMQSender, Loggable {
 				}
 			});
 		}
+	}
+
+	@Override
+	public boolean isRunning() {
+		while (this.runningCheckpoint.get() && !this.running) {
+			LockSupport.parkNanos(10);
+		}
+		return this.running;
 	}
 
 	@Override

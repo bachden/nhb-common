@@ -96,6 +96,7 @@ public class ZMQTaskProducer extends ZMQProducer {
 			this.sender.start();
 			this.onStart();
 			this.running = true;
+			getLogger().debug("{} producer started, target: {}", this.getName(), this.getConfig().getSendEndpoint());
 		}
 	}
 

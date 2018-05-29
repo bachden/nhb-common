@@ -1,5 +1,6 @@
 package com.nhb.messaging.zmq.producer;
 
+import com.nhb.common.async.Callback;
 import com.nhb.common.data.PuArray;
 import com.nhb.common.data.PuArrayList;
 import com.nhb.common.data.PuDataType;
@@ -46,6 +47,14 @@ public class ZMQRPCProducer extends ZMQTaskProducer {
 		}
 	};
 
+	private Callback<byte[]> onFutureCancelledCallback = new Callback<byte[]>() {
+
+		@Override
+		public void apply(byte[] messageId) {
+			ZMQRPCProducer.this.onFutureCancelled(messageId);
+		}
+	};
+
 	public ZMQRPCProducer() {
 		this(ZMQIdGenerator.newTimebasedUUIDGenerator());
 	}
@@ -86,7 +95,19 @@ public class ZMQRPCProducer extends ZMQTaskProducer {
 	@Override
 	protected void onSendingSuccess(ZMQEvent event) {
 		byte[] messageId = event.getMessageId();
-		this.futureRegistry.put(messageId, event.getFuture());
+
+		DefaultZMQFuture future = event.getFuture();
+		future.setRefId(messageId);
+
+		this.futureRegistry.put(messageId, future);
+
+		future.setCancelCallback(this.onFutureCancelledCallback);
+	}
+
+	protected void onFutureCancelled(byte[] messageId) {
+		if (messageId != null) {
+			this.futureRegistry.remove(messageId);
+		}
 	}
 
 	private void onReceive(ZMQEvent event) {
