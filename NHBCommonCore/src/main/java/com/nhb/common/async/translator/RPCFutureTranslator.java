@@ -10,6 +10,8 @@ import com.nhb.common.async.Callback;
 import com.nhb.common.async.RPCCallback;
 import com.nhb.common.async.RPCFuture;
 
+import lombok.Getter;
+
 public abstract class RPCFutureTranslator<FromType, ToType> extends AbstractFutureTranslator<FromType, ToType>
 		implements RPCFuture<ToType> {
 
@@ -38,7 +40,9 @@ public abstract class RPCFutureTranslator<FromType, ToType> extends AbstractFutu
 	}
 
 	private final AtomicBoolean hasCallback = new AtomicBoolean(false);
+	@Getter
 	private Callback<ToType> callback;
+	
 	private Object monitorFuture;
 
 	@SuppressWarnings("unchecked")
