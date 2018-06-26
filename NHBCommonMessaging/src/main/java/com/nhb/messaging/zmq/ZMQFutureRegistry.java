@@ -4,14 +4,14 @@ import java.util.Map;
 
 import org.cliffc.high_scale_lib.NonBlockingHashMap;
 
-import com.nhb.common.vo.ByteArrayWrapper;
+import com.nhb.common.vo.ByteArray;
 
 public class ZMQFutureRegistry {
 
-	private final Map<ByteArrayWrapper, DefaultZMQFuture> registry = new NonBlockingHashMap<>();
+	private final Map<ByteArray, DefaultZMQFuture> registry = new NonBlockingHashMap<>();
 
-	private ByteArrayWrapper wrap(byte[] messageId) {
-		return ByteArrayWrapper.newInstanceWithJavaSafeHashCodeCalculator(messageId);
+	private ByteArray wrap(byte[] messageId) {
+		return ByteArray.newInstanceWithJavaSafeHashCodeCalculator(messageId);
 	}
 
 	public void put(byte[] key, DefaultZMQFuture future) {

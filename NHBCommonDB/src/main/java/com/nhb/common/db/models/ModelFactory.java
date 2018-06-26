@@ -80,7 +80,12 @@ public class ModelFactory {
 		}
 	}
 
+	@Deprecated
 	public <T extends AbstractModel> T newModel(Class<T> modelClass) {
+		return this.getModel(modelClass.getName());
+	}
+
+	public <T extends AbstractModel> T getModel(Class<T> modelClass) {
 		return this.getModel(modelClass.getName());
 	}
 

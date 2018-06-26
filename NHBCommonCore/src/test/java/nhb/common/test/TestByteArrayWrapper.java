@@ -6,6 +6,7 @@ import java.util.Map;
 import com.nhb.common.utils.MapUtils;
 import com.nhb.common.vo.ByteArrayWrapper;
 
+@SuppressWarnings("deprecation")
 public class TestByteArrayWrapper {
 
 	public static void main(String[] args) {

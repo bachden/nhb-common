@@ -1,0 +1,138 @@
+package com.nhb.common.flag;
+
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.LockSupport;
+import java.util.function.IntBinaryOperator;
+
+public class SemaphoreFlag {
+
+	private final int lowerBound;
+	private final int upperBound;
+
+	private final AtomicInteger counter = new AtomicInteger(0);
+	private final AtomicBoolean incrementLock = new AtomicBoolean(false);
+	private final AtomicBoolean decrementLock = new AtomicBoolean(false);
+
+	public static SemaphoreFlag newDefault() {
+		return new SemaphoreFlag(Integer.MIN_VALUE, Integer.MAX_VALUE);
+	}
+
+	public static SemaphoreFlag newDefault(int lowerBound, int upperBound) {
+		return new SemaphoreFlag(lowerBound, upperBound);
+	}
+
+	public static SemaphoreFlag newWithLowerBound(int lowerBound) {
+		return new SemaphoreFlag(lowerBound, Integer.MAX_VALUE);
+	}
+
+	public static SemaphoreFlag newWithUpperBound(int upperBound) {
+		return new SemaphoreFlag(Integer.MIN_VALUE, upperBound);
+	}
+
+	private SemaphoreFlag(int lowerBound, int upperBound) {
+		if (upperBound > lowerBound) {
+			throw new IllegalArgumentException("upperBound cannot be less than lowerBound");
+		}
+
+		this.lowerBound = lowerBound;
+		this.upperBound = upperBound;
+
+		if (lowerBound > 0) {
+			this.counter.set(lowerBound);
+		}
+		if (upperBound < 0) {
+			this.counter.set(upperBound);
+		}
+	}
+
+	private void waitForUnlocked(long nanos, AtomicBoolean breakSpinLoop, AtomicBoolean lock) {
+		while (lock.get()) {
+			if (breakSpinLoop == null || !breakSpinLoop.get()) {
+				LockSupport.parkNanos(nanos);
+			}
+		}
+	}
+
+	public void waitForIncrementUnlocked(long nanos, AtomicBoolean breakSpinLoop) {
+		this.waitForUnlocked(nanos, breakSpinLoop, incrementLock);
+	}
+
+	public void waitForDecrementUnlocked(long nanos, AtomicBoolean breakSpinLoop) {
+		this.waitForUnlocked(nanos, breakSpinLoop, decrementLock);
+	}
+
+	public boolean lockIncrement() {
+		return this.incrementLock.compareAndSet(false, true);
+	}
+
+	public int incrementAndGet(AtomicBoolean breakSpinLoop) {
+		this.waitForIncrementUnlocked(10, breakSpinLoop);
+		return this.counter.accumulateAndGet(1, new IntBinaryOperator() {
+
+			@Override
+			public int applyAsInt(int currentValue, int incrementBy) {
+				int newValue = currentValue + incrementBy;
+				if (newValue > upperBound) {
+					return upperBound;
+				}
+				return newValue;
+			}
+		});
+	}
+
+	public boolean lockDecrement() {
+		return this.decrementLock.compareAndSet(false, true);
+	}
+
+	public int decrementAndGet(AtomicBoolean breakSpinLoop) {
+		this.waitForDecrementUnlocked(10, breakSpinLoop);
+		return this.counter.accumulateAndGet(-1, new IntBinaryOperator() {
+
+			@Override
+			public int applyAsInt(int currentValue, int incrementBy) {
+				int newValue = currentValue + incrementBy;
+				if (newValue < lowerBound) {
+					return lowerBound;
+				}
+				return newValue;
+			}
+		});
+	}
+
+	public int get() {
+		return this.counter.get();
+	}
+
+	private final void lockAndWaitFor(int value, long nanos, AtomicBoolean breakSpinLoop, AtomicBoolean lock) {
+		if (lock.compareAndSet(false, true)) {
+			this.waitForCounter(value, nanos, breakSpinLoop);
+		} else {
+			throw new IllegalStateException("Increase lock has been locked");
+		}
+	}
+
+	public final void lockIncrementAndWaitFor(int value, long nanos, AtomicBoolean breakSpinLoop) {
+		this.lockAndWaitFor(value, nanos, breakSpinLoop, incrementLock);
+	}
+
+	public final void lockDecrementAndWaitFor(int value, long nanos, AtomicBoolean breakSpinLoop) {
+		this.lockAndWaitFor(value, nanos, breakSpinLoop, decrementLock);
+	}
+
+	private final void waitForCounter(int value, long nanos, AtomicBoolean breakSpinLoop) {
+		while (this.counter.get() != value) {
+			if (breakSpinLoop == null || !breakSpinLoop.get()) {
+				LockSupport.parkNanos(nanos);
+			}
+		}
+	}
+
+	public boolean unlockIncrement() {
+		return this.incrementLock.compareAndSet(true, false);
+	}
+
+	public boolean unlockDecrement() {
+		return this.decrementLock.compareAndSet(true, false);
+	}
+}

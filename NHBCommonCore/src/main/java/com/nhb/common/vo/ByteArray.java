@@ -10,34 +10,27 @@ import java.util.Arrays;
 
 import com.nhb.common.hash.BinaryHashCodeCalculator;
 
-/**
- * Use ByteArray instead
- * 
- * @author bachden
- *
- */
-@Deprecated
-public class ByteArrayWrapper implements Serializable {
+public class ByteArray implements Serializable {
 	private static final long serialVersionUID = 1L;
 
-	public static final ByteArrayWrapper newInstance(byte[] source) {
-		return new ByteArrayWrapper(source);
+	public static final ByteArray newInstance(byte[] source) {
+		return new ByteArray(source);
 	}
 
-	public static final ByteArrayWrapper newInstance(byte[] source, BinaryHashCodeCalculator hashCodeCalculator) {
-		return new ByteArrayWrapper(source, hashCodeCalculator);
+	public static final ByteArray newInstance(byte[] source, BinaryHashCodeCalculator hashCodeCalculator) {
+		return new ByteArray(source, hashCodeCalculator);
 	}
 
-	public static final ByteArrayWrapper newInstanceWithJavaSafeHashCodeCalculator(byte[] source) {
-		return ByteArrayWrapper.newInstance(source, XXHASH32_JAVA_SAFE);
+	public static final ByteArray newInstanceWithJavaSafeHashCodeCalculator(byte[] source) {
+		return ByteArray.newInstance(source, XXHASH32_JAVA_SAFE);
 	}
 
-	public static final ByteArrayWrapper newInstanceWithJavaUnsafeHashCodeCalculator(byte[] source) {
-		return ByteArrayWrapper.newInstance(source, XXHASH32_JAVA_UNSAFE);
+	public static final ByteArray newInstanceWithJavaUnsafeHashCodeCalculator(byte[] source) {
+		return ByteArray.newInstance(source, XXHASH32_JAVA_UNSAFE);
 	}
 
-	public static final ByteArrayWrapper newInstanceWithJNIHashCodeCalculator(byte[] source) {
-		return ByteArrayWrapper.newInstance(source, XXHASH32_JNI);
+	public static final ByteArray newInstanceWithJNIHashCodeCalculator(byte[] source) {
+		return ByteArray.newInstance(source, XXHASH32_JNI);
 	}
 
 	private final byte[] source;
@@ -46,11 +39,11 @@ public class ByteArrayWrapper implements Serializable {
 
 	private transient final BinaryHashCodeCalculator hashCodeCalculator;
 
-	public ByteArrayWrapper(byte[] source) {
+	public ByteArray(byte[] source) {
 		this(source, DEFAULT);
 	}
 
-	public ByteArrayWrapper(byte[] source, BinaryHashCodeCalculator hashCodeCalculator) {
+	public ByteArray(byte[] source, BinaryHashCodeCalculator hashCodeCalculator) {
 		if (source == null) {
 			throw new NullPointerException("Source byte[] cannot be null");
 		}
@@ -63,8 +56,8 @@ public class ByteArrayWrapper implements Serializable {
 
 	@Override
 	public boolean equals(Object other) {
-		if (other instanceof ByteArrayWrapper) {
-			return Arrays.equals(source, ((ByteArrayWrapper) other).source);
+		if (other instanceof ByteArray) {
+			return Arrays.equals(source, ((ByteArray) other).source);
 		} else if (other instanceof byte[]) {
 			return Arrays.equals(source, (byte[]) other);
 		}

@@ -23,8 +23,8 @@ public class AbstractModel extends BaseLoggable {
 	private Map<String, Object> environmentVariables = new HashMap<>();
 
 	/**
-	 * This method called after this model created in ModelFactory and
-	 * everything was set
+	 * This method called after this model created in ModelFactory and everything
+	 * was set
 	 * 
 	 * Internal modifier let this invisible with outside method
 	 */
