@@ -49,6 +49,10 @@ public class LeaderElectionAgent {
 		return new LeaderElectionAgent(zooKeeper, rootPath, DEFAULT_NODE_PREFIX, true, data);
 	}
 
+	public static final LeaderElectionAgent newCandidate(ZooKeeper zooKeeper, String rootPath) {
+		return new LeaderElectionAgent(zooKeeper, rootPath, DEFAULT_NODE_PREFIX, true, null);
+	}
+
 	public static final LeaderElectionAgent newCandidate(String connnection, int sessionTimeoutMillis,
 			long connectTimeoutMillis, String rootPath, byte[] data)
 			throws IOException, InterruptedException, TimeoutException {
@@ -91,6 +95,8 @@ public class LeaderElectionAgent {
 
 	private final AtomicInteger version = new AtomicInteger(0);
 
+	@Setter
+	@Getter
 	private byte[] myData;
 
 	@Getter

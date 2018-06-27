@@ -44,8 +44,8 @@ public class TestLeaderElection {
 	}
 
 	public void start() {
-		agent.setLeaderChangeCallback((newLeaderPath, imLeader) -> { // imLeader should always false when memeber ==
-																		// false
+		agent.setLeaderChangeCallback((newLeaderPath, imLeader) -> { // imLeader should always false when agent isn't a
+																		// candidate
 			if (newLeaderPath == null) {
 				System.out.println("No leader found!!!");
 			} else {
