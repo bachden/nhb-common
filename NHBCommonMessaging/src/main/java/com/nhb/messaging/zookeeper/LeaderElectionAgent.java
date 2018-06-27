@@ -33,15 +33,26 @@ public class LeaderElectionAgent {
 	private static final ZooKeeper initZooKeeper(String connnection, int sessionTimeoutMillis,
 			long connectTimeoutMillis) throws IOException, InterruptedException, TimeoutException {
 		final CountDownLatch connectedSignal = new CountDownLatch(1);
-		ZooKeeper zooKeeper = new ZooKeeper(connnection, sessionTimeoutMillis, event -> {
+
+		final ZooKeeper zooKeeper = new ZooKeeper(connnection, sessionTimeoutMillis, event -> {
 			if (KeeperState.SyncConnected.equals(event.getState())) {
 				connectedSignal.countDown();
 			}
 		});
+
 		if (!connectedSignal.await(connectTimeoutMillis, TimeUnit.MILLISECONDS)) {
 			zooKeeper.close();
 			throw new TimeoutException("Connection timeout after " + connectTimeoutMillis + " milliseconds");
 		}
+
+		Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+			try {
+				zooKeeper.close();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}));
+
 		return zooKeeper;
 	}
 
@@ -56,7 +67,10 @@ public class LeaderElectionAgent {
 	public static final LeaderElectionAgent newCandidate(String connnection, int sessionTimeoutMillis,
 			long connectTimeoutMillis, String rootPath, byte[] data)
 			throws IOException, InterruptedException, TimeoutException {
-		return newCandidate(initZooKeeper(connnection, sessionTimeoutMillis, connectTimeoutMillis), rootPath, data);
+		LeaderElectionAgent result = newCandidate(
+				initZooKeeper(connnection, sessionTimeoutMillis, connectTimeoutMillis), rootPath, data);
+		result.selfCreatedZooKeeker = true;
+		return result;
 	}
 
 	public static final LeaderElectionAgent newClient(ZooKeeper zooKeeper, String rootPath) {
@@ -65,7 +79,10 @@ public class LeaderElectionAgent {
 
 	public static final LeaderElectionAgent newClient(String connnection, int sessionTimeoutMillis,
 			long connectTimeoutMillis, String rootPath) throws IOException, InterruptedException, TimeoutException {
-		return newClient(initZooKeeper(connnection, sessionTimeoutMillis, connectTimeoutMillis), rootPath);
+		LeaderElectionAgent result = newClient(initZooKeeper(connnection, sessionTimeoutMillis, connectTimeoutMillis),
+				rootPath);
+		result.selfCreatedZooKeeker = true;
+		return result;
 	}
 
 	private final ZooKeeper zooKeeper;
@@ -101,6 +118,8 @@ public class LeaderElectionAgent {
 
 	@Getter
 	private byte[] leaderData;
+
+	private boolean selfCreatedZooKeeker = false;
 
 	private LeaderElectionAgent(ZooKeeper zooKeeper, String rootPath, String prefix, boolean isCandidate, byte[] data) {
 		this.zooKeeper = zooKeeper;
@@ -282,11 +301,13 @@ public class LeaderElectionAgent {
 
 	public void stop() {
 		if (this.started.compareAndSet(true, false)) {
-			try {
-				this.zooKeeper.close();
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-				log.error("Error while closing zooKeeper", e);
+			if (selfCreatedZooKeeker) {
+				try {
+					this.zooKeeper.close();
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+					log.error("Error while closing zooKeeper", e);
+				}
 			}
 		}
 	}
