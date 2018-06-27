@@ -26,5 +26,8 @@
 			<!-- <AppenderRef ref="fileOutputLog" /> -->
 			<AppenderRef ref="console" />
 		</Root>
+		<Logger name="org.apache.zookeeper" level="warn" additivity="false">
+			<AppenderRef ref="console" />
+		</Logger>
 	</Loggers>
 </Configuration>
