@@ -79,7 +79,7 @@ public class MutexFlag {
 	}
 
 	/**
-	 * change state from PROCESSING to DONE
+	 * change state from PROCESSING to NONE
 	 * 
 	 * @return true if success, false otherwise
 	 */

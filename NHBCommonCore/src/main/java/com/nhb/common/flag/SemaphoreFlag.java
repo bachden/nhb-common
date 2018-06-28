@@ -31,7 +31,7 @@ public class SemaphoreFlag {
 	}
 
 	private SemaphoreFlag(int lowerBound, int upperBound) {
-		if (upperBound > lowerBound) {
+		if (upperBound < lowerBound) {
 			throw new IllegalArgumentException("upperBound cannot be less than lowerBound");
 		}
 
