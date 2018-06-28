@@ -38,11 +38,8 @@ public class SemaphoreFlag {
 		this.lowerBound = lowerBound;
 		this.upperBound = upperBound;
 
-		if (lowerBound > 0) {
+		if (lowerBound != 0) {
 			this.counter.set(lowerBound);
-		}
-		if (upperBound < 0) {
-			this.counter.set(upperBound);
 		}
 	}
 
