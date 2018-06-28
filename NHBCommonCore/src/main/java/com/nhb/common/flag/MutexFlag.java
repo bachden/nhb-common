@@ -206,10 +206,13 @@ public class MutexFlag {
 		// this flag's state should be NONE
 		if (this.start()) {
 			// this flag's state should be PROCESSING
-			runnable.run();
-			// end PROCESSING
-			this.done();
-			// this flag's state should be DONE
+			try {
+				runnable.run();
+				// end PROCESSING
+			} finally {
+				this.done();
+				// this flag's state should be DONE
+			}
 			return true;
 		}
 		return false;
@@ -226,10 +229,13 @@ public class MutexFlag {
 		// this flag's state should be NONE
 		if (this.start()) {
 			// this flag's state should be PROCESSING
-			runnable.run();
-			// end PROCESSING
-			this.doneAndReset();
-			// this flag's state should be NONE
+			try {
+				runnable.run();
+				// end PROCESSING
+			} finally {
+				this.doneAndReset();
+				// this flag's state should be NONE
+			}
 			return true;
 		}
 		return false;
