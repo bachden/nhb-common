@@ -89,6 +89,7 @@ public class ZMQRPCProducer extends ZMQTaskProducer {
 
 	@Override
 	protected void onStop() {
+		this.futureRegistry.cancelAll();
 		this.receiver.stop();
 	}
 

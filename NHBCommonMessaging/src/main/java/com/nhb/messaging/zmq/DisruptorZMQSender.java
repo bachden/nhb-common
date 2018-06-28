@@ -161,7 +161,7 @@ public class DisruptorZMQSender implements ZMQSender, Loggable {
 	@Override
 	public final void stop() {
 		if (this.runningCheckpoint.compareAndSet(true, false)) {
-			this.disruptor.halt();
+			this.disruptor.shutdown();
 			this.socketFactory.destroy();
 			this.running = false;
 		}
