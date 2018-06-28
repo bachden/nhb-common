@@ -47,7 +47,7 @@ public class SemaphoreFlag {
 	}
 
 	private void waitForUnlocked(long nanos, AtomicBoolean breakSpinLoop, AtomicBoolean lock) {
-		while (lock.get()) {
+		while (lock.get() && !Thread.currentThread().isInterrupted()) {
 			if (breakSpinLoop == null || !breakSpinLoop.get()) {
 				LockSupport.parkNanos(nanos);
 			}

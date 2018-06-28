@@ -167,7 +167,7 @@ public class MutexFlag {
 	 * @param nanoToPack
 	 */
 	private void waitForProcessing(long nanoToPack, AtomicBoolean breakSpinLoop) {
-		while (this.isProcessing()) {
+		while (this.isProcessing() && !Thread.currentThread().isInterrupted()) {
 			if (breakSpinLoop == null || !breakSpinLoop.get()) {
 				LockSupport.parkNanos(nanoToPack);
 			}
