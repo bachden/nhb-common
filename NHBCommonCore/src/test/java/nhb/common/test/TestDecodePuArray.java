@@ -1,3 +1,4 @@
+package nhb.common.test;
 import java.util.Arrays;
 
 import com.nhb.common.data.PuArray;

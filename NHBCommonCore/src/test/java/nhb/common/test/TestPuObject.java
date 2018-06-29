@@ -1,3 +1,4 @@
+package nhb.common.test;
 import java.io.IOException;
 import java.math.BigDecimal;
 

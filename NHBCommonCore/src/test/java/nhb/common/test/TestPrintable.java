@@ -1,3 +1,4 @@
+package nhb.common.test;
 import java.util.UUID;
 
 import com.nhb.common.utils.StringUtils;

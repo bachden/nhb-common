@@ -1,3 +1,4 @@
+package nhb.common.test;
 import static org.msgpack.template.Templates.tMap;
 
 import java.io.ByteArrayInputStream;
