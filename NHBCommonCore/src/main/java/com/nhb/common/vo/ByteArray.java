@@ -7,11 +7,13 @@ import static com.nhb.common.hash.BinaryHashCodeCalculator.XXHASH32_JNI;
 
 import java.io.Serializable;
 import java.util.Arrays;
+import java.util.Base64;
 
 import com.nhb.common.hash.BinaryHashCodeCalculator;
 
-public class ByteArray implements Serializable {
-	private static final long serialVersionUID = 1L;
+public class ByteArray implements Serializable, Comparable<ByteArray> {
+
+	private static final long serialVersionUID = -888719399858981241L;
 
 	public static final ByteArray newInstance(byte[] source) {
 		return new ByteArray(source);
@@ -34,16 +36,18 @@ public class ByteArray implements Serializable {
 	}
 
 	private final byte[] source;
+	private final int hashCodeCalculatorId;
 
-	private int hashCode = -1;
+	private transient String cachedString = null;
+	private transient String cachedBase64 = null;
+	private transient Integer cachedHashCode = null;
+	private transient BinaryHashCodeCalculator hashCodeCalculator = null;
 
-	private transient final BinaryHashCodeCalculator hashCodeCalculator;
-
-	public ByteArray(byte[] source) {
+	private ByteArray(byte[] source) {
 		this(source, DEFAULT);
 	}
 
-	public ByteArray(byte[] source, BinaryHashCodeCalculator hashCodeCalculator) {
+	private ByteArray(byte[] source, BinaryHashCodeCalculator hashCodeCalculator) {
 		if (source == null) {
 			throw new NullPointerException("Source byte[] cannot be null");
 		}
@@ -52,6 +56,25 @@ public class ByteArray implements Serializable {
 		}
 		this.source = source;
 		this.hashCodeCalculator = hashCodeCalculator;
+		this.hashCodeCalculatorId = hashCodeCalculator.getId();
+	}
+
+	private ByteArray(byte[] source, int hashCodeCalculatorId) {
+		if (source == null) {
+			throw new NullPointerException("Source byte[] cannot be null");
+		}
+		this.source = source;
+		this.hashCodeCalculatorId = hashCodeCalculatorId;
+	}
+
+	protected BinaryHashCodeCalculator getHashCodeCalculator() {
+		if (this.hashCodeCalculator == null) {
+			this.hashCodeCalculator = BinaryHashCodeCalculator.getRegisteredCalculator(hashCodeCalculatorId);
+			if (this.hashCodeCalculator == null) {
+				this.hashCodeCalculator = BinaryHashCodeCalculator.DEFAULT;
+			}
+		}
+		return hashCodeCalculator;
 	}
 
 	@Override
@@ -70,15 +93,30 @@ public class ByteArray implements Serializable {
 
 	@Override
 	public int hashCode() {
-		if (hashCode == -1) {
-			hashCode = this.hashCodeCalculator.calcHashCode(this.source);
+		if (cachedHashCode == null) {
+			cachedHashCode = this.getHashCodeCalculator().calcHashCode(this.source);
 		}
-		return hashCode;
+		return cachedHashCode;
 	}
 
 	@Override
 	public String toString() {
-		return Arrays.toString(this.source);
+		if (this.cachedString == null) {
+			this.cachedString = Arrays.toString(this.source);
+		}
+		return this.cachedString;
+	}
+
+	public String toBase64() {
+		if (this.cachedBase64 == null) {
+			this.cachedBase64 = Base64.getEncoder().encodeToString(getSource());
+		}
+		return this.cachedBase64;
+	}
+
+	@Override
+	public int compareTo(ByteArray o) {
+		return Arrays.equals(this.getSource(), o.getSource()) ? 0 : (this.hashCode() > o.hashCode() ? 1 : -1);
 	}
 
 }

@@ -1,11 +1,12 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<artifactId>nhb-common-scripting</artifactId>
+	<artifactId>nhb-common-encryption</artifactId>
+
 	<parent>
 		<groupId>nhb.common</groupId>
 		<artifactId>nhb-common-base</artifactId>
-		<version>1.5.4</version>
+		<version>1.5.3</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 
@@ -24,26 +25,17 @@
 			</plugin>
 		</plugins>
 	</build>
+	
 	<dependencies>
-		<!-- https://mvnrepository.com/artifact/org.projectlombok/lombok -->
 		<dependency>
-			<groupId>org.projectlombok</groupId>
-			<artifactId>lombok</artifactId>
-			<version>1.16.10</version>
-			<scope>provided</scope>
+			<groupId>commons-codec</groupId>
+			<artifactId>commons-codec</artifactId>
+			<version>1.9</version>
 		</dependency>
-
 		<dependency>
-			<groupId>nhb.common</groupId>
-			<artifactId>nhb-common-core</artifactId>
-			<version>${project.parent.version}</version>
-		</dependency>
-
-		<!-- https://mvnrepository.com/artifact/org.codehaus.groovy/groovy-all -->
-		<dependency>
-			<groupId>org.codehaus.groovy</groupId>
-			<artifactId>groovy-all</artifactId>
-			<version>2.4.7</version>
+			<groupId>commons-io</groupId>
+			<artifactId>commons-io</artifactId>
+			<version>2.4</version>
 		</dependency>
 	</dependencies>
 </project>
