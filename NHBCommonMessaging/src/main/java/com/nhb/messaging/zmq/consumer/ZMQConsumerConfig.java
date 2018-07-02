@@ -24,10 +24,12 @@ public class ZMQConsumerConfig {
 	private ZMQSocketOptions sendSocketOptions;
 	private ZMQSocketType sendSocketType = ZMQSocketType.PUSH_CONNECT;
 	private ZMQSocketWriter socketWriter = ZMQSocketWriter.newDefaultWriter();
+	private boolean respondedCountEnabled = false;
 
 	private String receiveEndpoint;
 	private int receiveWorkerSize = 1;
 	private ZMQSocketType receiveSocketType = ZMQSocketType.PULL_BIND;
+	private boolean receivedCountEnabled = false;
 
 	private ZMQMessageProcessor messageProcessor = ZMQMessageProcessor.DEBUG_MESSAGE_PROCESSOR;
 }

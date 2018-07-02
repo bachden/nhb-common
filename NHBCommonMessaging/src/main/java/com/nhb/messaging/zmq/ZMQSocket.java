@@ -3,12 +3,13 @@ package com.nhb.messaging.zmq;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Function;
+import java.util.function.Consumer;
 
 import org.zeromq.ZMQ;
 import org.zeromq.ZMQ.Msg;
 import org.zeromq.ZMQException;
 
+import lombok.AccessLevel;
 import lombok.Getter;
 
 public class ZMQSocket {
@@ -18,13 +19,13 @@ public class ZMQSocket {
 	@Getter
 	private final String address;
 
-	@Getter
+	@Getter(AccessLevel.PACKAGE)
 	private final ZMQ.Socket socket;
 
 	private final AtomicBoolean closed = new AtomicBoolean(false);
-	private final Function<Integer, Void> onCloseCallback;
+	private final Consumer<ZMQSocket> onCloseCallback;
 
-	ZMQSocket(ZMQ.Socket socket, int port, String address, Function<Integer, Void> onCloseCallback) {
+	ZMQSocket(ZMQ.Socket socket, int port, String address, Consumer<ZMQSocket> onCloseCallback) {
 		if (socket == null) {
 			throw new NullPointerException("ZMQ.Socket cannot be null");
 		}
@@ -82,7 +83,7 @@ public class ZMQSocket {
 	public void close(int linger) {
 		if (this.closed.compareAndSet(false, true)) {
 			if (this.onCloseCallback != null) {
-				this.onCloseCallback.apply(linger);
+				this.onCloseCallback.accept(this);
 			} else {
 				socket.setLinger(linger);
 				socket.close();

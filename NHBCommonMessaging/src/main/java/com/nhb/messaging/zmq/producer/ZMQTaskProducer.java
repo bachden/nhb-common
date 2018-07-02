@@ -88,7 +88,13 @@ public class ZMQTaskProducer extends ZMQProducer {
 				.payloadBuilder(this.payloadBuilder) //
 				.sendingDoneHandler(this.sendingDoneHandler) //
 				.socketWriter(config.getSocketWriter()) //
+				.sentCountEnabled(config.isSentCountEnabled()) //
 				.build();
+	}
+
+	@Override
+	public long getSentCount() {
+		return this.sender.getSentCount();
 	}
 
 	public final void start() {

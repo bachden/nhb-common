@@ -6,6 +6,8 @@ public interface ZMQConsumer {
 
 	void init(ZMQConsumerConfig config);
 
+	long getReceivedCount();
+
 	void start();
 
 	void stop();

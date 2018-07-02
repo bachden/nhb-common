@@ -1,6 +1,6 @@
 package com.nhb.messaging.zmq;
 
-public class ZMQSendingException extends Throwable {
+public class ZMQSendingException extends RuntimeException {
 
 	public ZMQSendingException() {
 		super();

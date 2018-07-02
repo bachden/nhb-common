@@ -25,9 +25,11 @@ public class ZMQProducerConfig {
 	private ZMQSocketType sendSocketType = ZMQSocketType.PUSH_CONNECT;
 	private ZMQSocketOptions sendSocketOptions;
 	private ZMQSocketWriter socketWriter = ZMQSocketWriter.newNonBlockingWriter();
+	private boolean sentCountEnabled = false;
 
 	private String receiveEndpoint;
 	private int receiveWorkerSize = 1;
 	private ZMQSocketType receiveSocketType = ZMQSocketType.PULL_BIND;
+	private boolean receivedCountEnable = false;
 
 }

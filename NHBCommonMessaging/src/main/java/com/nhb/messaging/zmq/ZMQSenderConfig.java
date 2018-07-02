@@ -38,6 +38,9 @@ public class ZMQSenderConfig {
 	@Builder.Default
 	private ZMQIdGenerator idGenerator = ZMQIdGenerator.newTimebasedUUIDGenerator();
 
+	@Builder.Default
+	private boolean sentCountEnabled = false;
+
 	public void validate() {
 		if (endpoint == null) {
 			throw new NullPointerException("Endpoint cannot be null");

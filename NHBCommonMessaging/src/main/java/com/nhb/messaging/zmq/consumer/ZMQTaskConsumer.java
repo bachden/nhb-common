@@ -107,6 +107,7 @@ public class ZMQTaskConsumer implements ZMQConsumer, Loggable {
 				.poolSize(config.getReceiveWorkerSize()) //
 				.receivedMessageHandler(this.receivedMessageHandler) //
 				.payloadExtractor(this.payloadExtractor) //
+				.receivedCountEnabled(config.isReceivedCountEnabled()) //
 				.build();
 	}
 
@@ -134,5 +135,10 @@ public class ZMQTaskConsumer implements ZMQConsumer, Loggable {
 
 	protected void onStop() {
 		// do nothing
+	}
+
+	@Override
+	public long getReceivedCount() {
+		return this.receiver.getReceivedCount();
 	}
 }

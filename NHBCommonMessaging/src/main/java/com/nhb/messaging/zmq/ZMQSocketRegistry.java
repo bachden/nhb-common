@@ -5,7 +5,6 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -18,7 +17,7 @@ import lombok.Getter;
 public class ZMQSocketRegistry implements Loggable {
 	private static final Set<String> TCP_UDP = new HashSet<>(Arrays.asList("tcp", "udp"));
 
-	private final List<ZMQ.Socket> openedSockets = new LinkedList<>();
+	private final List<ZMQSocket> openedSockets = new LinkedList<>();
 
 	@Getter
 	private final int ioThreads;
@@ -37,48 +36,25 @@ public class ZMQSocketRegistry implements Loggable {
 		this.ioThreads = ioThreads;
 		this.context = ZMQ.context(ioThreads);
 		if (autoDestroy) {
-			Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
-
-				@Override
-				public void run() {
-					ZMQSocketRegistry.this.destroy();
-				}
-			}, "ZeroMQ socket registry shutdown hook"));
+			Runtime.getRuntime().addShutdownHook(new Thread(this::destroy, "ZeroMQ socket registry shutdown hook"));
 		}
 	}
 
 	public void destroy() {
-		for (ZMQ.Socket socket : this.openedSockets) {
-			socket.setLinger(0);
-			try {
-				Thread.sleep(30);
-			} catch (InterruptedException e1) {
-				getLogger().error("Thread interupted while sleeping aftter socket.setLinger(0)", e1);
-				e1.printStackTrace();
-			}
-			socket.close();
-
-			try {
-				Thread.sleep(10);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
+		while (this.openedSockets.size() > 0) {
+			this.closeSocket(this.openedSockets.get(0));
 		}
+
 		try {
-			Thread.sleep(10);
+			Thread.sleep(100);
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
 		context.close();
 	}
 
-	public ZMQSocket openSocket(String addr, ZMQSocketType type) {
-		return this.openSocket(addr, type, null);
-	}
-
-	public ZMQSocket openSocket(String address, ZMQSocketType type, ZMQSocketOptions options) {
+	private ZMQSocket createSocket(String address, ZMQSocketType type, ZMQSocketOptions options) {
 		ZMQ.Socket socket = this.getContext().socket(type.getFlag());
-		openedSockets.add(socket);
 
 		String protocol = extractProtocol(address);
 
@@ -92,18 +68,9 @@ public class ZMQSocketRegistry implements Loggable {
 			}
 		}
 
-		Function<Integer, Void> onCloseCallback = new Function<Integer, Void>() {
-
-			@Override
-			public Void apply(Integer linger) {
-				ZMQSocketRegistry.this.closeSocket(socket, linger);
-				return null;
-			}
-		};
-
 		if (type.isClient()) {
 			socket.connect(address);
-			return new ZMQSocket(socket, -1, address, onCloseCallback);
+			return new ZMQSocket(socket, -1, address, this::closeSocket);
 		} else {
 			int port = extractPort(address);
 			if (port == -1 && TCP_UDP.contains(protocol.toLowerCase())) {
@@ -133,8 +100,23 @@ public class ZMQSocketRegistry implements Loggable {
 				}
 			}
 
-			return new ZMQSocket(socket, port, address, onCloseCallback);
+			return new ZMQSocket(socket, port, address, this::closeSocket);
 		}
+	}
+
+	public ZMQSocket openSocket(String address, ZMQSocketType type, ZMQSocketOptions options) {
+		ZMQSocket socket = this.createSocket(address, type, options);
+		if (socket != null) {
+			synchronized (this.openedSockets) {
+				this.openedSockets.add(socket);
+				return socket;
+			}
+		}
+		return null;
+	}
+
+	public ZMQSocket openSocket(String addr, ZMQSocketType type) {
+		return this.openSocket(addr, type, null);
 	}
 
 	private static final int extractPort(String address) {
@@ -153,19 +135,16 @@ public class ZMQSocketRegistry implements Loggable {
 		return null;
 	}
 
-	public void closeSocket(ZMQ.Socket socket, int linger) {
+	private void closeSocket(ZMQSocket socket) {
 		if (this.openedSockets.contains(socket)) {
 			synchronized (this.openedSockets) {
 				if (this.openedSockets.contains(socket)) {
-					openedSockets.remove(socket);
-					socket.setLinger(linger);
-					socket.close();
+					socket.setLinger(0);
+					socket.unbind(socket.getAddress());
+					socket.getSocket().close();
+					this.openedSockets.remove(socket);
 				}
 			}
 		}
-	}
-
-	public void closeSocket(ZMQ.Socket socket) {
-		this.closeSocket(socket, 0);
 	}
 }

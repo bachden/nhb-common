@@ -106,7 +106,16 @@ public class ZMQRPCConsumer extends ZMQTaskConsumer {
 				.payloadBuilder(this.responsePayloadBuilder) //
 				.sendingDoneHandler(ZMQSendingDoneHandler.DEFAULT) //
 				.socketWriter(config.getSocketWriter()) //
+				.sentCountEnabled(config.isRespondedCountEnabled()) //
 				.build();
+	}
+
+	public long getRespondedCount() {
+		long sum = 0;
+		for (ZMQSender sender : this.responderRegistry.values()) {
+			sum += sender.getSentCount();
+		}
+		return sum;
 	}
 
 	@Override

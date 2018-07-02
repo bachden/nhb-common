@@ -38,4 +38,6 @@ public abstract class ZMQProducer implements MessageProducer<ZMQFuture>, Loggabl
 	}
 
 	public abstract void stop();
+
+	public abstract long getSentCount();
 }

@@ -28,6 +28,9 @@ public class ZMQReceiverConfig {
 
 	private ZMQReceivedMessageHandler receivedMessageHandler;
 
+	@Builder.Default
+	private boolean receivedCountEnabled = false;
+
 	public void validate() {
 		if (endpoint == null) {
 			throw new NullPointerException("Endpoint cannot be null");

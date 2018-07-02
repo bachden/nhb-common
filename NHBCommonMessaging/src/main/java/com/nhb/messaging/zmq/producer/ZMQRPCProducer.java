@@ -16,6 +16,7 @@ import com.nhb.messaging.zmq.ZMQPayloadExtractor;
 import com.nhb.messaging.zmq.ZMQReceivedMessageHandler;
 import com.nhb.messaging.zmq.ZMQReceiver;
 import com.nhb.messaging.zmq.ZMQReceiverConfig;
+import com.nhb.messaging.zmq.ZMQSendingException;
 
 public class ZMQRPCProducer extends ZMQTaskProducer {
 
@@ -79,6 +80,7 @@ public class ZMQRPCProducer extends ZMQTaskProducer {
 				.poolSize(config.getReceiveWorkerSize()) //
 				.receivedMessageHandler(this.receivedMessageHandler) //
 				.payloadExtractor(this.payloadExtractor) //
+				.receivedCountEnabled(config.isReceivedCountEnable()) //
 				.build();
 	}
 
@@ -99,6 +101,10 @@ public class ZMQRPCProducer extends ZMQTaskProducer {
 
 		DefaultZMQFuture future = event.getFuture();
 		future.setRefId(messageId);
+
+		if (this.futureRegistry.containsKey(messageId)) {
+			throw new ZMQSendingException("Future with messageId {} already exist in registry");
+		}
 
 		this.futureRegistry.put(messageId, future);
 
@@ -167,5 +173,9 @@ public class ZMQRPCProducer extends ZMQTaskProducer {
 
 	public int remaining() {
 		return this.futureRegistry.remaining();
+	}
+
+	public long getReceivedCount() {
+		return this.receiver.getReceivedCount();
 	}
 }

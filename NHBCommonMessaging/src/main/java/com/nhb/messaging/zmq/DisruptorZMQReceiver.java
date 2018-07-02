@@ -21,6 +21,7 @@ import com.nhb.common.vo.ByteBufferInputStream;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.Setter;
 
 public class DisruptorZMQReceiver implements ZMQReceiver, Loggable {
 
@@ -42,6 +43,10 @@ public class DisruptorZMQReceiver implements ZMQReceiver, Loggable {
 	@Getter
 	private volatile boolean running = false;
 	private final AtomicBoolean runningCheckpoint = new AtomicBoolean(false);
+
+	@Setter
+	private volatile boolean receivedCountEnabled = false;
+	private volatile long receivedCounter = 0;
 
 	private ZMQSocket socket;
 	private Thread pollingThread;
@@ -81,6 +86,11 @@ public class DisruptorZMQReceiver implements ZMQReceiver, Loggable {
 	}
 
 	@Override
+	public long getReceivedCount() {
+		return this.receivedCounter;
+	}
+
+	@Override
 	public void init(ZMQSocketRegistry registry, ZMQReceiverConfig config) {
 		if (this.initializedCheckpoint.compareAndSet(false, true)) {
 			if (registry == null) {
@@ -93,6 +103,8 @@ public class DisruptorZMQReceiver implements ZMQReceiver, Loggable {
 			this.config = config;
 			this.socketRegistry = registry;
 			this.payloadExtractor = config.getPayloadExtractor();
+
+			this.setReceivedCountEnabled(config.isReceivedCountEnabled());
 
 			ThreadFactory threadFactory = new ThreadFactoryBuilder().setNameFormat(config.getThreadNamePattern())
 					.build();
@@ -137,6 +149,9 @@ public class DisruptorZMQReceiver implements ZMQReceiver, Loggable {
 						try {
 							final PuElement payload = PuElementTemplate.getInstance()
 									.read(new ByteBufferInputStream(buffer));
+							if (this.receivedCountEnabled) {
+								this.receivedCounter++;
+							}
 							this.disruptor.publishEvent(new EventTranslator<ZMQEvent>() {
 
 								@Override

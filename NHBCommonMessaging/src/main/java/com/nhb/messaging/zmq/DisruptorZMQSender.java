@@ -2,6 +2,7 @@ package com.nhb.messaging.zmq;
 
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.LockSupport;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -68,6 +69,9 @@ public class DisruptorZMQSender implements ZMQSender, Loggable {
 		@Override
 		public void onEvent(ZMQEvent event) throws Exception {
 			handler.onSendingDone(event);
+			if (event.getSentCounter() != null) {
+				event.getSentCounter().incrementAndGet();
+			}
 		}
 	}
 
@@ -87,6 +91,9 @@ public class DisruptorZMQSender implements ZMQSender, Loggable {
 
 	private ZMQPayloadBuilder payloadBuilder;
 
+	private volatile boolean sentCountEnabled = false;
+	private final AtomicLong sentCounter = new AtomicLong(0);
+
 	public void init(ZMQSocketRegistry socketRegistry, ZMQSenderConfig config) {
 		if (initializedCheckpoint.compareAndSet(false, true)) {
 			if (config == null) {
@@ -96,6 +103,8 @@ public class DisruptorZMQSender implements ZMQSender, Loggable {
 			}
 
 			config.validate();
+
+			this.sentCountEnabled = config.isSentCountEnabled();
 
 			ZMQSendingDoneHandler sendingDoneHandler = config.getSendingDoneHandler();
 
@@ -177,8 +186,22 @@ public class DisruptorZMQSender implements ZMQSender, Loggable {
 				event.clear();
 				event.setData(data);
 				event.setFuture(future);
+
+				if (sentCountEnabled) {
+					event.setSentCounter(sentCounter);
+				}
 			}
 		});
 		return future;
+	}
+
+	@Override
+	public void setSentCountEnabled(boolean enabled) {
+		this.sentCountEnabled = enabled;
+	}
+
+	@Override
+	public long getSentCount() {
+		return this.sentCounter.get();
 	}
 }
