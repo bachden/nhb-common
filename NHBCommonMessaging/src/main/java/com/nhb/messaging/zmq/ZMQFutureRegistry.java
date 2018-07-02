@@ -14,24 +14,40 @@ public class ZMQFutureRegistry {
 
 	private final Map<ByteArray, DefaultZMQFuture> registry = new NonBlockingHashMap<>();
 
-	private ByteArray wrap(byte[] messageId) {
+	public ByteArray wrap(byte[] messageId) {
 		return ByteArray.newInstanceWithJavaSafeHashCodeCalculator(messageId);
 	}
 
 	public void put(byte[] key, DefaultZMQFuture future) {
-		this.registry.put(wrap(key), future);
+		this.put(wrap(key), future);
+	}
+
+	public void put(ByteArray key, DefaultZMQFuture future) {
+		this.registry.put(key, future);
 	}
 
 	public DefaultZMQFuture remove(byte[] key) {
-		return this.registry.remove(wrap(key));
+		return this.remove(wrap(key));
+	}
+
+	public DefaultZMQFuture remove(ByteArray key) {
+		return this.registry.remove(key);
 	}
 
 	public boolean containsKey(byte[] key) {
-		return this.registry.containsKey(wrap(key));
+		return this.containsKey(wrap(key));
+	}
+
+	public boolean containsKey(ByteArray key) {
+		return this.registry.containsKey(key);
 	}
 
 	public DefaultZMQFuture get(byte[] key) {
-		return this.registry.get(wrap(key));
+		return this.get(wrap(key));
+	}
+
+	public DefaultZMQFuture get(ByteArray key) {
+		return this.registry.get(key);
 	}
 
 	public int remaining() {

@@ -4,6 +4,7 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.LockSupport;
+import java.util.function.Supplier;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.lmax.disruptor.BlockingWaitStrategy;
@@ -18,6 +19,7 @@ import com.nhb.common.data.PuElement;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 public class DisruptorZMQSender implements ZMQSender, Loggable {
@@ -47,6 +49,8 @@ public class DisruptorZMQSender implements ZMQSender, Loggable {
 						event.setSuccess(this.socketWriter.write(event.getPayload(), this.socket));
 						if (!event.isSuccess()) {
 							event.setFailedCause(new ZMQSendingException("Cannot send message, unknown exception"));
+						} else if (event.getSentCounter() != null) {
+							event.getSentCounter().incrementAndGet();
 						}
 					} else {
 						log.warn("cannot build payload: {}", event.getData());
@@ -69,11 +73,13 @@ public class DisruptorZMQSender implements ZMQSender, Loggable {
 		@Override
 		public void onEvent(ZMQEvent event) throws Exception {
 			handler.onSendingDone(event);
-			if (event.getSentCounter() != null) {
-				event.getSentCounter().incrementAndGet();
-			}
 		}
 	}
+
+	@Setter
+	private Supplier<ZMQFuture> futureSupplier = () -> {
+		return new DefaultZMQFuture();
+	};
 
 	@Getter(AccessLevel.PROTECTED)
 	private ThreadFactory threadFactory;
@@ -178,7 +184,7 @@ public class DisruptorZMQSender implements ZMQSender, Loggable {
 
 	@Override
 	public ZMQFuture send(final PuElement data) {
-		final DefaultZMQFuture future = ZMQFuture.newDefault();
+		final DefaultZMQFuture future = (DefaultZMQFuture) this.futureSupplier.get();
 		disruptor.publishEvent(new EventTranslator<ZMQEvent>() {
 
 			@Override

@@ -1,5 +1,7 @@
 package com.nhb.messaging.zmq;
 
+import java.util.function.Supplier;
+
 import com.nhb.common.data.PuElement;
 
 public interface ZMQSender {
@@ -17,6 +19,8 @@ public interface ZMQSender {
 	void start();
 
 	void stop();
+
+	void setFutureSupplier(Supplier<ZMQFuture> futureSupplier);
 
 	ZMQFuture send(PuElement data);
 }

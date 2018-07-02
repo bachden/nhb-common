@@ -23,15 +23,11 @@ public class ZMQTaskProducer extends ZMQProducer {
 	private final ZMQSendingDoneHandler sendingDoneHandler = new ZMQSendingDoneHandler() {
 
 		@Override
-		public void onSendingDone(ZMQEvent message) {
-			if (message.isSuccess()) {
-				ZMQTaskProducer.this.onSendingSuccess(message);
+		public void onSendingDone(ZMQEvent event) {
+			if (event.isSuccess()) {
+				ZMQTaskProducer.this.onSendingSuccess(event);
 			} else {
-				DefaultZMQFuture future = message.getFuture();
-				if (future != null) {
-					future.setFailedCause(message.getFailedCause());
-					future.setAndDone(null);
-				}
+				ZMQTaskProducer.this.onSendingFail(event);
 			}
 		}
 	};
@@ -65,6 +61,7 @@ public class ZMQTaskProducer extends ZMQProducer {
 			this.socketRegistry = config.getSocketRegistry();
 
 			this.sender = new DisruptorZMQSender();
+			this.sender.setFutureSupplier(this::createNewFuture);
 			this.sender.init(this.socketRegistry, this.extractSenderConfig(config));
 
 			this.onInit();
@@ -74,6 +71,10 @@ public class ZMQTaskProducer extends ZMQProducer {
 
 	protected void onInit() {
 
+	}
+
+	protected DefaultZMQFuture createNewFuture() {
+		return ZMQFuture.newDefault();
 	}
 
 	private ZMQSenderConfig extractSenderConfig(ZMQProducerConfig config) {
@@ -136,6 +137,14 @@ public class ZMQTaskProducer extends ZMQProducer {
 		DefaultZMQFuture future = message.getFuture();
 		if (future != null) {
 			future.setAndDone(PuNull.IGNORE_ME);
+		}
+	}
+
+	protected void onSendingFail(ZMQEvent event) {
+		DefaultZMQFuture future = event.getFuture();
+		if (future != null) {
+			future.setFailedCause(event.getFailedCause());
+			future.setAndDone(null);
 		}
 	}
 }

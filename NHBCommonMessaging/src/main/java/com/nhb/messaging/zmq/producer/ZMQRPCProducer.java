@@ -16,7 +16,6 @@ import com.nhb.messaging.zmq.ZMQPayloadExtractor;
 import com.nhb.messaging.zmq.ZMQReceivedMessageHandler;
 import com.nhb.messaging.zmq.ZMQReceiver;
 import com.nhb.messaging.zmq.ZMQReceiverConfig;
-import com.nhb.messaging.zmq.ZMQSendingException;
 
 public class ZMQRPCProducer extends ZMQTaskProducer {
 
@@ -48,13 +47,7 @@ public class ZMQRPCProducer extends ZMQTaskProducer {
 		}
 	};
 
-	private Callback<byte[]> onFutureCancelledCallback = new Callback<byte[]>() {
-
-		@Override
-		public void apply(byte[] messageId) {
-			ZMQRPCProducer.this.onFutureCancelled(messageId);
-		}
-	};
+	private Callback<byte[]> onFutureCancelledCallback = this::onFutureCancelled;
 
 	public ZMQRPCProducer() {
 		this(ZMQIdGenerator.newTimebasedUUIDGenerator());
@@ -96,19 +89,24 @@ public class ZMQRPCProducer extends ZMQTaskProducer {
 	}
 
 	@Override
-	protected void onSendingSuccess(ZMQEvent event) {
-		byte[] messageId = event.getMessageId();
-
-		DefaultZMQFuture future = event.getFuture();
-		future.setRefId(messageId);
-
-		if (this.futureRegistry.containsKey(messageId)) {
-			throw new ZMQSendingException("Future with messageId {} already exist in registry");
-		}
-
-		this.futureRegistry.put(messageId, future);
-
+	protected DefaultZMQFuture createNewFuture() {
+		DefaultZMQFuture future = new DefaultZMQFuture();
+		future.setRefId(idGenerator.generateId());
+		this.futureRegistry.put(future.getRefId(), future);
 		future.setCancelCallback(this.onFutureCancelledCallback);
+		return future;
+	}
+
+	@Override
+	protected void onSendingFail(ZMQEvent event) {
+		DefaultZMQFuture future = this.futureRegistry.remove(event.getMessageId());
+		future.setFailedCause(event.getFailedCause());
+		future.setAndDone(null);
+	}
+
+	@Override
+	protected void onSendingSuccess(ZMQEvent event) {
+		// do nothing, just override to prevent super action...
 	}
 
 	protected void onFutureCancelled(byte[] messageId) {
@@ -126,6 +124,9 @@ public class ZMQRPCProducer extends ZMQTaskProducer {
 				future.setFailedCause(event.getFailedCause());
 				future.setAndDone(null);
 			}
+		} else {
+			getLogger().error("Error while handling received socket data",
+					new NullPointerException("Got response but future cannot be found"));
 		}
 	}
 
@@ -160,7 +161,7 @@ public class ZMQRPCProducer extends ZMQTaskProducer {
 	}
 
 	private void buildPayload(ZMQEvent event) {
-		byte[] messageId = this.idGenerator.generateId();
+		byte[] messageId = event.getFuture().getRefId();
 
 		PuArray payload = new PuArrayList();
 		payload.addFrom(messageId);
