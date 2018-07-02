@@ -11,7 +11,6 @@ import com.nhb.messaging.zmq.ZMQFuture;
 import com.nhb.messaging.zmq.ZMQPayloadBuilder;
 import com.nhb.messaging.zmq.ZMQSender;
 import com.nhb.messaging.zmq.ZMQSenderConfig;
-import com.nhb.messaging.zmq.ZMQSendingDoneHandler;
 import com.nhb.messaging.zmq.ZMQSocketRegistry;
 
 import lombok.AccessLevel;
@@ -19,18 +18,6 @@ import lombok.Getter;
 import lombok.Setter;
 
 public class ZMQTaskProducer extends ZMQProducer {
-
-	private final ZMQSendingDoneHandler sendingDoneHandler = new ZMQSendingDoneHandler() {
-
-		@Override
-		public void onSendingDone(ZMQEvent event) {
-			if (event.isSuccess()) {
-				ZMQTaskProducer.this.onSendingSuccess(event);
-			} else {
-				ZMQTaskProducer.this.onSendingFail(event);
-			}
-		}
-	};
 
 	private ZMQSender sender;
 
@@ -49,7 +36,7 @@ public class ZMQTaskProducer extends ZMQProducer {
 
 	@Getter(AccessLevel.PROTECTED)
 	@Setter(AccessLevel.PROTECTED)
-	private ZMQPayloadBuilder payloadBuilder;
+	private ZMQPayloadBuilder payloadBuilder = null;
 
 	public final void init(ZMQProducerConfig config) {
 		if (this.initializedChecker.compareAndSet(false, true)) {
@@ -87,7 +74,7 @@ public class ZMQTaskProducer extends ZMQProducer {
 				.socketType(config.getSendSocketType()) //
 				.socketOptions(config.getSendSocketOptions()) //
 				.payloadBuilder(this.payloadBuilder) //
-				.sendingDoneHandler(this.sendingDoneHandler) //
+				.sendingDoneHandler(this::onSendingDone) //
 				.socketWriter(config.getSocketWriter()) //
 				.sentCountEnabled(config.isSentCountEnabled()) //
 				.build();
@@ -133,17 +120,12 @@ public class ZMQTaskProducer extends ZMQProducer {
 		throw new UnsupportedOperationException();
 	}
 
-	protected void onSendingSuccess(ZMQEvent message) {
+	protected void onSendingDone(ZMQEvent message) {
 		DefaultZMQFuture future = message.getFuture();
-		if (future != null) {
+		if (message.isSuccess()) {
 			future.setAndDone(PuNull.IGNORE_ME);
-		}
-	}
-
-	protected void onSendingFail(ZMQEvent event) {
-		DefaultZMQFuture future = event.getFuture();
-		if (future != null) {
-			future.setFailedCause(event.getFailedCause());
+		} else {
+			future.setFailedCause(message.getFailedCause());
 			future.setAndDone(null);
 		}
 	}

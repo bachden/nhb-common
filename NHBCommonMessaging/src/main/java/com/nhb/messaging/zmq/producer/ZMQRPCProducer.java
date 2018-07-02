@@ -1,6 +1,5 @@
 package com.nhb.messaging.zmq.producer;
 
-import com.nhb.common.async.Callback;
 import com.nhb.common.data.PuArray;
 import com.nhb.common.data.PuArrayList;
 import com.nhb.common.data.PuDataType;
@@ -11,9 +10,6 @@ import com.nhb.messaging.zmq.DisruptorZMQReceiver;
 import com.nhb.messaging.zmq.ZMQEvent;
 import com.nhb.messaging.zmq.ZMQFutureRegistry;
 import com.nhb.messaging.zmq.ZMQIdGenerator;
-import com.nhb.messaging.zmq.ZMQPayloadBuilder;
-import com.nhb.messaging.zmq.ZMQPayloadExtractor;
-import com.nhb.messaging.zmq.ZMQReceivedMessageHandler;
 import com.nhb.messaging.zmq.ZMQReceiver;
 import com.nhb.messaging.zmq.ZMQReceiverConfig;
 
@@ -23,39 +19,13 @@ public class ZMQRPCProducer extends ZMQTaskProducer {
 	private final ZMQIdGenerator idGenerator;
 	private final ZMQFutureRegistry futureRegistry = new ZMQFutureRegistry();
 
-	private final ZMQReceivedMessageHandler receivedMessageHandler = new ZMQReceivedMessageHandler() {
-
-		@Override
-		public void onReceive(ZMQEvent message) {
-			ZMQRPCProducer.this.onReceive(message);
-		}
-	};
-
-	private ZMQPayloadBuilder payloadBuilder = new ZMQPayloadBuilder() {
-
-		@Override
-		public void buildPayload(ZMQEvent event) {
-			ZMQRPCProducer.this.buildPayload(event);
-		}
-	};
-
-	private ZMQPayloadExtractor payloadExtractor = new ZMQPayloadExtractor() {
-
-		@Override
-		public void extractPayload(ZMQEvent event) {
-			ZMQRPCProducer.this.extractReceivedPayload(event);
-		}
-	};
-
-	private Callback<byte[]> onFutureCancelledCallback = this::onFutureCancelled;
-
 	public ZMQRPCProducer() {
 		this(ZMQIdGenerator.newTimebasedUUIDGenerator());
 	}
 
 	public ZMQRPCProducer(ZMQIdGenerator idGenerator) {
 		this.idGenerator = idGenerator;
-		this.setPayloadBuilder(this.payloadBuilder);
+		this.setPayloadBuilder(this::buildPayload);
 	}
 
 	@Override
@@ -71,8 +41,8 @@ public class ZMQRPCProducer extends ZMQTaskProducer {
 				.socketType(config.getReceiveSocketType()) //
 				.bufferCapacity(config.getBufferCapacity()) //
 				.poolSize(config.getReceiveWorkerSize()) //
-				.receivedMessageHandler(this.receivedMessageHandler) //
-				.payloadExtractor(this.payloadExtractor) //
+				.receivedMessageHandler(this::onReceive) //
+				.payloadExtractor(this::extractReceivedPayload) //
 				.receivedCountEnabled(config.isReceivedCountEnable()) //
 				.build();
 	}
@@ -93,20 +63,17 @@ public class ZMQRPCProducer extends ZMQTaskProducer {
 		DefaultZMQFuture future = new DefaultZMQFuture();
 		future.setRefId(idGenerator.generateId());
 		this.futureRegistry.put(future.getRefId(), future);
-		future.setCancelCallback(this.onFutureCancelledCallback);
+		future.setCancelCallback(this::onFutureCancelled);
 		return future;
 	}
 
 	@Override
-	protected void onSendingFail(ZMQEvent event) {
-		DefaultZMQFuture future = this.futureRegistry.remove(event.getMessageId());
-		future.setFailedCause(event.getFailedCause());
-		future.setAndDone(null);
-	}
-
-	@Override
-	protected void onSendingSuccess(ZMQEvent event) {
-		// do nothing, just override to prevent super action...
+	protected void onSendingDone(ZMQEvent event) {
+		if (!event.isSuccess()) {
+			DefaultZMQFuture future = this.futureRegistry.remove(event.getMessageId());
+			future.setFailedCause(event.getFailedCause());
+			future.setAndDone(null);
+		}
 	}
 
 	protected void onFutureCancelled(byte[] messageId) {

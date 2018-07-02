@@ -185,6 +185,10 @@ public class DisruptorZMQSender implements ZMQSender, Loggable {
 	@Override
 	public ZMQFuture send(final PuElement data) {
 		final DefaultZMQFuture future = (DefaultZMQFuture) this.futureSupplier.get();
+		if (future == null) {
+			throw new NullPointerException("ZMQFuture cannot be null");
+		}
+
 		disruptor.publishEvent(new EventTranslator<ZMQEvent>() {
 
 			@Override
@@ -198,6 +202,7 @@ public class DisruptorZMQSender implements ZMQSender, Loggable {
 				}
 			}
 		});
+
 		return future;
 	}
 
