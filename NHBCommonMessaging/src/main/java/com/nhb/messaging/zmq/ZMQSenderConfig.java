@@ -36,7 +36,7 @@ public class ZMQSenderConfig {
 	private ZMQSocketWriter socketWriter = ZMQSocketWriter.newDefaultWriter();
 
 	@Builder.Default
-	private ZMQIdGenerator idGenerator = ZMQIdGenerator.newTimebasedUUIDGenerator();
+	private ZMQIdGenerator idGenerator = ZMQIdGenerator.DEFAULT_TIMEBASED_UUID_GENERATOR;
 
 	@Builder.Default
 	private boolean sentCountEnabled = false;

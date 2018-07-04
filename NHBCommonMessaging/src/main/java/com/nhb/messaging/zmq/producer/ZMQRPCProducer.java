@@ -20,7 +20,7 @@ public class ZMQRPCProducer extends ZMQTaskProducer {
 	private final ZMQFutureRegistry futureRegistry = new ZMQFutureRegistry();
 
 	public ZMQRPCProducer() {
-		this(ZMQIdGenerator.newTimebasedUUIDGenerator());
+		this(ZMQIdGenerator.DEFAULT_TIMEBASED_UUID_GENERATOR);
 	}
 
 	public ZMQRPCProducer(ZMQIdGenerator idGenerator) {

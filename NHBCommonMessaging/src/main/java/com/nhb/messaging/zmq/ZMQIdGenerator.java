@@ -4,15 +4,7 @@ import com.nhb.common.utils.UUIDUtils;
 
 public interface ZMQIdGenerator {
 
-	static ZMQIdGenerator newTimebasedUUIDGenerator() {
-		return new ZMQIdGenerator() {
-
-			@Override
-			public byte[] generateId() {
-				return UUIDUtils.timebasedUUIDAsBytes();
-			}
-		};
-	}
+	static ZMQIdGenerator DEFAULT_TIMEBASED_UUID_GENERATOR = UUIDUtils::timebasedUUIDAsBytes;
 
 	byte[] generateId();
 }
