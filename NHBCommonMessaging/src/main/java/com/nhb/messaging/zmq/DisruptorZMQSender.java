@@ -16,7 +16,6 @@ import com.nhb.common.Loggable;
 import com.nhb.common.data.PuElement;
 
 import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -65,16 +64,6 @@ public class DisruptorZMQSender implements ZMQSender, Loggable {
 		}
 	}
 
-	@AllArgsConstructor
-	private static class SendingDoneWorker implements WorkHandler<ZMQEvent> {
-		private final ZMQSendingDoneHandler handler;
-
-		@Override
-		public void onEvent(ZMQEvent event) throws Exception {
-			handler.onSendingDone(event);
-		}
-	}
-
 	@Setter
 	private Supplier<ZMQFuture> futureSupplier = () -> {
 		return new DefaultZMQFuture();
@@ -99,6 +88,28 @@ public class DisruptorZMQSender implements ZMQSender, Loggable {
 	private volatile boolean sentCountEnabled = false;
 	private final AtomicLong sentCounter = new AtomicLong(0);
 
+	private ExceptionHandler<ZMQEvent> exceptionHandler = new ExceptionHandler<ZMQEvent>() {
+
+		@Override
+		public void handleEventException(Throwable ex, long sequence, ZMQEvent event) {
+			getLogger().error("Error while handling ZMQEvent: {}", event.getPayload(), ex);
+			if (event.getFuture() != null) {
+				event.getFuture().setFailedCause(ex);
+				event.getFuture().setAndDone(null);
+			}
+		}
+
+		@Override
+		public void handleOnStartException(Throwable ex) {
+			getLogger().error("Error while starting sender disruptor", ex);
+		}
+
+		@Override
+		public void handleOnShutdownException(Throwable ex) {
+			getLogger().error("Error while shutting down sender disruptor", ex);
+		}
+	};
+
 	public void init(ZMQSocketRegistry socketRegistry, ZMQSenderConfig config) {
 		if (initializedCheckpoint.compareAndSet(false, true)) {
 			if (config == null) {
@@ -118,10 +129,6 @@ public class DisruptorZMQSender implements ZMQSender, Loggable {
 	private void doInit(ZMQSocketRegistry socketRegistry, ZMQSenderConfig config) {
 		this.sentCountEnabled = config.isSentCountEnabled();
 
-		ZMQSendingDoneHandler sendingDoneHandler = config.getSendingDoneHandler();
-
-		this.payloadBuilder = config.getPayloadBuilder();
-
 		this.socketFactory = new ZMQSocketFactory(socketRegistry, config.getEndpoint(), config.getSocketType(),
 				config.getSocketOptions());
 
@@ -129,35 +136,22 @@ public class DisruptorZMQSender implements ZMQSender, Loggable {
 		this.disruptor = new Disruptor<>(ZMQEvent::new, config.getQueueSize(), threadFactory, ProducerType.MULTI,
 				new BlockingWaitStrategy());
 
+		this.payloadBuilder = config.getPayloadBuilder();
 		SendToSocketWorker[] senders = new SendToSocketWorker[config.getSendWorkerSize()];
 		for (int i = 0; i < senders.length; i++) {
 			senders[i] = new SendToSocketWorker(socketFactory.newSocket(), config.getSocketWriter(),
 					this.payloadBuilder);
 		}
 
-		SendingDoneWorker[] sendingDoneHandlers = new SendingDoneWorker[config.getSendingDoneHandlerSize()];
+		ZMQSendingDoneHandler sendingDoneHandler = config.getSendingDoneHandler();
+		@SuppressWarnings("unchecked")
+		WorkHandler<ZMQEvent>[] sendingDoneHandlers = new WorkHandler[config.getSendingDoneHandlerSize()];
 		for (int i = 0; i < sendingDoneHandlers.length; i++) {
-			sendingDoneHandlers[i] = new SendingDoneWorker(sendingDoneHandler);
+			sendingDoneHandlers[i] = sendingDoneHandler::onSendingDone;
 		}
 
 		disruptor.handleEventsWithWorkerPool(senders).thenHandleEventsWithWorkerPool(sendingDoneHandlers);
-		disruptor.setDefaultExceptionHandler(new ExceptionHandler<ZMQEvent>() {
-
-			@Override
-			public void handleEventException(Throwable ex, long sequence, ZMQEvent event) {
-				getLogger().error("Error while handling ZMQEvent: {}", event.getPayload(), ex);
-			}
-
-			@Override
-			public void handleOnStartException(Throwable ex) {
-				getLogger().error("Error while starting sender disruptor", ex);
-			}
-
-			@Override
-			public void handleOnShutdownException(Throwable ex) {
-				getLogger().error("Error while shutting down sender disruptor", ex);
-			}
-		});
+		disruptor.setDefaultExceptionHandler(exceptionHandler);
 	}
 
 	@Override
@@ -180,7 +174,7 @@ public class DisruptorZMQSender implements ZMQSender, Loggable {
 
 	@Override
 	public final void stop() {
-		if (this.runningCheckpoint.compareAndSet(true, false)) {
+		if (this.isRunning() && this.runningCheckpoint.compareAndSet(true, false)) {
 			this.disruptor.shutdown();
 			this.socketFactory.destroy();
 			this.running = false;
