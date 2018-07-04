@@ -109,49 +109,55 @@ public class DisruptorZMQSender implements ZMQSender, Loggable {
 
 			config.validate();
 
-			this.sentCountEnabled = config.isSentCountEnabled();
+			doInit(socketRegistry, config);
 
-			ZMQSendingDoneHandler sendingDoneHandler = config.getSendingDoneHandler();
-
-			this.payloadBuilder = config.getPayloadBuilder();
-
-			this.socketFactory = new ZMQSocketFactory(socketRegistry, config.getEndpoint(), config.getSocketType(),
-					config.getSocketOptions());
-
-			this.threadFactory = new ThreadFactoryBuilder().setNameFormat(config.getThreadNamePattern()).build();
-			this.disruptor = new Disruptor<>(ZMQEvent.EVENT_FACTORY, config.getQueueSize(), threadFactory,
-					ProducerType.MULTI, new BlockingWaitStrategy());
-
-			SendToSocketWorker[] senders = new SendToSocketWorker[config.getSendWorkerSize()];
-			for (int i = 0; i < senders.length; i++) {
-				senders[i] = new SendToSocketWorker(socketFactory.newSocket(), config.getSocketWriter(),
-						this.payloadBuilder);
-			}
-
-			SendingDoneWorker[] sendingDoneHandlers = new SendingDoneWorker[config.getSendingDoneHandlerSize()];
-			for (int i = 0; i < sendingDoneHandlers.length; i++) {
-				sendingDoneHandlers[i] = new SendingDoneWorker(sendingDoneHandler);
-			}
-
-			disruptor.handleEventsWithWorkerPool(senders).thenHandleEventsWithWorkerPool(sendingDoneHandlers);
-			disruptor.setDefaultExceptionHandler(new ExceptionHandler<ZMQEvent>() {
-
-				@Override
-				public void handleEventException(Throwable ex, long sequence, ZMQEvent event) {
-					getLogger().error("Error while handling ZMQEvent: {}", event.getPayload(), ex);
-				}
-
-				@Override
-				public void handleOnStartException(Throwable ex) {
-					getLogger().error("Error while starting sender disruptor", ex);
-				}
-
-				@Override
-				public void handleOnShutdownException(Throwable ex) {
-					getLogger().error("Error while shutting down sender disruptor", ex);
-				}
-			});
+			this.initialized = true;
 		}
+	}
+
+	private void doInit(ZMQSocketRegistry socketRegistry, ZMQSenderConfig config) {
+		this.sentCountEnabled = config.isSentCountEnabled();
+
+		ZMQSendingDoneHandler sendingDoneHandler = config.getSendingDoneHandler();
+
+		this.payloadBuilder = config.getPayloadBuilder();
+
+		this.socketFactory = new ZMQSocketFactory(socketRegistry, config.getEndpoint(), config.getSocketType(),
+				config.getSocketOptions());
+
+		this.threadFactory = new ThreadFactoryBuilder().setNameFormat(config.getThreadNamePattern()).build();
+		this.disruptor = new Disruptor<>(ZMQEvent::new, config.getQueueSize(), threadFactory, ProducerType.MULTI,
+				new BlockingWaitStrategy());
+
+		SendToSocketWorker[] senders = new SendToSocketWorker[config.getSendWorkerSize()];
+		for (int i = 0; i < senders.length; i++) {
+			senders[i] = new SendToSocketWorker(socketFactory.newSocket(), config.getSocketWriter(),
+					this.payloadBuilder);
+		}
+
+		SendingDoneWorker[] sendingDoneHandlers = new SendingDoneWorker[config.getSendingDoneHandlerSize()];
+		for (int i = 0; i < sendingDoneHandlers.length; i++) {
+			sendingDoneHandlers[i] = new SendingDoneWorker(sendingDoneHandler);
+		}
+
+		disruptor.handleEventsWithWorkerPool(senders).thenHandleEventsWithWorkerPool(sendingDoneHandlers);
+		disruptor.setDefaultExceptionHandler(new ExceptionHandler<ZMQEvent>() {
+
+			@Override
+			public void handleEventException(Throwable ex, long sequence, ZMQEvent event) {
+				getLogger().error("Error while handling ZMQEvent: {}", event.getPayload(), ex);
+			}
+
+			@Override
+			public void handleOnStartException(Throwable ex) {
+				getLogger().error("Error while starting sender disruptor", ex);
+			}
+
+			@Override
+			public void handleOnShutdownException(Throwable ex) {
+				getLogger().error("Error while shutting down sender disruptor", ex);
+			}
+		});
 	}
 
 	@Override

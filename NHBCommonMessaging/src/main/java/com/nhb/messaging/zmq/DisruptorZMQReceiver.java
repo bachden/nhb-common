@@ -85,34 +85,40 @@ public class DisruptorZMQReceiver implements ZMQReceiver, Loggable {
 			} else if (config == null) {
 				throw new NullPointerException("Config cannot be null");
 			}
+
 			config.validate();
 
 			this.config = config;
 			this.socketRegistry = registry;
-			this.payloadExtractor = config.getPayloadExtractor();
 
-			this.setReceivedCountEnabled(config.isReceivedCountEnabled());
-
-			ThreadFactory threadFactory = new ThreadFactoryBuilder().setNameFormat(config.getThreadNamePattern())
-					.build();
-			disruptor = new Disruptor<>(ZMQEvent.EVENT_FACTORY, config.getQueueSize(), threadFactory,
-					ProducerType.SINGLE, new BlockingWaitStrategy());
-
-			final ZMQReceivedMessageHandler receivedMessageHandler = config.getReceivedMessageHandler();
-
-			@SuppressWarnings("unchecked")
-			WorkHandler<ZMQEvent>[] workers = new WorkHandler[config.getPoolSize()];
-			for (int i = 0; i < workers.length; i++) {
-				workers[i] = receivedMessageHandler::onReceive;
-			}
-
-			this.disruptor.handleEventsWithWorkerPool(workers);
-			this.disruptor.setDefaultExceptionHandler(this.exceptionHandler);
-
-			this.pollingThread = new Thread(this::pollData, "ZMQ " + config.getEndpoint() + " poller");
+			doInit();
 
 			this.initialized = true;
 		}
+	}
+
+	private void doInit() {
+		this.payloadExtractor = config.getPayloadExtractor();
+
+		this.setReceivedCountEnabled(config.isReceivedCountEnabled());
+
+		ThreadFactory threadFactory = new ThreadFactoryBuilder().setNameFormat(config.getThreadNamePattern()).build();
+		disruptor = new Disruptor<>(ZMQEvent::new, config.getQueueSize(), threadFactory, ProducerType.SINGLE,
+				new BlockingWaitStrategy());
+
+		final ZMQReceivedMessageHandler receivedMessageHandler = config.getReceivedMessageHandler();
+
+		@SuppressWarnings("unchecked")
+		WorkHandler<ZMQEvent>[] workers = new WorkHandler[config.getPoolSize()];
+		for (int i = 0; i < workers.length; i++) {
+			workers[i] = receivedMessageHandler::onReceive;
+		}
+
+		this.disruptor.handleEventsWithWorkerPool(workers);
+		this.disruptor.setDefaultExceptionHandler(this.exceptionHandler);
+
+		this.pollingThread = new Thread(this::pollData, "ZMQ " + config.getEndpoint() + " poller");
+
 	}
 
 	private void pollData() {

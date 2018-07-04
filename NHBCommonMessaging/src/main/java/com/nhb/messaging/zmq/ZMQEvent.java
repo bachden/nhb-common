@@ -2,7 +2,6 @@ package com.nhb.messaging.zmq;
 
 import java.util.concurrent.atomic.AtomicLong;
 
-import com.lmax.disruptor.EventFactory;
 import com.nhb.common.data.PuElement;
 
 import lombok.Getter;
@@ -11,14 +10,6 @@ import lombok.Setter;
 @Setter
 @Getter
 public final class ZMQEvent {
-
-	public static final EventFactory<ZMQEvent> EVENT_FACTORY = new EventFactory<ZMQEvent>() {
-
-		@Override
-		public ZMQEvent newInstance() {
-			return new ZMQEvent();
-		}
-	};
 
 	private byte[] messageId;
 	private String responseEndpoint;
