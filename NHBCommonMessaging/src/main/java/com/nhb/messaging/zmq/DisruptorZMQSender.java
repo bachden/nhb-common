@@ -8,7 +8,6 @@ import java.util.function.Supplier;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.lmax.disruptor.BlockingWaitStrategy;
-import com.lmax.disruptor.EventTranslator;
 import com.lmax.disruptor.ExceptionHandler;
 import com.lmax.disruptor.WorkHandler;
 import com.lmax.disruptor.dsl.Disruptor;
@@ -189,17 +188,12 @@ public class DisruptorZMQSender implements ZMQSender, Loggable {
 			throw new NullPointerException("ZMQFuture cannot be null");
 		}
 
-		disruptor.publishEvent(new EventTranslator<ZMQEvent>() {
-
-			@Override
-			public void translateTo(ZMQEvent event, long sequence) {
-				event.clear();
-				event.setData(data);
-				event.setFuture(future);
-
-				if (sentCountEnabled) {
-					event.setSentCounter(sentCounter);
-				}
+		disruptor.publishEvent((event, sequence) -> {
+			event.clear();
+			event.setData(data);
+			event.setFuture(future);
+			if (sentCountEnabled) {
+				event.setSentCounter(sentCounter);
 			}
 		});
 

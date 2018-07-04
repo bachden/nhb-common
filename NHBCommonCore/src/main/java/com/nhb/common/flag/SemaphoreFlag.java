@@ -3,7 +3,6 @@ package com.nhb.common.flag;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.LockSupport;
-import java.util.function.IntBinaryOperator;
 
 public class SemaphoreFlag {
 
@@ -65,16 +64,12 @@ public class SemaphoreFlag {
 
 	public int incrementAndGet(AtomicBoolean breakSpinLoop) {
 		this.waitForIncrementUnlocked(10, breakSpinLoop);
-		return this.counter.accumulateAndGet(1, new IntBinaryOperator() {
-
-			@Override
-			public int applyAsInt(int currentValue, int incrementBy) {
-				int newValue = currentValue + incrementBy;
-				if (newValue > upperBound) {
-					return upperBound;
-				}
-				return newValue;
+		return this.counter.accumulateAndGet(1, (currentValue, incrementBy) -> {
+			int newValue = currentValue + incrementBy;
+			if (newValue > upperBound) {
+				return upperBound;
 			}
+			return newValue;
 		});
 	}
 
@@ -84,16 +79,12 @@ public class SemaphoreFlag {
 
 	public int decrementAndGet(AtomicBoolean breakSpinLoop) {
 		this.waitForDecrementUnlocked(10, breakSpinLoop);
-		return this.counter.accumulateAndGet(-1, new IntBinaryOperator() {
-
-			@Override
-			public int applyAsInt(int currentValue, int incrementBy) {
-				int newValue = currentValue + incrementBy;
-				if (newValue < lowerBound) {
-					return lowerBound;
-				}
-				return newValue;
+		return this.counter.accumulateAndGet(-1, (currentValue, incrementBy) -> {
+			int newValue = currentValue + incrementBy;
+			if (newValue < lowerBound) {
+				return lowerBound;
 			}
+			return newValue;
 		});
 	}
 

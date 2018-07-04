@@ -26,20 +26,16 @@ public interface ZMQSocketWriter {
 	 */
 	static ZMQSocketWriter newZeroCopyWriter(int bufferCapacity) {
 
-		return new ZMQSocketWriter() {
+		final ByteBuffer buffer = ByteBuffer.allocateDirect(bufferCapacity);
 
-			private final ByteBuffer buffer = ByteBuffer.allocateDirect(bufferCapacity);
-
-			@Override
-			public boolean write(PuElement payload, ZMQSocket socket) {
-				if (payload != null && socket != null) {
-					this.buffer.clear();
-					payload.writeTo(new ByteBufferOutputStream(buffer));
-					this.buffer.flip();
-					return socket.sendZeroCopy(buffer, buffer.remaining(), 0);
-				}
-				throw new NullPointerException("Payload and socket cannot be null");
+		return (payload, socket) -> {
+			if (payload != null && socket != null) {
+				buffer.clear();
+				payload.writeTo(new ByteBufferOutputStream(buffer));
+				buffer.flip();
+				return socket.sendZeroCopy(buffer, buffer.remaining(), 0);
 			}
+			throw new NullPointerException("Payload and socket cannot be null");
 		};
 	}
 
@@ -63,15 +59,11 @@ public interface ZMQSocketWriter {
 	 */
 	static ZMQSocketWriter newDefaultWriter(final int puElementBufferSize) {
 
-		return new ZMQSocketWriter() {
-
-			@Override
-			public boolean write(PuElement payload, ZMQSocket socket) {
-				if (payload != null && socket != null) {
-					return socket.send(payload.toBytes(puElementBufferSize), 0);
-				}
-				throw new NullPointerException("Payload and socket cannot be null");
+		return (payload, socket) -> {
+			if (payload != null && socket != null) {
+				return socket.send(payload.toBytes(puElementBufferSize), 0);
 			}
+			throw new NullPointerException("Payload and socket cannot be null");
 		};
 	}
 
@@ -84,15 +76,11 @@ public interface ZMQSocketWriter {
 	 */
 	static ZMQSocketWriter newNonBlockingWriter(final int puElementBufferSize) {
 
-		return new ZMQSocketWriter() {
-
-			@Override
-			public boolean write(PuElement payload, ZMQSocket socket) {
-				if (payload != null && socket != null) {
-					return socket.send(payload.toBytes(puElementBufferSize), ZMQ.NOBLOCK);
-				}
-				throw new NullPointerException("Payload and socket cannot be null");
+		return (payload, socket) -> {
+			if (payload != null && socket != null) {
+				return socket.send(payload.toBytes(puElementBufferSize), ZMQ.NOBLOCK);
 			}
+			throw new NullPointerException("Payload and socket cannot be null");
 		};
 	}
 
