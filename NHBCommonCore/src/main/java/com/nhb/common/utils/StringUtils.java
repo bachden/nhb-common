@@ -3,18 +3,21 @@ package com.nhb.common.utils;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Arrays;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.commons.lang.RandomStringUtils;
+import org.apache.commons.lang3.RandomStringUtils;
 
 import com.google.common.base.CaseFormat;
+import com.nhb.common.format.FormatTransformer;
+import com.nhb.common.format.FormatTransformerRegistry;
+import com.nhb.common.format.GlobalFormatTransformerRegistry;
 
 import lombok.Builder;
 import lombok.Data;
@@ -164,6 +167,70 @@ public final class StringUtils {
 		return true;
 	}
 
+	private static final String[] REGEX_SPECIAL_CHARS = new String[] { "\\", ".", "*", "+", "-", "[", "]", "(", ")",
+			"$", "^", "|", "{", "}", "?" };
+
+	public static final String normalizeForRegex(String key) {
+		String result = key;
+		for (String c : REGEX_SPECIAL_CHARS) {
+			result = result.replaceAll("\\" + c, "\\\\\\" + c);
+		}
+		return result;
+	}
+
+	/**
+	 * Transform using GlobalFormatTransformerRegistry singleton instance
+	 * 
+	 * @param source
+	 * @param args
+	 * @return
+	 */
+	public static String transform(String source, Object args) {
+		return transform(source, args, GlobalFormatTransformerRegistry.getInstance());
+	}
+
+	public static String transform(String source, Object args, FormatTransformerRegistry transformerRegistry) {
+		if (source != null) {
+			if (transformerRegistry == null) {
+				return format(source, args, null);
+			}
+
+			Pattern pattern = Pattern.compile("\\{\\{([^\\{\\}]+)\\}\\}");
+			Matcher matcher = pattern.matcher(source);
+			List<String[]> matchedGroups = new LinkedList<>();
+			while (matcher.find()) {
+				matchedGroups.add(new String[] { matcher.group(0), matcher.group(1) });
+			}
+
+			if (matchedGroups.isEmpty()) {
+				return source;
+			}
+
+			String result = source;
+			for (String[] matchedGroup : matchedGroups) {
+				final String key = matchedGroup[0];
+				String argName = matchedGroup[1];
+
+				String[] arr = argName.trim().split("\\s*>\\s*");
+
+				Object value = ObjectUtils.getValueByPath(args, arr[0]);
+				if (value != null) {
+					if (arr.length > 1) {
+						String[] transformerNames = Arrays.copyOfRange(arr, 1, arr.length);
+						List<FormatTransformer> chain = transformerRegistry.getChain(transformerNames);
+						for (FormatTransformer transformer : chain) {
+							value = transformer.transform(value);
+						}
+					}
+					result = result.replaceAll(normalizeForRegex(key), PrimitiveTypeUtils.getStringValueFrom(value));
+				}
+			}
+
+			return result;
+		}
+		return null;
+	}
+
 	public static String format(String pattern, Object args, StringFormatOption option) {
 		List<String> matches = getAllMatches(pattern, "\\{\\{[a-zA-Z0-9_]+\\}\\}");
 		Set<String> keys = new HashSet<>();
@@ -194,18 +261,20 @@ public final class StringUtils {
 	}
 
 	public static void main(String[] args) {
-		String pattern = "Name: {{name}} -> age: {{age}}";
-		TestVO obj = new TestVO();
-		obj.setName("Bách Hoàng Nguyễn");
-		obj.setAge(28);
-		System.out.println("Formatted string: "
-				+ format(pattern, obj, StringFormatOption.builder().autoFormatNumber(true).build()));
-
-		Map<String, Object> map = new HashMap<>();
-		map.put("name", "abc");
-		map.put("age", 280029340);
-
-		System.out.println("Formatted string: "
-				+ format(pattern, map, StringFormatOption.builder().autoFormatNumber(true).build()));
+		// String pattern = "Name: {{name}} -> age: {{age}}";
+		// TestVO obj = new TestVO();
+		// obj.setName("Bách Hoàng Nguyễn");
+		// obj.setAge(28);
+		// System.out.println("Formatted string: "
+		// + format(pattern, obj,
+		// StringFormatOption.builder().autoFormatNumber(true).build()));
+		//
+		// Map<String, Object> map = new HashMap<>();
+		// map.put("name", "abc");
+		// map.put("age", 280029340);
+		//
+		// System.out.println("Formatted string: "
+		// + format(pattern, map,
+		// StringFormatOption.builder().autoFormatNumber(true).build()));
 	}
 }

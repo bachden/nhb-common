@@ -17,7 +17,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.apache.commons.lang.exception.ExceptionUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import com.nhb.common.annotations.DefaultSetter;
 import com.nhb.common.annotations.Transparent;
@@ -415,7 +415,7 @@ public final class ObjectUtils {
 					} else if (element.getClass().isEnum()) {
 						list.add(element.toString());
 					} else if (element instanceof Throwable) {
-						list.add(ExceptionUtils.getFullStackTrace((Throwable) element));
+						list.add(ExceptionUtils.getStackTrace((Throwable) element));
 					} else {
 						list.add(toMapRecursive(element));
 					}
@@ -475,7 +475,7 @@ public final class ObjectUtils {
 			} else if (value.getClass().isEnum()) {
 				map.put(field, value.toString());
 			} else if (value instanceof Throwable) {
-				map.put(field, ExceptionUtils.getFullStackTrace((Throwable) value));
+				map.put(field, ExceptionUtils.getStackTrace((Throwable) value));
 			} else {
 				map.put(field, toMapRecursive(value));
 			}

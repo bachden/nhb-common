@@ -3,8 +3,6 @@ package com.nhb.common.predicate.logic;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.lang.NullArgumentException;
-
 import com.nhb.common.predicate.object.ObjectDependence;
 import com.nhb.common.predicate.object.ObjectDependencePredicate;
 import com.nhb.common.predicate.value.Value;
@@ -26,12 +24,12 @@ abstract class LogicPredicate extends ObjectDependencePredicate {
 		if (values != null) {
 			for (Value<Boolean> value : values) {
 				if (value == null) {
-					throw new NullArgumentException("Value for LogicPredicate cannot be null");
+					throw new NullPointerException("Value for LogicPredicate cannot be null");
 				}
 				this.values.add(value);
 			}
 		} else {
-			throw new NullArgumentException("Value for LogicPredicate cannot be null");
+			throw new NullPointerException("Value for LogicPredicate cannot be null");
 		}
 	}
 
