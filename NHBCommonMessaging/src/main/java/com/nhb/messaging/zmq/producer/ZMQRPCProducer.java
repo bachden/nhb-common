@@ -44,6 +44,7 @@ public class ZMQRPCProducer extends ZMQTaskProducer {
 				.receivedMessageHandler(this::onReceive) //
 				.payloadExtractor(this::extractReceivedPayload) //
 				.receivedCountEnabled(config.isReceivedCountEnable()) //
+				.waitStrategy(config.getReceiveWaitStrategy()) //
 				.build();
 	}
 

@@ -1,5 +1,7 @@
 package com.nhb.messaging.zmq.producer;
 
+import com.lmax.disruptor.BlockingWaitStrategy;
+import com.lmax.disruptor.WaitStrategy;
 import com.nhb.messaging.zmq.ZMQSocketOptions;
 import com.nhb.messaging.zmq.ZMQSocketRegistry;
 import com.nhb.messaging.zmq.ZMQSocketType;
@@ -31,5 +33,6 @@ public class ZMQProducerConfig {
 	private int receiveWorkerSize = 1;
 	private ZMQSocketType receiveSocketType = ZMQSocketType.PULL_BIND;
 	private boolean receivedCountEnable = false;
+	private WaitStrategy receiveWaitStrategy = new BlockingWaitStrategy();
 
 }

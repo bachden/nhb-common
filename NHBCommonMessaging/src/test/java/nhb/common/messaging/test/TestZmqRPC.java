@@ -4,6 +4,7 @@ import java.text.DecimalFormat;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 
+import com.lmax.disruptor.YieldingWaitStrategy;
 import com.nhb.common.async.Callback;
 import com.nhb.common.data.MapTuple;
 import com.nhb.common.data.PuElement;
@@ -139,6 +140,7 @@ public class TestZmqRPC {
 		config.setMessageProcessor(ZMQMessageProcessor.SIMPLE_RESPONSE_MESSAGE_PROCESSOR);
 		config.setRespondedCountEnabled(true);
 		config.setReceivedCountEnabled(true);
+		config.setReceiveWaitStrategy(new YieldingWaitStrategy());
 
 		ZMQRPCConsumer consumer = new ZMQRPCConsumer();
 		consumer.init(config);
@@ -158,6 +160,7 @@ public class TestZmqRPC {
 		config.setSendWorkerSize(numSenders);
 		config.setSentCountEnabled(true);
 		config.setReceivedCountEnable(true);
+		config.setReceiveWaitStrategy(new YieldingWaitStrategy());
 
 		ZMQRPCProducer producer = new ZMQRPCProducer();
 		producer.init(config);

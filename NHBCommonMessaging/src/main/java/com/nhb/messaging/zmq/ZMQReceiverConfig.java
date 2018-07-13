@@ -1,5 +1,7 @@
 package com.nhb.messaging.zmq;
 
+import com.lmax.disruptor.BlockingWaitStrategy;
+import com.lmax.disruptor.WaitStrategy;
 import com.nhb.common.data.exception.InvalidDataException;
 
 import lombok.Builder;
@@ -24,6 +26,9 @@ public class ZMQReceiverConfig {
 	@Builder.Default
 	private int poolSize = 1;
 
+	@Builder.Default
+	private WaitStrategy waitStrategy = new BlockingWaitStrategy();
+
 	private ZMQPayloadExtractor payloadExtractor;
 
 	private ZMQReceivedMessageHandler receivedMessageHandler;
@@ -46,6 +51,8 @@ public class ZMQReceiverConfig {
 			throw new NullPointerException("payload extractor cannot be null");
 		} else if (receivedMessageHandler == null) {
 			throw new NullPointerException("receivedMessageHandler cannot be null");
+		} else if (waitStrategy == null) {
+			throw new NullPointerException("waitStrategy cannot be null");
 		}
 	}
 }

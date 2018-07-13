@@ -8,7 +8,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.zeromq.ZMQException;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import com.lmax.disruptor.BlockingWaitStrategy;
 import com.lmax.disruptor.ExceptionHandler;
 import com.lmax.disruptor.WorkHandler;
 import com.lmax.disruptor.dsl.Disruptor;
@@ -39,7 +38,7 @@ public class DisruptorZMQReceiver implements ZMQReceiver, Loggable {
 	private Thread pollingThread;
 	private ZMQSocketRegistry socketRegistry;
 	private ZMQReceiverConfig config;
-	private Disruptor<ZMQEvent> disruptor;
+	private Disruptor<ZMQEvent> messageHandler;
 
 	private ZMQPayloadExtractor payloadExtractor;
 	private ExceptionHandler<ZMQEvent> exceptionHandler = new ExceptionHandler<ZMQEvent>() {
@@ -103,19 +102,17 @@ public class DisruptorZMQReceiver implements ZMQReceiver, Loggable {
 		this.setReceivedCountEnabled(config.isReceivedCountEnabled());
 
 		ThreadFactory threadFactory = new ThreadFactoryBuilder().setNameFormat(config.getThreadNamePattern()).build();
-		disruptor = new Disruptor<>(ZMQEvent::new, config.getQueueSize(), threadFactory, ProducerType.SINGLE,
-				new BlockingWaitStrategy());
-
-		final ZMQReceivedMessageHandler receivedMessageHandler = config.getReceivedMessageHandler();
+		messageHandler = new Disruptor<>(ZMQEvent::new, config.getQueueSize(), threadFactory, ProducerType.SINGLE,
+				config.getWaitStrategy());
 
 		@SuppressWarnings("unchecked")
 		WorkHandler<ZMQEvent>[] workers = new WorkHandler[config.getPoolSize()];
 		for (int i = 0; i < workers.length; i++) {
-			workers[i] = receivedMessageHandler::onReceive;
+			workers[i] = config.getReceivedMessageHandler()::onReceive;
 		}
 
-		this.disruptor.handleEventsWithWorkerPool(workers);
-		this.disruptor.setDefaultExceptionHandler(this.exceptionHandler);
+		this.messageHandler.handleEventsWithWorkerPool(workers);
+		this.messageHandler.setDefaultExceptionHandler(this.exceptionHandler);
 
 		this.pollingThread = new Thread(this::pollData, "ZMQ " + config.getEndpoint() + " poller");
 
@@ -149,7 +146,7 @@ public class DisruptorZMQReceiver implements ZMQReceiver, Loggable {
 						this.receivedCounter++;
 					}
 
-					this.disruptor.publishEvent((event, sequence) -> {
+					this.messageHandler.publishEvent((event, sequence) -> {
 						event.clear();
 						event.setPayload(payload);
 						this.payloadExtractor.extractPayload(event);
@@ -166,7 +163,7 @@ public class DisruptorZMQReceiver implements ZMQReceiver, Loggable {
 	public void start() {
 		if (this.runningCheckpoint.compareAndSet(false, true)) {
 			this.socket = this.socketRegistry.openSocket(config.getEndpoint(), config.getSocketType());
-			this.disruptor.start();
+			this.messageHandler.start();
 			this.pollingThread.start();
 			this.running = true;
 		}
@@ -178,7 +175,7 @@ public class DisruptorZMQReceiver implements ZMQReceiver, Loggable {
 			if (!this.pollingThread.isInterrupted()) {
 				this.pollingThread.interrupt();
 			}
-			this.disruptor.shutdown();
+			this.messageHandler.shutdown();
 			this.socket.close();
 			this.running = false;
 		}

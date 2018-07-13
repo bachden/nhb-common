@@ -108,6 +108,7 @@ public class ZMQTaskConsumer implements ZMQConsumer, Loggable {
 				.receivedMessageHandler(this.receivedMessageHandler) //
 				.payloadExtractor(this.payloadExtractor) //
 				.receivedCountEnabled(config.isReceivedCountEnabled()) //
+				.waitStrategy(config.getReceiveWaitStrategy()) //
 				.build();
 	}
 
