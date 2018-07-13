@@ -4,10 +4,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.nhb.common.async.CompletableFuture;
+import com.nhb.common.data.PuDataType;
 import com.nhb.common.data.PuElement;
 import com.nhb.common.data.PuValue;
 
 public interface ZMQMessageProcessor {
+
+	public static final PuValue DEFAULT_SIMPLE_RESPONSE = new PuValue(true, PuDataType.BOOLEAN);
 
 	static ZMQMessageProcessor DEBUG_MESSAGE_PROCESSOR = new ZMQMessageProcessor() {
 		private final Logger logger = LoggerFactory.getLogger("ZMQMessageProcessor.DEBUG_MESSAGE_PROCESSOR");
@@ -15,7 +18,7 @@ public interface ZMQMessageProcessor {
 		@Override
 		public void process(PuElement data, CompletableFuture<PuElement> future) {
 			logger.debug("Processing message: {}", data);
-			future.setAndDone(PuValue.fromObject("message processed"));
+			future.setAndDone(DEFAULT_SIMPLE_RESPONSE);
 		}
 	};
 
@@ -23,7 +26,7 @@ public interface ZMQMessageProcessor {
 
 		@Override
 		public void process(PuElement data, CompletableFuture<PuElement> future) {
-			future.setAndDone(PuValue.fromObject("message processed"));
+			future.setAndDone(DEFAULT_SIMPLE_RESPONSE);
 		}
 	};
 

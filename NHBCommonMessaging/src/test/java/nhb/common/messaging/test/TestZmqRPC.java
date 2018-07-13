@@ -3,13 +3,9 @@ package nhb.common.messaging.test;
 import java.text.DecimalFormat;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
 
 import com.nhb.common.async.Callback;
-import com.nhb.common.async.CompletableFuture;
 import com.nhb.common.data.PuDataType;
 import com.nhb.common.data.PuElement;
 import com.nhb.common.data.PuValue;
@@ -35,36 +31,19 @@ public class TestZmqRPC {
 	public static void main(String[] args) throws InterruptedException, ExecutionException {
 		ZMQSocketRegistry socketRegistry = new ZMQSocketRegistry();
 
-		final AtomicLong receiveCounter = new AtomicLong(0);
 		final int messageSize = 1024;
-		final int numSenders = 2;
+		final int numSenders = 3;
 		ZMQRPCProducer producer = initProducer(socketRegistry, numSenders, messageSize);
-		ZMQRPCConsumer consumer = initConsumer(socketRegistry, numSenders, messageSize, receiveCounter);
+		ZMQRPCConsumer consumer = initConsumer(socketRegistry, numSenders, messageSize);
 
 		consumer.start();
 		producer.start();
-
-		int count = 10;
-		while (count-- > 0) {
-			try {
-				producer.publish(PuValue.fromObject("ping")).get(100, TimeUnit.MILLISECONDS);
-				break;
-			} catch (TimeoutException e) {
-			}
-
-			if (count == 0) {
-				throw new RuntimeException("Cannot establish bi-direction communication to consumer");
-			}
-		}
 
 		int numMessages = (int) 1e6;
 		PuValue data = new PuValue(new byte[messageSize - 3 /* for msgpack meta */], PuDataType.RAW);
 
 		log.debug("Start sending....");
 		// reset receiveCouter
-		receiveCounter.set(0l);
-		AtomicInteger sentCounter = new AtomicInteger(0);
-		CountDownLatch doneSignal = new CountDownLatch(numMessages);
 		Thread monitor = new Thread(() -> {
 			DecimalFormat dfP = new DecimalFormat("0.##%");
 			DecimalFormat df = new DecimalFormat("###,###.##");
@@ -74,35 +53,40 @@ public class TestZmqRPC {
 				} catch (InterruptedException e) {
 					return;
 				}
-				long remainingCount = doneSignal.getCount();
-				int sentCount = sentCounter.get();
-				log.debug("Total: {}, sent: {}, remaining: {} (in producer: {}), consumer received: {} --> done: {}" //
-				, df.format(numMessages) // total
-				, dfP.format(Double.valueOf(sentCount) / numMessages) // sent percentage
-				, df.format(remainingCount) // remaining
-				, df.format(producer.remaining()) // remaining future in producer
-				, df.format(receiveCounter.get()) // consumer received count
-				, dfP.format(Double.valueOf(numMessages - remainingCount) / numMessages) // done percentage
+				log.debug(
+						"[DONE: {}, remaining={}] => [PRODUCER: sent={}, responded={}] => [CONSUMER: received: {}, responsed: {}]" //
+				, dfP.format(Double.valueOf(producer.getReceivedCount()) / numMessages) // done percentage
+				, df.format(numMessages - producer.getReceivedCount()) // remaining
+				, df.format(producer.getSentCount()) // sent count
+				, df.format(producer.getReceivedCount()) // received count
+				, df.format(consumer.getReceivedCount()) // consumer received count
+				, df.format(consumer.getRespondedCount()) // consumer responsed count
 				);
 			}
 		}, "monitor");
-		monitor.start();
 
 		TimeWatcher timeWatcher = new TimeWatcher();
+		AtomicInteger doneCounter = new AtomicInteger(0);
+		CountDownLatch doneSignal = new CountDownLatch(1);
+
+		Callback<PuElement> callback = new Callback<PuElement>() {
+
+			@Override
+			public void apply(PuElement result) {
+				if (result == null) {
+					log.error("ERROR...");
+				}
+				if (doneCounter.incrementAndGet() == numMessages) {
+					doneSignal.countDown();
+				}
+			}
+		};
+
+		monitor.start();
 		timeWatcher.reset();
 		for (int i = 0; i < numMessages; i++) {
 			final ZMQFuture future = producer.publish(data);
-			future.setCallback(new Callback<PuElement>() {
-
-				@Override
-				public void apply(PuElement result) {
-					if (result == null) {
-						log.error("Error: ", future.getFailedCause());
-					}
-					doneSignal.countDown();
-				}
-			});
-			sentCounter.incrementAndGet();
+			future.setCallback(callback);
 		}
 		doneSignal.await();
 		double totalTimeSeconds = timeWatcher.endLapSeconds();
@@ -112,7 +96,6 @@ public class TestZmqRPC {
 
 		double avgMessageSize = data.toBytes().length;
 		double totalSentBytes = avgMessageSize * numMessages;
-		double totalIOBytes = totalSentBytes * 2;
 
 		DecimalFormat df = new DecimalFormat("###,###.##");
 
@@ -128,16 +111,12 @@ public class TestZmqRPC {
 		log.info("Sending throughput: {} bytes/s == {} KB/s == {} MB/s", df.format(totalSentBytes / totalTimeSeconds),
 				df.format(totalSentBytes / 1024 / totalTimeSeconds),
 				df.format(totalSentBytes / 1024 / 1024 / totalTimeSeconds));
-		log.info("Total I/O throughput: {} bytes/s == {} KB/s == {} MB/s", df.format(totalIOBytes / totalTimeSeconds),
-				df.format(totalIOBytes / 1024 / totalTimeSeconds),
-				df.format(totalIOBytes / 1024 / 1024 / totalTimeSeconds));
 
 		log.info("**************** DONE ****************");
 		System.exit(0);
 	}
 
-	private static ZMQRPCConsumer initConsumer(ZMQSocketRegistry socketRegistry, int numSenders, int messageSize,
-			AtomicLong receiveCounter) {
+	private static ZMQRPCConsumer initConsumer(ZMQSocketRegistry socketRegistry, int numSenders, int messageSize) {
 		ZMQRPCConsumer consumer = new ZMQRPCConsumer();
 		ZMQConsumerConfig config = new ZMQConsumerConfig();
 		config.setSendSocketOptions(
@@ -147,14 +126,9 @@ public class TestZmqRPC {
 		config.setBufferCapacity(messageSize * 2);
 		config.setSocketWriter(ZMQSocketWriter.newNonBlockingWriter(messageSize + 32));
 		config.setSocketRegistry(socketRegistry);
-		config.setMessageProcessor(new ZMQMessageProcessor() {
-
-			@Override
-			public void process(PuElement data, CompletableFuture<PuElement> future) {
-				receiveCounter.incrementAndGet();
-				future.setAndDone(data);
-			}
-		});
+		config.setMessageProcessor(ZMQMessageProcessor.SIMPLE_RESPONSE_MESSAGE_PROCESSOR);
+		config.setRespondedCountEnabled(true);
+		config.setReceivedCountEnabled(true);
 
 		consumer.init(config);
 		return consumer;
@@ -171,6 +145,8 @@ public class TestZmqRPC {
 		config.setSocketWriter(ZMQSocketWriter.newNonBlockingWriter(messageSize + 32));
 		config.setReceiveEndpoint(PRODUCER_RECEIVE_ENDPOINT);
 		config.setSendWorkerSize(numSenders);
+		config.setSentCountEnabled(true);
+		config.setReceivedCountEnable(true);
 
 		producer.init(config);
 		return producer;
