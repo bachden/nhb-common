@@ -5,9 +5,9 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 
 import com.nhb.common.async.Callback;
-import com.nhb.common.data.PuDataType;
+import com.nhb.common.data.MapTuple;
 import com.nhb.common.data.PuElement;
-import com.nhb.common.data.PuValue;
+import com.nhb.common.data.PuObject;
 import com.nhb.common.utils.TimeWatcher;
 import com.nhb.messaging.zmq.ZMQSocketOptions;
 import com.nhb.messaging.zmq.ZMQSocketRegistry;
@@ -38,7 +38,12 @@ public class TestZmqRPC {
 		producer.start();
 
 		int numMessages = (int) 1024 * 1024;
-		PuValue data = new PuValue(new byte[messageSize - 3 /* for msgpack meta */], PuDataType.RAW);
+		// PuValue data = new PuValue(new byte[messageSize - 3 /* for msgpack meta */],
+		// PuDataType.RAW);
+
+		PuObject data = PuObject.fromObject(new MapTuple<>("name", "Nguyễn Hoàng Bách", "age", 30, "sub",
+				new MapTuple<>("key", "value", "another_key", new MapTuple<>("subkey", "subvalue", "raw",
+						new byte[messageSize - 84 /* for msgpack meta */]))));
 
 		log.debug("Start sending....");
 		// reset receiveCouter
@@ -106,6 +111,7 @@ public class TestZmqRPC {
 		log.info("Elapsed: {} seconds", df.format(totalTimeSeconds));
 		log.info("Avg msg size: {} bytes", df.format(avgMessageSize));
 		log.info("Msg rate: {} msg/s", df.format(Double.valueOf(numMessages) / totalTimeSeconds));
+
 		log.info("Total sent bytes: {} bytes == {} KB == {} MB", df.format(totalSentBytes),
 				df.format(totalSentBytes / 1024), df.format(totalSentBytes / 1024 / 1024));
 
@@ -131,9 +137,10 @@ public class TestZmqRPC {
 		config.setBufferCapacity(messageSize * 2);
 		config.setSocketWriter(ZMQSocketWriter.newNonBlockingWriter(messageSize + 32));
 		config.setSocketRegistry(socketRegistry);
-		config.setMessageProcessor(ZMQMessageProcessor.SIMPLE_RESPONSE_MESSAGE_PROCESSOR);
+		config.setMessageProcessor(ZMQMessageProcessor.ECHO_MESSAGE_PROCESSOR);
 		config.setRespondedCountEnabled(true);
 		config.setReceivedCountEnabled(true);
+		config.setUnmashallerSize(4);
 
 		ZMQRPCConsumer consumer = new ZMQRPCConsumer();
 		consumer.init(config);
@@ -153,6 +160,7 @@ public class TestZmqRPC {
 		config.setSendWorkerSize(numSenders);
 		config.setSentCountEnabled(true);
 		config.setReceivedCountEnable(true);
+		config.setUnmashallerSize(4);
 
 		ZMQRPCProducer producer = new ZMQRPCProducer();
 		producer.init(config);

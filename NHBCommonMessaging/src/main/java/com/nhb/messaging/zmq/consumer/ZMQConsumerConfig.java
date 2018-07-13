@@ -27,6 +27,7 @@ public class ZMQConsumerConfig {
 	private boolean respondedCountEnabled = false;
 
 	private String receiveEndpoint;
+	private int unmashallerSize = 2;
 	private int receiveWorkerSize = 1;
 	private ZMQSocketType receiveSocketType = ZMQSocketType.PULL_BIND;
 	private boolean receivedCountEnabled = false;

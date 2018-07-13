@@ -16,6 +16,9 @@ public class ZMQReceiverConfig {
 	private int bufferCapacity = 1024;
 
 	@Builder.Default
+	private int unmashallerSize = 2;
+
+	@Builder.Default
 	private int queueSize = 1024;
 
 	@Builder.Default
@@ -46,6 +49,8 @@ public class ZMQReceiverConfig {
 			throw new NullPointerException("payload extractor cannot be null");
 		} else if (receivedMessageHandler == null) {
 			throw new NullPointerException("receivedMessageHandler cannot be null");
+		} else if (unmashallerSize <= 0 || Integer.bitCount(unmashallerSize) != 1) {
+			throw new InvalidDataException("unmashallerSize must be positive and is power of 2");
 		}
 	}
 }

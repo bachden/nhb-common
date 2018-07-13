@@ -39,7 +39,8 @@ public class DisruptorZMQReceiver implements ZMQReceiver, Loggable {
 	private Thread pollingThread;
 	private ZMQSocketRegistry socketRegistry;
 	private ZMQReceiverConfig config;
-	private Disruptor<ZMQEvent> disruptor;
+	private Disruptor<ZMQEvent> handlerPool;
+	private Disruptor<ByteBuffer> unmashallerPool;
 
 	private ZMQPayloadExtractor payloadExtractor;
 	private ExceptionHandler<ZMQEvent> exceptionHandler = new ExceptionHandler<ZMQEvent>() {
@@ -97,15 +98,39 @@ public class DisruptorZMQReceiver implements ZMQReceiver, Loggable {
 		}
 	}
 
+	private ByteBuffer createByteBuffer() {
+		return ByteBuffer.allocateDirect(config.getBufferCapacity());
+	}
+
 	private void doInit() {
 		this.payloadExtractor = config.getPayloadExtractor();
 
 		this.setReceivedCountEnabled(config.isReceivedCountEnabled());
 
 		ThreadFactory threadFactory = new ThreadFactoryBuilder().setNameFormat(config.getThreadNamePattern()).build();
-		disruptor = new Disruptor<>(ZMQEvent::new, config.getQueueSize(), threadFactory, ProducerType.SINGLE,
-				new BlockingWaitStrategy());
 
+		initUnmashallerPool(threadFactory);
+		initHandlerPool(threadFactory);
+
+		this.pollingThread = new Thread(this::pollData, "ZMQ " + config.getEndpoint() + " poller");
+
+	}
+
+	private void initUnmashallerPool(ThreadFactory threadFactory) {
+		@SuppressWarnings("unchecked")
+		WorkHandler<ByteBuffer>[] unmashallers = new WorkHandler[config.getUnmashallerSize()];
+		for (int i = 0; i < unmashallers.length; i++) {
+			unmashallers[i] = this::unmashall;
+		}
+		getLogger().debug("Unmashaller size: {}", unmashallers.length);
+		this.unmashallerPool = new Disruptor<>(this::createByteBuffer, unmashallers.length * 2, threadFactory,
+				ProducerType.SINGLE, new BlockingWaitStrategy());
+
+		this.unmashallerPool.handleEventsWithWorkerPool(unmashallers);
+
+	}
+
+	private void initHandlerPool(ThreadFactory threadFactory) {
 		final ZMQReceivedMessageHandler receivedMessageHandler = config.getReceivedMessageHandler();
 
 		@SuppressWarnings("unchecked")
@@ -114,11 +139,29 @@ public class DisruptorZMQReceiver implements ZMQReceiver, Loggable {
 			workers[i] = receivedMessageHandler::onReceive;
 		}
 
-		this.disruptor.handleEventsWithWorkerPool(workers);
-		this.disruptor.setDefaultExceptionHandler(this.exceptionHandler);
+		this.handlerPool = new Disruptor<>(ZMQEvent::new, config.getQueueSize(), threadFactory,
+				config.getUnmashallerSize() == 1 ? ProducerType.SINGLE : ProducerType.MULTI,
+				new BlockingWaitStrategy());
+		this.handlerPool.handleEventsWithWorkerPool(workers);
+		this.handlerPool.setDefaultExceptionHandler(this.exceptionHandler);
+	}
 
-		this.pollingThread = new Thread(this::pollData, "ZMQ " + config.getEndpoint() + " poller");
+	private void unmashall(ByteBuffer buffer) {
+		if (buffer.position() > 0) {
+			buffer.flip();
+			try {
+				final PuElement payload = PuElementTemplate.getInstance().read(new ByteBufferInputStream(buffer));
 
+				this.handlerPool.publishEvent((event, sequence) -> {
+					event.clear();
+					event.setPayload(payload);
+					this.payloadExtractor.extractPayload(event);
+				});
+
+			} catch (IOException e) {
+				getLogger().error("Cannot parse as puElement", e);
+			}
+		}
 	}
 
 	private void pollData() {
@@ -126,47 +169,38 @@ public class DisruptorZMQReceiver implements ZMQReceiver, Loggable {
 			throw new NullPointerException("Receiver didn't started exception");
 		}
 
-		final ByteBuffer buffer = ByteBuffer.allocateDirect(config.getBufferCapacity());
-		while (this.isRunning() && !Thread.currentThread().isInterrupted()) {
-			buffer.clear();
-			int recv = 0;
-			try {
-				recv = this.socket.recvZeroCopy(buffer, buffer.capacity(), 0);
-			} catch (ZMQException e) {
-				if (e.getMessage().contains("Context was terminated")) {
-					return;
-				}
-			}
-			if (recv == -1) {
-				getLogger().error("Error while receive zero copy", new Exception());
-				return;
-			} else {
-				buffer.flip();
+		AtomicBoolean hasError = new AtomicBoolean(false);
+		while (this.isRunning() && !hasError.get() && !Thread.currentThread().isInterrupted()) {
+			this.unmashallerPool.publishEvent((buffer, sequence) -> {
+				buffer.clear();
+				int recv = 0;
+
 				try {
-					final PuElement payload = PuElementTemplate.getInstance().read(new ByteBufferInputStream(buffer));
-
-					if (this.receivedCountEnabled) {
-						this.receivedCounter++;
+					recv = this.socket.recvZeroCopy(buffer, buffer.capacity(), 0);
+				} catch (ZMQException e) {
+					if (e.getMessage().contains("Context was terminated")) {
+						hasError.set(true);
 					}
-
-					this.disruptor.publishEvent((event, sequence) -> {
-						event.clear();
-						event.setPayload(payload);
-						this.payloadExtractor.extractPayload(event);
-					});
-
-				} catch (IOException e) {
-					getLogger().error("Cannot parse as puElement", e);
 				}
-			}
+
+				if (recv == -1) {
+					getLogger().error("Error while receive zero copy", new Exception());
+					buffer.clear();
+					hasError.set(true);
+				} else if (this.receivedCountEnabled) {
+					this.receivedCounter++;
+				}
+			});
 		}
+
 	}
 
 	@Override
 	public void start() {
 		if (this.runningCheckpoint.compareAndSet(false, true)) {
 			this.socket = this.socketRegistry.openSocket(config.getEndpoint(), config.getSocketType());
-			this.disruptor.start();
+			this.unmashallerPool.start();
+			this.handlerPool.start();
 			this.pollingThread.start();
 			this.running = true;
 		}
@@ -178,7 +212,8 @@ public class DisruptorZMQReceiver implements ZMQReceiver, Loggable {
 			if (!this.pollingThread.isInterrupted()) {
 				this.pollingThread.interrupt();
 			}
-			this.disruptor.shutdown();
+			this.unmashallerPool.shutdown();
+			this.handlerPool.shutdown();
 			this.socket.close();
 			this.running = false;
 		}
