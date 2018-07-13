@@ -12,8 +12,6 @@ public interface ZMQSender {
 
 	void init(ZMQSocketRegistry registry, ZMQSenderConfig config);
 
-	void setSentCountEnabled(boolean enabled);
-
 	long getSentCount();
 
 	void start();

@@ -2,7 +2,6 @@ package com.nhb.messaging.zmq;
 
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.LockSupport;
 import java.util.function.Supplier;
 
@@ -29,13 +28,19 @@ public class DisruptorZMQSender implements ZMQSender, Loggable {
 		private final ZMQSocket socket;
 		private final ZMQPayloadBuilder payloadBuilder;
 
-		private SendToSocketWorker(ZMQSocket socket, ZMQSocketWriter socketWriter, ZMQPayloadBuilder payloadBuilder) {
+		@Getter
+		private long sentCounter = 0;
+		private final boolean sentCountEnabled;
+
+		private SendToSocketWorker(ZMQSocket socket, ZMQSocketWriter socketWriter, ZMQPayloadBuilder payloadBuilder,
+				boolean sendCountEnabled) {
 			if (socket == null) {
 				throw new NullPointerException("Socket cannot be null");
 			}
 			this.socket = socket;
 			this.socketWriter = socketWriter;
 			this.payloadBuilder = payloadBuilder;
+			this.sentCountEnabled = sendCountEnabled;
 		}
 
 		@Override
@@ -47,8 +52,8 @@ public class DisruptorZMQSender implements ZMQSender, Loggable {
 						event.setSuccess(this.socketWriter.write(event.getPayload(), this.socket));
 						if (!event.isSuccess()) {
 							event.setFailedCause(new ZMQSendingException("Cannot send message, unknown exception"));
-						} else if (event.getSentCounter() != null) {
-							event.getSentCounter().incrementAndGet();
+						} else if (sentCountEnabled) {
+							sentCounter++;
 						}
 					} else {
 						log.warn("cannot build payload: {}", event.getData());
@@ -86,7 +91,6 @@ public class DisruptorZMQSender implements ZMQSender, Loggable {
 	private ZMQPayloadBuilder payloadBuilder;
 
 	private volatile boolean sentCountEnabled = false;
-	private final AtomicLong sentCounter = new AtomicLong(0);
 
 	private ExceptionHandler<ZMQEvent> exceptionHandler = new ExceptionHandler<ZMQEvent>() {
 
@@ -109,6 +113,8 @@ public class DisruptorZMQSender implements ZMQSender, Loggable {
 			getLogger().error("Error while shutting down sender disruptor", ex);
 		}
 	};
+
+	private SendToSocketWorker[] senders;
 
 	public void init(ZMQSocketRegistry socketRegistry, ZMQSenderConfig config) {
 		if (initializedCheckpoint.compareAndSet(false, true)) {
@@ -137,10 +143,10 @@ public class DisruptorZMQSender implements ZMQSender, Loggable {
 				new BlockingWaitStrategy());
 
 		this.payloadBuilder = config.getPayloadBuilder();
-		SendToSocketWorker[] senders = new SendToSocketWorker[config.getSendWorkerSize()];
+		senders = new SendToSocketWorker[config.getSendWorkerSize()];
 		for (int i = 0; i < senders.length; i++) {
 			senders[i] = new SendToSocketWorker(socketFactory.newSocket(), config.getSocketWriter(),
-					this.payloadBuilder);
+					this.payloadBuilder, sentCountEnabled);
 		}
 
 		ZMQSendingDoneHandler sendingDoneHandler = config.getSendingDoneHandler();
@@ -192,21 +198,17 @@ public class DisruptorZMQSender implements ZMQSender, Loggable {
 			event.clear();
 			event.setData(data);
 			event.setFuture(future);
-			if (sentCountEnabled) {
-				event.setSentCounter(sentCounter);
-			}
 		});
 
 		return future;
 	}
 
 	@Override
-	public void setSentCountEnabled(boolean enabled) {
-		this.sentCountEnabled = enabled;
-	}
-
-	@Override
 	public long getSentCount() {
-		return this.sentCounter.get();
+		long result = 0;
+		for (SendToSocketWorker sender : this.senders) {
+			result += sender.getSentCounter();
+		}
+		return result;
 	}
 }

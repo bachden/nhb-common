@@ -1,7 +1,5 @@
 package com.nhb.messaging.zmq;
 
-import java.util.concurrent.atomic.AtomicLong;
-
 import com.nhb.common.data.PuElement;
 
 import lombok.Getter;
@@ -21,8 +19,6 @@ public final class ZMQEvent {
 	private boolean success = true;
 	private Throwable failedCause;
 
-	private AtomicLong sentCounter = null;
-
 	public void clear() {
 		this.messageId = null;
 		this.payload = null;
@@ -30,6 +26,5 @@ public final class ZMQEvent {
 		this.future = null;
 		this.success = true;
 		this.failedCause = null;
-		this.sentCounter = null;
 	}
 }

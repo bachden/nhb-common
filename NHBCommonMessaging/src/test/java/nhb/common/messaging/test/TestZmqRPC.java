@@ -3,7 +3,6 @@ package nhb.common.messaging.test;
 import java.text.DecimalFormat;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import com.nhb.common.async.Callback;
 import com.nhb.common.data.PuDataType;
