@@ -137,7 +137,7 @@ public class TestZmqRPC {
 		config.setBufferCapacity(messageSize * 2);
 		config.setSocketWriter(ZMQSocketWriter.newNonBlockingWriter(messageSize + 32));
 		config.setSocketRegistry(socketRegistry);
-		config.setMessageProcessor(ZMQMessageProcessor.SIMPLE_RESPONSE_MESSAGE_PROCESSOR);
+		config.setMessageProcessor(ZMQMessageProcessor.ECHO_MESSAGE_PROCESSOR);
 		config.setRespondedCountEnabled(true);
 		config.setReceivedCountEnabled(true);
 		config.setReceiveWaitStrategy(new YieldingWaitStrategy());
