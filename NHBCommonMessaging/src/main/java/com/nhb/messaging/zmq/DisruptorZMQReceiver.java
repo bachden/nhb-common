@@ -8,9 +8,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.zeromq.ZMQException;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import com.lmax.disruptor.BlockingWaitStrategy;
 import com.lmax.disruptor.ExceptionHandler;
 import com.lmax.disruptor.WorkHandler;
+import com.lmax.disruptor.YieldingWaitStrategy;
 import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.dsl.ProducerType;
 import com.nhb.common.Loggable;
@@ -124,7 +124,7 @@ public class DisruptorZMQReceiver implements ZMQReceiver, Loggable {
 		}
 		getLogger().debug("Unmashaller size: {}", unmashallers.length);
 		this.unmashallerPool = new Disruptor<>(this::createByteBuffer, unmashallers.length * 2, threadFactory,
-				ProducerType.SINGLE, new BlockingWaitStrategy());
+				ProducerType.SINGLE, new YieldingWaitStrategy());
 
 		this.unmashallerPool.handleEventsWithWorkerPool(unmashallers);
 
@@ -141,7 +141,7 @@ public class DisruptorZMQReceiver implements ZMQReceiver, Loggable {
 
 		this.handlerPool = new Disruptor<>(ZMQEvent::new, config.getQueueSize(), threadFactory,
 				config.getUnmashallerSize() == 1 ? ProducerType.SINGLE : ProducerType.MULTI,
-				new BlockingWaitStrategy());
+				new YieldingWaitStrategy());
 		this.handlerPool.handleEventsWithWorkerPool(workers);
 		this.handlerPool.setDefaultExceptionHandler(this.exceptionHandler);
 	}
