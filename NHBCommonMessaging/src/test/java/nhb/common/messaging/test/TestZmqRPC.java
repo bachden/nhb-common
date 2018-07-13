@@ -53,7 +53,7 @@ public class TestZmqRPC {
 					return;
 				}
 				log.debug(
-						"[DONE: {}, remaining={}] => [PRODUCER: sent={}, responded={}] => [CONSUMER: received: {}, responsed: {}]" //
+						"[DONE: {}, remaining={}] => [PRODUCER: sent={}, responsed={}] => [CONSUMER: received={}, responsed={}]" //
 				, dfP.format(Double.valueOf(producer.getReceivedCount()) / numMessages) // done percentage
 				, df.format(numMessages - producer.getReceivedCount()) // remaining
 				, df.format(producer.getSentCount()) // sent count
@@ -65,17 +65,20 @@ public class TestZmqRPC {
 		}, "monitor");
 
 		TimeWatcher timeWatcher = new TimeWatcher();
-		AtomicInteger doneCounter = new AtomicInteger(0);
 		CountDownLatch doneSignal = new CountDownLatch(1);
 
 		Callback<PuElement> callback = new Callback<PuElement>() {
+			private int doneCounter = 0;
 
+			/**
+			 * Single thread only
+			 */
 			@Override
 			public void apply(PuElement result) {
 				if (result == null) {
 					log.error("ERROR...");
 				}
-				if (doneCounter.incrementAndGet() == numMessages) {
+				if (++doneCounter == numMessages) {
 					doneSignal.countDown();
 				}
 			}
@@ -94,6 +97,7 @@ public class TestZmqRPC {
 
 		double avgMessageSize = data.toBytes().length;
 		double totalSentBytes = avgMessageSize * numMessages;
+		double totalIOThroughput = totalSentBytes * 2;
 
 		DecimalFormat df = new DecimalFormat("###,###.##");
 
@@ -109,6 +113,10 @@ public class TestZmqRPC {
 		log.info("Sending throughput: {} bytes/s == {} KB/s == {} MB/s", df.format(totalSentBytes / totalTimeSeconds),
 				df.format(totalSentBytes / 1024 / totalTimeSeconds),
 				df.format(totalSentBytes / 1024 / 1024 / totalTimeSeconds));
+
+		log.info("Total I/O throughput: {} bytes/s == {} KB/s == {} MB/s",
+				df.format(totalIOThroughput / totalTimeSeconds), df.format(totalIOThroughput / 1024 / totalTimeSeconds),
+				df.format(totalIOThroughput / 1024 / 1024 / totalTimeSeconds));
 
 		log.info("**************** DONE ****************");
 		System.exit(0);
