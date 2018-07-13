@@ -39,10 +39,10 @@ public class TestZmqRPC {
 		producer.start();
 
 		int numMessages = (int) 1024 * 1024;
-		// PuValue data = new PuValue(new byte[messageSize - 3 /* for msgpack meta */],
-		// PuDataType.RAW);
+		// PuElement data = new PuValue(new byte[messageSize - 3 /* for msgpack meta
+		// */], PuDataType.RAW);
 
-		PuObject data = PuObject.fromObject(new MapTuple<>("name", "Nguyễn Hoàng Bách", "age", 30, "sub",
+		PuElement data = PuObject.fromObject(new MapTuple<>("name", "Nguyễn Hoàng Bách", "age", 30, "sub",
 				new MapTuple<>("key", "value", "another_key", new MapTuple<>("subkey", "subvalue", "raw",
 						new byte[messageSize - 84 /* for msgpack meta */]))));
 

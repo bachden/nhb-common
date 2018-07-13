@@ -40,7 +40,6 @@ public class DisruptorZMQReceiver implements ZMQReceiver, Loggable {
 	private ZMQReceiverConfig config;
 	private Disruptor<ZMQEvent> messageHandler;
 
-	private ZMQPayloadExtractor payloadExtractor;
 	private ExceptionHandler<ZMQEvent> exceptionHandler = new ExceptionHandler<ZMQEvent>() {
 
 		@Override
@@ -97,8 +96,6 @@ public class DisruptorZMQReceiver implements ZMQReceiver, Loggable {
 	}
 
 	private void doInit() {
-		this.payloadExtractor = config.getPayloadExtractor();
-
 		this.setReceivedCountEnabled(config.isReceivedCountEnabled());
 
 		ThreadFactory threadFactory = new ThreadFactoryBuilder().setNameFormat(config.getThreadNamePattern()).build();
@@ -108,14 +105,18 @@ public class DisruptorZMQReceiver implements ZMQReceiver, Loggable {
 		@SuppressWarnings("unchecked")
 		WorkHandler<ZMQEvent>[] workers = new WorkHandler[config.getPoolSize()];
 		for (int i = 0; i < workers.length; i++) {
-			workers[i] = config.getReceivedMessageHandler()::onReceive;
+			workers[i] = this::onReceive;
 		}
 
 		this.messageHandler.handleEventsWithWorkerPool(workers);
 		this.messageHandler.setDefaultExceptionHandler(this.exceptionHandler);
 
 		this.pollingThread = new Thread(this::pollData, "ZMQ " + config.getEndpoint() + " poller");
+	}
 
+	private void onReceive(ZMQEvent event) {
+		this.config.getPayloadExtractor().extractPayload(event);
+		this.config.getReceivedMessageHandler().onReceive(event);
 	}
 
 	private void pollData() {
@@ -149,7 +150,6 @@ public class DisruptorZMQReceiver implements ZMQReceiver, Loggable {
 					this.messageHandler.publishEvent((event, sequence) -> {
 						event.clear();
 						event.setPayload(payload);
-						this.payloadExtractor.extractPayload(event);
 					});
 
 				} catch (IOException e) {
