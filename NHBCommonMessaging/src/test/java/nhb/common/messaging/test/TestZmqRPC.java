@@ -5,9 +5,9 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 
 import com.nhb.common.async.Callback;
-import com.nhb.common.data.PuDataType;
+import com.nhb.common.data.MapTuple;
 import com.nhb.common.data.PuElement;
-import com.nhb.common.data.PuValue;
+import com.nhb.common.data.PuObject;
 import com.nhb.common.utils.TimeWatcher;
 import com.nhb.messaging.zmq.ZMQSocketOptions;
 import com.nhb.messaging.zmq.ZMQSocketRegistry;
@@ -38,7 +38,12 @@ public class TestZmqRPC {
 		producer.start();
 
 		int numMessages = (int) 1024 * 1024;
-		PuValue data = new PuValue(new byte[messageSize - 3 /* for msgpack meta */], PuDataType.RAW);
+		// PuValue data = new PuValue(new byte[messageSize - 3 /* for msgpack meta */],
+		// PuDataType.RAW);
+
+		PuObject data = PuObject.fromObject(new MapTuple<>("name", "Nguyễn Hoàng Bách", "age", 30, "sub",
+				new MapTuple<>("key", "value", "another_key", new MapTuple<>("subkey", "subvalue", "raw",
+						new byte[messageSize - 84 /* for msgpack meta */]))));
 
 		log.debug("Start sending....");
 		// reset receiveCouter
