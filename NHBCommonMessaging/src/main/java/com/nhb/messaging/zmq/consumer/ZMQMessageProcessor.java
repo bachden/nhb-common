@@ -12,6 +12,9 @@ public interface ZMQMessageProcessor {
 
 	public static final PuValue DEFAULT_SIMPLE_RESPONSE = new PuValue(true, PuDataType.BOOLEAN);
 
+	/**
+	 * Log received data then response message "true"
+	 */
 	static ZMQMessageProcessor DEBUG_MESSAGE_PROCESSOR = new ZMQMessageProcessor() {
 		private final Logger logger = LoggerFactory.getLogger("ZMQMessageProcessor.DEBUG_MESSAGE_PROCESSOR");
 
@@ -22,6 +25,9 @@ public interface ZMQMessageProcessor {
 		}
 	};
 
+	/**
+	 * Response immediately message "true"
+	 */
 	static ZMQMessageProcessor SIMPLE_RESPONSE_MESSAGE_PROCESSOR = new ZMQMessageProcessor() {
 
 		@Override
@@ -30,6 +36,9 @@ public interface ZMQMessageProcessor {
 		}
 	};
 
+	/**
+	 * Response immediately received data
+	 */
 	static ZMQMessageProcessor ECHO_MESSAGE_PROCESSOR = new ZMQMessageProcessor() {
 
 		@Override

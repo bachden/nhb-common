@@ -10,7 +10,6 @@ import com.nhb.common.data.PuDataType;
 import com.nhb.common.data.PuElement;
 import com.nhb.common.data.PuValue;
 import com.nhb.common.utils.TimeWatcher;
-import com.nhb.messaging.zmq.ZMQFuture;
 import com.nhb.messaging.zmq.ZMQSocketOptions;
 import com.nhb.messaging.zmq.ZMQSocketRegistry;
 import com.nhb.messaging.zmq.ZMQSocketWriter;
@@ -39,7 +38,7 @@ public class TestZmqRPC {
 		consumer.start();
 		producer.start();
 
-		int numMessages = (int) 1e6;
+		int numMessages = (int) 1024 * 1024;
 		PuValue data = new PuValue(new byte[messageSize - 3 /* for msgpack meta */], PuDataType.RAW);
 
 		log.debug("Start sending....");
@@ -85,8 +84,7 @@ public class TestZmqRPC {
 		monitor.start();
 		timeWatcher.reset();
 		for (int i = 0; i < numMessages; i++) {
-			final ZMQFuture future = producer.publish(data);
-			future.setCallback(callback);
+			producer.publish(data).setCallback(callback);
 		}
 		doneSignal.await();
 		double totalTimeSeconds = timeWatcher.endLapSeconds();
@@ -117,7 +115,7 @@ public class TestZmqRPC {
 	}
 
 	private static ZMQRPCConsumer initConsumer(ZMQSocketRegistry socketRegistry, int numSenders, int messageSize) {
-		ZMQRPCConsumer consumer = new ZMQRPCConsumer();
+
 		ZMQConsumerConfig config = new ZMQConsumerConfig();
 		config.setSendSocketOptions(
 				ZMQSocketOptions.builder().hwm((long) 1e6).sndHWM((long) 1e6).rcvHWM((long) 1e6).build());
@@ -130,12 +128,13 @@ public class TestZmqRPC {
 		config.setRespondedCountEnabled(true);
 		config.setReceivedCountEnabled(true);
 
+		ZMQRPCConsumer consumer = new ZMQRPCConsumer();
 		consumer.init(config);
+
 		return consumer;
 	}
 
 	private static ZMQRPCProducer initProducer(ZMQSocketRegistry socketRegistry, int numSenders, int messageSize) {
-		ZMQRPCProducer producer = new ZMQRPCProducer();
 		ZMQProducerConfig config = new ZMQProducerConfig();
 		config.setSendSocketOptions(
 				ZMQSocketOptions.builder().hwm((long) 1e6).sndHWM((long) 1e6).rcvHWM((long) 1e6).build());
@@ -148,7 +147,9 @@ public class TestZmqRPC {
 		config.setSentCountEnabled(true);
 		config.setReceivedCountEnable(true);
 
+		ZMQRPCProducer producer = new ZMQRPCProducer();
 		producer.init(config);
+
 		return producer;
 	}
 
