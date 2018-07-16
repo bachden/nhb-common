@@ -11,7 +11,7 @@ import com.nhb.common.utils.StringUtils;
 public class TestFormatTransformation {
 
 	public static void main(String[] args) {
-		String str = "My name is {{ name > lowerCase > capitalize > stripAccents }}, " //
+		String str = "My name is {{ name > nameTransform }}, " //
 				+ "{{ age }} years old, " //
 				+ "monthly salary {{ salary > decrement10% > thousandSeparate}} {{currency > upperCase}}, " //
 				+ "health {{health > percentage}}, " //
@@ -30,6 +30,9 @@ public class TestFormatTransformation {
 
 		GlobalFormatTransformerRegistry.getInstance().addTransformer("decrement10%",
 				CommonNumberTransformerRegistry.newXEvalExpTransformer("0.9 * x"));
+
+		GlobalFormatTransformerRegistry.getInstance().addAlias("nameTransform", "lowerCase > capitalize",
+				"stripAccents");
 
 		System.out.println(StringUtils.transform(str, data));
 	}

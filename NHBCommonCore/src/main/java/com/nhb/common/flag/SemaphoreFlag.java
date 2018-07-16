@@ -2,6 +2,7 @@ package com.nhb.common.flag;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.LockSupport;
 
 public class SemaphoreFlag {
@@ -10,8 +11,8 @@ public class SemaphoreFlag {
 	private final int upperBound;
 
 	private final AtomicInteger counter = new AtomicInteger(0);
-	private final AtomicBoolean incrementLock = new AtomicBoolean(false);
-	private final AtomicBoolean decrementLock = new AtomicBoolean(false);
+	private final AtomicReference<AtomicInteger> incrementLock = new AtomicReference<>(counter);
+	private final AtomicReference<AtomicInteger> decrementLock = new AtomicReference<>(counter);
 
 	public static SemaphoreFlag newDefault() {
 		return new SemaphoreFlag(Integer.MIN_VALUE, Integer.MAX_VALUE);
@@ -42,8 +43,8 @@ public class SemaphoreFlag {
 		}
 	}
 
-	private void waitForUnlocked(long nanos, AtomicBoolean breakSpinLoop, AtomicBoolean lock) {
-		while (lock.get() && !Thread.currentThread().isInterrupted()) {
+	private void waitForUnlocked(long nanos, AtomicBoolean breakSpinLoop, AtomicReference<AtomicInteger> lock) {
+		while (lock.get() == null && !Thread.currentThread().isInterrupted()) {
 			if (breakSpinLoop == null || !breakSpinLoop.get()) {
 				LockSupport.parkNanos(nanos);
 			}
@@ -59,7 +60,7 @@ public class SemaphoreFlag {
 	}
 
 	public boolean lockIncrement() {
-		return this.incrementLock.compareAndSet(false, true);
+		return this.incrementLock.compareAndSet(this.counter, null);
 	}
 
 	public int incrementAndGet(AtomicBoolean breakSpinLoop) {
@@ -74,7 +75,7 @@ public class SemaphoreFlag {
 	}
 
 	public boolean lockDecrement() {
-		return this.decrementLock.compareAndSet(false, true);
+		return this.decrementLock.compareAndSet(this.counter, null);
 	}
 
 	public int decrementAndGet(AtomicBoolean breakSpinLoop) {
@@ -92,8 +93,9 @@ public class SemaphoreFlag {
 		return this.counter.get();
 	}
 
-	private final void lockAndWaitFor(int value, long nanos, AtomicBoolean breakSpinLoop, AtomicBoolean lock) {
-		if (lock.compareAndSet(false, true)) {
+	private final void lockAndWaitFor(int value, long nanos, AtomicBoolean breakSpinLoop,
+			AtomicReference<AtomicInteger> lock) {
+		if (lock.compareAndSet(this.counter, null)) {
 			this.waitForCounter(value, nanos, breakSpinLoop);
 		} else {
 			throw new IllegalStateException("Increase lock has been locked");
@@ -117,10 +119,10 @@ public class SemaphoreFlag {
 	}
 
 	public boolean unlockIncrement() {
-		return this.incrementLock.compareAndSet(true, false);
+		return this.incrementLock.compareAndSet(null, this.counter);
 	}
 
 	public boolean unlockDecrement() {
-		return this.decrementLock.compareAndSet(true, false);
+		return this.decrementLock.compareAndSet(null, this.counter);
 	}
 }

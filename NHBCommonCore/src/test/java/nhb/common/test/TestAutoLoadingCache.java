@@ -10,18 +10,18 @@ public class TestAutoLoadingCache {
 
 		final AtomicLong seed = new AtomicLong();
 		final AutoLoadingCache<Integer, Long> cache = AutoLoadingCache.newDefault((key) -> {
-			int latency = 200;
-			try {
-				System.out.println("Simulating loading latency by " + latency + "ms");
-				Thread.sleep(latency);
-			} catch (InterruptedException e) {
-				return -1l;
-			}
+			// int latency = 1;
+			// try {
+			// System.out.println("Simulating loading latency by " + latency + "ms");
+			// Thread.sleep(latency);
+			// } catch (InterruptedException e) {
+			// return -1l;
+			// }
 			return seed.incrementAndGet();
 		});
 
-		cache.setInterval(100);
-		cache.setTimeToLive(300);
+		cache.setInterval(10);
+		cache.setTimeToLive(50);
 
 		final int nThreads = 10;
 		final Thread[] threads = new Thread[nThreads];
@@ -29,11 +29,11 @@ public class TestAutoLoadingCache {
 			final int threadId = i;
 			threads[i] = new Thread(() -> {
 				while (!Thread.currentThread().isInterrupted()) {
-					try {
-						Thread.sleep((threadId + 1) * 10);
-					} catch (InterruptedException e) {
-						return;
-					}
+					// try {
+					// Thread.sleep((threadId + 1) * 10);
+					// } catch (InterruptedException e) {
+					// return;
+					// }
 					Long value = cache.get(0);
 					if (value == null) {
 						new NullPointerException("Got null value").printStackTrace();
