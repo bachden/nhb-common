@@ -50,7 +50,7 @@ class DefaultLocalCache<K, V> implements LocalCache<K, V>, Loggable {
 
 	private void clearCache() {
 		try {
-			this.cleaningFlag.lockIncrementAndWaitFor(0, 5, stopFlag);
+			this.cleaningFlag.lockIncrementAndWaitFor(0, 10, stopFlag);
 			long curr = System.currentTimeMillis();
 			Set<K> tobeRemoved = new HashSet<>();
 			for (Entry<K, CachedValue<V>> entry : this.source.entrySet()) {
