@@ -10,7 +10,7 @@ public class TestAutoLoadingCache {
 
 		final AtomicLong seed = new AtomicLong();
 		final AutoLoadingCache<Integer, Long> cache = AutoLoadingCache.newDefault((key) -> {
-			int latency = 200;
+			int latency = 2000;
 			try {
 				System.out.println("Simulating loading latency by " + latency + "ms");
 				Thread.sleep(latency);
