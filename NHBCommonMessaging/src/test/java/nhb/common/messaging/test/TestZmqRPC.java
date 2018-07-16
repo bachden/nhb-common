@@ -4,7 +4,7 @@ import java.text.DecimalFormat;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 
-import com.lmax.disruptor.YieldingWaitStrategy;
+import com.lmax.disruptor.BlockingWaitStrategy;
 import com.nhb.common.async.Callback;
 import com.nhb.common.data.MapTuple;
 import com.nhb.common.data.PuElement;
@@ -42,12 +42,10 @@ public class TestZmqRPC {
 		// PuElement data = new PuValue(new byte[messageSize - 3 /* for msgpack meta
 		// */], PuDataType.RAW);
 
-		PuElement data = PuObject.fromObject(new MapTuple<>("name", "Nguyễn Hoàng Bách", "age", 30, "sub",
-				new MapTuple<>("key", "value", "another_key", new MapTuple<>("subkey", "subvalue", "raw",
-						new byte[messageSize - 84 /* for msgpack meta */]))));
+		PuElement data = PuObject
+				.fromObject(new MapTuple<>("name", "Nguyễn Hoàng Bách", "age", 30, "sub", new MapTuple<>("key", "value",
+						"another_key", new MapTuple<>("subkey", "subvalue", "raw", new byte[messageSize - 84]))));
 
-		log.debug("Start sending....");
-		// reset receiveCouter
 		Thread monitor = new Thread(() -> {
 			DecimalFormat dfP = new DecimalFormat("0.##%");
 			DecimalFormat df = new DecimalFormat("###,###.##");
@@ -89,6 +87,7 @@ public class TestZmqRPC {
 			}
 		};
 
+		log.debug("Start sending....");
 		monitor.start();
 		timeWatcher.reset();
 		for (int i = 0; i < numMessages; i++) {
@@ -140,7 +139,7 @@ public class TestZmqRPC {
 		config.setMessageProcessor(ZMQMessageProcessor.ECHO_MESSAGE_PROCESSOR);
 		config.setRespondedCountEnabled(true);
 		config.setReceivedCountEnabled(true);
-		config.setReceiveWaitStrategy(new YieldingWaitStrategy());
+		config.setReceiveWaitStrategy(new BlockingWaitStrategy());
 
 		ZMQRPCConsumer consumer = new ZMQRPCConsumer();
 		consumer.init(config);
@@ -160,7 +159,7 @@ public class TestZmqRPC {
 		config.setSendWorkerSize(numSenders);
 		config.setSentCountEnabled(true);
 		config.setReceivedCountEnable(true);
-		config.setReceiveWaitStrategy(new YieldingWaitStrategy());
+		config.setReceiveWaitStrategy(new BlockingWaitStrategy());
 
 		ZMQRPCProducer producer = new ZMQRPCProducer();
 		producer.init(config);
