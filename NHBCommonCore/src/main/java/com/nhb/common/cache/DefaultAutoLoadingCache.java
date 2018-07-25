@@ -41,6 +41,9 @@ class DefaultAutoLoadingCache<K, V> extends DefaultLocalCache<K, V> implements A
 		try {
 			return this.acquireExecute(() -> {
 				if (!this.unsafeContainsKey(key)) {
+					if (this.loader == null) {
+						return null;
+					}
 					final MutexFlag barrier = ensureLoadingBarrier(key);
 					if (barrier.start()) {
 						try {

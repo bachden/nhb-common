@@ -35,6 +35,7 @@ public class ZMQSocketRegistry implements Loggable {
 		}
 		this.ioThreads = ioThreads;
 		this.context = ZMQ.context(ioThreads);
+		getLogger().debug("ZMQ version: {}", ZMQ.getVersionString());
 		if (autoDestroy) {
 			Runtime.getRuntime().addShutdownHook(new Thread(this::destroy, "ZeroMQ socket registry shutdown hook"));
 		}

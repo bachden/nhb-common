@@ -2,6 +2,17 @@ package com.nhb.common.cache;
 
 public interface LocalCache<K, V> {
 
+	static <K, V> LocalCache<K, V> newDefault() {
+		return new DefaultLocalCache<>();
+	}
+
+	static <K, V> LocalCache<K, V> newDefault(long ttlMillis, long interval) {
+		LocalCache<K, V> result = newDefault();
+		result.setTimeToLive(ttlMillis);
+		result.setInterval(interval);
+		return result;
+	}
+
 	V get(K key);
 
 	V put(K key, V value);
