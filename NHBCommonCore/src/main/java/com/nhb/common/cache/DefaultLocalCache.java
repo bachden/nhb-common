@@ -1,6 +1,7 @@
 package com.nhb.common.cache;
 
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -148,5 +149,41 @@ class DefaultLocalCache<K, V> implements LocalCache<K, V>, Loggable {
 			this.cleaner.interrupt();
 			this.cleaner = null;
 		}
+	}
+
+	@Override
+	public Iterator<Entry<K, V>> iterator() {
+		Iterator<Entry<K, CachedValue<V>>> it = this.source.entrySet().iterator();
+		Iterator<Entry<K, V>> result = new Iterator<Entry<K, V>>() {
+
+			@Override
+			public boolean hasNext() {
+				return it.hasNext();
+			}
+
+			@Override
+			public Entry<K, V> next() {
+				Entry<K, CachedValue<V>> next = it.next();
+				return new Entry<K, V>() {
+
+					@Override
+					public K getKey() {
+						return next.getKey();
+					}
+
+					@Override
+					public V getValue() {
+						return next.getValue().get();
+					}
+
+					@Override
+					public V setValue(V value) {
+						throw new UnsupportedOperationException("Method is unsupported");
+					}
+				};
+			}
+
+		};
+		return result;
 	}
 }

@@ -1,6 +1,8 @@
 package com.nhb.common.cache;
 
-public interface LocalCache<K, V> {
+import java.util.Map.Entry;
+
+public interface LocalCache<K, V> extends Iterable<Entry<K, V>> {
 
 	static <K, V> LocalCache<K, V> newDefault() {
 		return new DefaultLocalCache<>();
