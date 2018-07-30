@@ -162,8 +162,16 @@ public class DisruptorZMQReceiver implements ZMQReceiver, Loggable {
 		}
 
 		if (this.socket != null) {
-			this.socket.unbind();
-			this.socket.close();
+			try {
+				this.socket.unbind();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			try {
+				this.socket.close();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 			this.socket = null;
 		}
 	}
