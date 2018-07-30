@@ -49,7 +49,7 @@ public class ZMQSocketRegistry implements Loggable {
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
-		System.err.println("Terminate context...");
+		System.err.println("[" + Thread.currentThread().getName() + "] --> Terminate context...");
 		context.term();
 	}
 

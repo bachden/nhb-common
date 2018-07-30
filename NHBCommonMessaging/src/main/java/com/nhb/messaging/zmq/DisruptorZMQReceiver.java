@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.locks.LockSupport;
 
 import org.zeromq.ZMQException;
 
@@ -26,7 +27,6 @@ public class DisruptorZMQReceiver implements ZMQReceiver, Loggable {
 	private volatile boolean initialized = false;
 	private final AtomicBoolean initializedCheckpoint = new AtomicBoolean(false);
 
-	@Getter
 	private volatile boolean running = false;
 	private final AtomicBoolean runningCheckpoint = new AtomicBoolean(false);
 
@@ -111,7 +111,7 @@ public class DisruptorZMQReceiver implements ZMQReceiver, Loggable {
 		this.messageHandler.handleEventsWithWorkerPool(workers);
 		this.messageHandler.setDefaultExceptionHandler(this.exceptionHandler);
 
-		this.pollingThread = new Thread(this::pollData, "ZMQ " + config.getEndpoint() + " poller");
+		this.pollingThread = new Thread(this::pollData);
 	}
 
 	private void onReceive(ZMQEvent event) {
@@ -122,21 +122,26 @@ public class DisruptorZMQReceiver implements ZMQReceiver, Loggable {
 	private void pollData() {
 		if (this.socket == null) {
 			this.socket = this.socketRegistry.openSocket(config.getEndpoint(), config.getSocketType());
+			this.socket.setReceiveTimeOut(100);
+			this.pollingThread.setName("ZMQ Poller " + this.getEndpoint());
 		}
 
 		final ByteBuffer buffer = ByteBuffer.allocateDirect(config.getBufferCapacity());
-		while (this.isRunning() && !Thread.currentThread().isInterrupted()) {
+		while (this.runningCheckpoint.get() && !Thread.currentThread().isInterrupted()) {
 			buffer.clear();
 			int recv = 0;
+
 			try {
 				recv = this.socket.recvZeroCopy(buffer, buffer.capacity(), 0);
 			} catch (ZMQException e) {
+				e.printStackTrace();
 				break;
 			}
-			if (recv == -1) {
-				getLogger().error("Error while receive zero copy", new Exception());
+
+			if (recv == -1 && (Thread.currentThread().isInterrupted() || !this.runningCheckpoint.get())) {
+				// context may be terminated or socket were closed
 				break;
-			} else {
+			} else if (buffer.position() > 0) {
 				buffer.flip();
 				try {
 					final PuElement payload = PuElementTemplate.getInstance().read(new ByteBufferInputStream(buffer));
@@ -157,15 +162,23 @@ public class DisruptorZMQReceiver implements ZMQReceiver, Loggable {
 		}
 
 		if (this.socket != null) {
+			this.socket.unbind();
 			this.socket.close();
 			this.socket = null;
 		}
 	}
 
 	@Override
+	public boolean isRunning() {
+		while (this.runningCheckpoint.get() && !this.running) {
+			LockSupport.parkNanos(10);
+		}
+		return this.running;
+	}
+
+	@Override
 	public void start() {
 		if (this.runningCheckpoint.compareAndSet(false, true)) {
-
 			this.messageHandler.start();
 			this.pollingThread.start();
 			this.running = true;
@@ -175,12 +188,9 @@ public class DisruptorZMQReceiver implements ZMQReceiver, Loggable {
 	@Override
 	public void stop() {
 		if (this.runningCheckpoint.compareAndSet(true, false)) {
-			if (!this.pollingThread.isInterrupted()) {
-				this.pollingThread.interrupt();
-			}
+			this.pollingThread.interrupt();
 			this.messageHandler.shutdown();
 			this.running = false;
 		}
 	}
-
 }

@@ -28,17 +28,23 @@ public class TestZmqRPC {
 	private static final String ENDPOINT = PRODUCER_RECEIVE_ENDPOINT + ":6789";
 
 	public static void main(String[] args) throws InterruptedException, ExecutionException {
-		ZMQSocketRegistry socketRegistry = new ZMQSocketRegistry();
+		final ZMQSocketRegistry socketRegistry = new ZMQSocketRegistry();
 
 		final int messageSize = 1024;
 		final int numSenders = 3;
-		ZMQRPCProducer producer = initProducer(socketRegistry, numSenders, messageSize);
-		ZMQRPCConsumer consumer = initConsumer(socketRegistry, numSenders, messageSize);
+
+		final ZMQRPCProducer producer = initProducer(socketRegistry, numSenders, messageSize);
+		final ZMQRPCConsumer consumer = initConsumer(socketRegistry, numSenders, messageSize);
+
+		Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+			log.info("Destroying...");
+			socketRegistry.destroy();
+		}, "Shutdown"));
 
 		consumer.start();
 		producer.start();
 
-		int numMessages = (int) 1024 * 1024;
+		int numMessages = (int) 1024;
 		// PuElement data = new PuValue(new byte[messageSize - 3 /* for msgpack meta
 		// */], PuDataType.RAW);
 
@@ -123,7 +129,10 @@ public class TestZmqRPC {
 				df.format(totalIOThroughput / 1024 / 1024 / totalTimeSeconds));
 
 		log.info("**************** DONE ****************");
-		System.exit(0);
+
+		log.info("Stop sending/receiving...");
+		producer.stop();
+		consumer.stop();
 	}
 
 	private static ZMQRPCConsumer initConsumer(ZMQSocketRegistry socketRegistry, int numSenders, int messageSize) {

@@ -788,8 +788,10 @@ public class ZMQSocket {
 	 * @param addr
 	 * @see org.zeromq.ZMQ.Socket#unbind(java.lang.String)
 	 */
-	public void unbind(String addr) {
-		socket.unbind(addr);
+	public void unbind() {
+		if (!this.getSocketType().isClient()) {
+			socket.unbind(this.getAddress());
+		}
 	}
 
 	/**
