@@ -22,16 +22,21 @@ public class ZMQSocket {
 	@Getter(AccessLevel.PACKAGE)
 	private final ZMQ.Socket socket;
 
+	@Getter
+	private final ZMQSocketType socketType;
+
 	private final AtomicBoolean closed = new AtomicBoolean(false);
 	private final Consumer<ZMQSocket> onCloseCallback;
 
-	ZMQSocket(ZMQ.Socket socket, int port, String address, Consumer<ZMQSocket> onCloseCallback) {
+	ZMQSocket(ZMQ.Socket socket, int port, String address, ZMQSocketType socketType,
+			Consumer<ZMQSocket> onCloseCallback) {
 		if (socket == null) {
 			throw new NullPointerException("ZMQ.Socket cannot be null");
 		}
 		this.socket = socket;
 		this.port = port;
 		this.address = address;
+		this.socketType = socketType;
 		this.onCloseCallback = onCloseCallback;
 	}
 
@@ -47,10 +52,8 @@ public class ZMQSocket {
 	 * Start new thread to execute proxy from this socket to backend socket with
 	 * capture socket
 	 * 
-	 * @param backend
-	 *            socket to handle request
-	 * @param capture
-	 *            socket to capture data
+	 * @param backend socket to handle request
+	 * @param capture socket to capture data
 	 * @return forwarding thread
 	 */
 	public Thread asyncForwardTo(ZMQSocket backend, ZMQSocket capture) {
@@ -64,16 +67,11 @@ public class ZMQSocket {
 	/**
 	 * Start new thread to execute proxy from this socket to backend socket
 	 * 
-	 * @param backend
-	 *            socket to handle request
+	 * @param backend socket to handle request
 	 * @return forwarding thread
 	 */
 	public Thread asyncForwardTo(ZMQSocket backend) {
 		return this.asyncForwardTo(backend, null);
-	}
-
-	public ZMQSocketType getSocketType() {
-		return ZMQSocketType.fromFlag(this.getType());
 	}
 
 	/**
@@ -982,8 +980,7 @@ public class ZMQSocket {
 	}
 
 	/**
-	 * @param buffer
-	 *            must be direct ByteBuffer
+	 * @param buffer must be direct ByteBuffer
 	 * @param flags
 	 * @return
 	 *         <ul>

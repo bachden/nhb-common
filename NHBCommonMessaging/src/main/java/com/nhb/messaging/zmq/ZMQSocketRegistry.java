@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import org.zeromq.ZMQ;
 
@@ -26,32 +27,30 @@ public class ZMQSocketRegistry implements Loggable {
 	private final ZMQ.Context context;
 
 	public ZMQSocketRegistry() {
-		this(1, true);
+		this(1);
 	}
 
-	public ZMQSocketRegistry(int ioThreads, boolean autoDestroy) {
+	public ZMQSocketRegistry(int ioThreads) {
 		if (ioThreads <= 0) {
 			throw new IllegalArgumentException("ioThreads cannot be zero or negative");
 		}
 		this.ioThreads = ioThreads;
 		this.context = ZMQ.context(ioThreads);
 		getLogger().debug("ZMQ version: {}", ZMQ.getVersionString());
-		if (autoDestroy) {
-			Runtime.getRuntime().addShutdownHook(new Thread(this::destroy, "ZeroMQ socket registry shutdown hook"));
-		}
 	}
 
 	public void destroy() {
-		while (this.openedSockets.size() > 0) {
-			this.closeSocket(this.openedSockets.get(0));
-		}
+		List<ZMQSocket> sockets = this.openedSockets.stream().filter(socket -> socket.getSocketType().isClient())
+				.collect(Collectors.toList());
+		sockets.forEach(socket -> socket.close());
 
 		try {
 			Thread.sleep(100);
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
-		context.close();
+		System.err.println("Terminate context...");
+		context.term();
 	}
 
 	private ZMQSocket createSocket(String address, ZMQSocketType type, ZMQSocketOptions options) {
@@ -71,7 +70,7 @@ public class ZMQSocketRegistry implements Loggable {
 
 		if (type.isClient()) {
 			socket.connect(address);
-			return new ZMQSocket(socket, -1, address, this::closeSocket);
+			return new ZMQSocket(socket, -1, address, type, this::closeSocket);
 		} else {
 			int port = extractPort(address);
 			if (port == -1 && TCP_UDP.contains(protocol.toLowerCase())) {
@@ -101,7 +100,7 @@ public class ZMQSocketRegistry implements Loggable {
 				}
 			}
 
-			return new ZMQSocket(socket, port, address, this::closeSocket);
+			return new ZMQSocket(socket, port, address, type, this::closeSocket);
 		}
 	}
 
@@ -140,8 +139,9 @@ public class ZMQSocketRegistry implements Loggable {
 		if (this.openedSockets.contains(socket)) {
 			synchronized (this.openedSockets) {
 				if (this.openedSockets.contains(socket)) {
+					System.err.println("[" + Thread.currentThread().getName() + "] -> Closing socket at: "
+							+ socket.getAddress() + " " + socket.getSocketType());
 					socket.setLinger(0);
-					socket.unbind(socket.getAddress());
 					socket.getSocket().close();
 					this.openedSockets.remove(socket);
 				}

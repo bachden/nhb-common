@@ -121,7 +121,7 @@ public class DisruptorZMQReceiver implements ZMQReceiver, Loggable {
 
 	private void pollData() {
 		if (this.socket == null) {
-			throw new NullPointerException("Receiver didn't started exception");
+			this.socket = this.socketRegistry.openSocket(config.getEndpoint(), config.getSocketType());
 		}
 
 		final ByteBuffer buffer = ByteBuffer.allocateDirect(config.getBufferCapacity());
@@ -131,13 +131,11 @@ public class DisruptorZMQReceiver implements ZMQReceiver, Loggable {
 			try {
 				recv = this.socket.recvZeroCopy(buffer, buffer.capacity(), 0);
 			} catch (ZMQException e) {
-				if (e.getMessage().contains("Context was terminated")) {
-					return;
-				}
+				break;
 			}
 			if (recv == -1) {
 				getLogger().error("Error while receive zero copy", new Exception());
-				return;
+				break;
 			} else {
 				buffer.flip();
 				try {
@@ -157,12 +155,17 @@ public class DisruptorZMQReceiver implements ZMQReceiver, Loggable {
 				}
 			}
 		}
+
+		if (this.socket != null) {
+			this.socket.close();
+			this.socket = null;
+		}
 	}
 
 	@Override
 	public void start() {
 		if (this.runningCheckpoint.compareAndSet(false, true)) {
-			this.socket = this.socketRegistry.openSocket(config.getEndpoint(), config.getSocketType());
+
 			this.messageHandler.start();
 			this.pollingThread.start();
 			this.running = true;
@@ -176,7 +179,6 @@ public class DisruptorZMQReceiver implements ZMQReceiver, Loggable {
 				this.pollingThread.interrupt();
 			}
 			this.messageHandler.shutdown();
-			this.socket.close();
 			this.running = false;
 		}
 	}

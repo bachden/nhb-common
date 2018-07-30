@@ -163,4 +163,11 @@ public class ZMQRPCConsumer extends ZMQTaskConsumer {
 			}
 		}
 	}
+
+	@Override
+	protected void onStop() {
+		for (ZMQSender responder : this.responderRegistry.values()) {
+			responder.stop();
+		}
+	}
 }
