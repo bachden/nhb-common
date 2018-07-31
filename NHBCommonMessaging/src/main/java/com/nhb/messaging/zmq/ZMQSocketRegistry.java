@@ -57,11 +57,8 @@ public class ZMQSocketRegistry implements Loggable {
 			String protocol = endpointSegments[0].toLowerCase();
 			String host = endpointSegments[1];
 			if (!host.equals("*")) {
-				host = InetAddressUtils.resolve(host);
-				if (host == null) {
-					throw new IllegalArgumentException("Invalid host name: " + endpointSegments[1]
-							+ ", expect domain (prefered) or network interface");
-				}
+				String resolvedHost = InetAddressUtils.resolve(host);
+				host = resolvedHost == null ? host : resolvedHost;
 			}
 			int port = endpointSegments[2] == null ? -1 : Integer.valueOf(endpointSegments[2]);
 
