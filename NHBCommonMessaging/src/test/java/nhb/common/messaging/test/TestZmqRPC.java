@@ -24,7 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class TestZmqRPC {
 
-	private static final String PRODUCER_RECEIVE_ENDPOINT = "tcp://127.0.0.1";
+	private static final String PRODUCER_RECEIVE_ENDPOINT = "tcp://lo0";
 	private static final String ENDPOINT = PRODUCER_RECEIVE_ENDPOINT + ":6789";
 
 	public static void main(String[] args) throws InterruptedException, ExecutionException {

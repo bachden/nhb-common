@@ -103,15 +103,17 @@ public final class Converter {
 	/**
 	 * Validate ip address with regular expression
 	 * 
-	 * @param ip
-	 *            ip address for validation
+	 * @param ip ip address for validation
 	 * @return true valid ip address, false invalid ip address
 	 */
+
+	@Deprecated
 	public static boolean isIpV4(final String ip) {
 		Matcher matcher = pattern.matcher(ip);
 		return matcher.matches();
 	}
 
+	@Deprecated
 	public static long ip2Long(String ipAddress) {
 		if (!isIpV4(ipAddress)) {
 			throw new AssertionError("Invalid ip address");
