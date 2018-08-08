@@ -2,6 +2,7 @@ package com.nhb.messaging.zmq;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.LockSupport;
@@ -39,6 +40,9 @@ public class DisruptorZMQReceiver implements ZMQReceiver, Loggable {
 	private ZMQSocketRegistry socketRegistry;
 	private ZMQReceiverConfig config;
 	private Disruptor<ZMQEvent> messageHandler;
+
+	private Exception startupException = null;
+	private CountDownLatch startupDoneSignal = null;
 
 	private ExceptionHandler<ZMQEvent> exceptionHandler = new ExceptionHandler<ZMQEvent>() {
 
@@ -120,11 +124,30 @@ public class DisruptorZMQReceiver implements ZMQReceiver, Loggable {
 	}
 
 	private void pollData() {
-		if (this.socket == null) {
-			this.socket = this.socketRegistry.openSocket(config.getEndpoint(), config.getSocketType());
-			this.socket.setReceiveTimeOut(100);
-			this.pollingThread.setName("ZMQ Poller " + this.getEndpoint());
+		try {
+			if (this.socket == null) {
+				try {
+					this.socket = this.socketRegistry.openSocket(config.getEndpoint(), config.getSocketType());
+					this.socket.setReceiveTimeOut(100);
+				} catch (Exception e) {
+					startupException = e;
+					if (this.socket != null) {
+						this.socket.close();
+						this.socket = null;
+					}
+				}
+			}
+		} finally {
+			if (this.startupDoneSignal != null) {
+				this.startupDoneSignal.countDown();
+			}
 		}
+
+		if (this.socket == null) {
+			return;
+		}
+
+		this.pollingThread.setName("ZMQ Poller " + this.getEndpoint());
 
 		final ByteBuffer buffer = ByteBuffer.allocateDirect(config.getBufferCapacity());
 		while (this.runningCheckpoint.get() && !Thread.currentThread().isInterrupted()) {
@@ -187,9 +210,27 @@ public class DisruptorZMQReceiver implements ZMQReceiver, Loggable {
 	@Override
 	public void start() {
 		if (this.runningCheckpoint.compareAndSet(false, true)) {
-			this.messageHandler.start();
-			this.pollingThread.start();
-			this.running = true;
+			this.running = false;
+
+			startupDoneSignal = new CountDownLatch(1);
+			startupException = null;
+
+			try {
+				this.messageHandler.start();
+				this.pollingThread.start();
+				startupDoneSignal.await();
+			} catch (InterruptedException e) {
+				startupException = e;
+			}
+
+			if (startupException != null) {
+				this.messageHandler.shutdown();
+				this.pollingThread.interrupt();
+				this.runningCheckpoint.set(false);
+				throw new RuntimeException("Cannot start receiver", startupException);
+			} else {
+				this.running = true;
+			}
 		}
 	}
 
