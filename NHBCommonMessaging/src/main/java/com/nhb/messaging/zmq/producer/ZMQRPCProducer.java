@@ -51,6 +51,12 @@ public class ZMQRPCProducer extends ZMQTaskProducer {
 	@Override
 	protected void onStart() {
 		this.receiver.start();
+		if (this.receiver.isRunning()) { // this running checkpoint is very importance to make sure receiver has been
+											// started
+			getLogger().debug("Receiver started successfully");
+		} else {
+			throw new RuntimeException("Cannot start receiver");
+		}
 	}
 
 	@Override
