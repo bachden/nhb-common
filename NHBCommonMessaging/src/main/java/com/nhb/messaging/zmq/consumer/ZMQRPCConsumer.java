@@ -1,11 +1,15 @@
 package com.nhb.messaging.zmq.consumer;
 
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.cliffc.high_scale_lib.NonBlockingHashMap;
 
-import com.nhb.common.annotations.NotThreadSafe;
 import com.nhb.common.async.Callback;
 import com.nhb.common.data.PuArray;
 import com.nhb.common.data.PuArrayList;
@@ -13,11 +17,10 @@ import com.nhb.common.data.PuDataType;
 import com.nhb.common.data.PuElement;
 import com.nhb.common.data.PuValue;
 import com.nhb.common.data.exception.InvalidDataException;
+import com.nhb.common.flag.SemaphoreFlag;
 import com.nhb.messaging.zmq.DisruptorZMQSender;
 import com.nhb.messaging.zmq.ZMQEvent;
 import com.nhb.messaging.zmq.ZMQFuture;
-import com.nhb.messaging.zmq.ZMQPayloadBuilder;
-import com.nhb.messaging.zmq.ZMQPayloadExtractor;
 import com.nhb.messaging.zmq.ZMQSender;
 import com.nhb.messaging.zmq.ZMQSenderConfig;
 import com.nhb.messaging.zmq.ZMQSendingDoneHandler;
@@ -25,27 +28,95 @@ import com.nhb.messaging.zmq.ZMQSendingDoneHandler;
 public class ZMQRPCConsumer extends ZMQTaskConsumer {
 
 	private final Map<String, ZMQSender> responderRegistry = new NonBlockingHashMap<>();
-	private ZMQPayloadExtractor payloadExtractor = new ZMQPayloadExtractor() {
 
-		/**
-		 * Single thread access only
-		 */
-		@Override
-		@NotThreadSafe
-		public void extractPayload(ZMQEvent event) {
-			ZMQRPCConsumer.this.extractReceivedPayload(event);
-		}
-	};
-	private ZMQPayloadBuilder responsePayloadBuilder = new ZMQPayloadBuilder() {
-
-		@Override
-		public void buildPayload(ZMQEvent event) {
-			ZMQRPCConsumer.this.buildResponsePayload(event);
-		}
-	};
+	private Thread idleResponderCleaner;
+	private final AtomicBoolean shuttingDownFlag = new AtomicBoolean(false);
+	private final SemaphoreFlag responderCleanBarrier = SemaphoreFlag.newWithLowerBound(0);
 
 	public ZMQRPCConsumer() {
-		this.setPayloadExtractor(payloadExtractor);
+		this.setPayloadExtractor(this::extractReceivedPayload);
+	}
+
+	@Override
+	protected void onInit() {
+		if (this.getConfig().getResponderMaxIdleMinutes() > 0) {
+			idleResponderCleaner = new Thread(this::cleanIdleResponders);
+		}
+	}
+
+	@Override
+	protected void onStart() {
+		if (this.idleResponderCleaner != null) {
+			this.idleResponderCleaner.start();
+		}
+		this.shuttingDownFlag.set(false);
+	}
+
+	private void cleanIdleResponders() {
+		getLogger().debug("Start idle responder cleaner thread");
+		while (!Thread.currentThread().isInterrupted()) {
+			try {
+				Thread.sleep((long) 6e4); // 1 minute
+			} catch (InterruptedException e) {
+				break;
+			}
+
+			responderCleanBarrier.lockIncrementAndWaitFor(0, 10, this.shuttingDownFlag);
+			try {
+				Set<String> tobeRemoved = new HashSet<>();
+				for (Entry<String, ZMQSender> entry : this.responderRegistry.entrySet()) {
+					if (entry.getValue().getIdleTime(TimeUnit.MINUTES) > this.getConfig()
+							.getResponderMaxIdleMinutes()) {
+						tobeRemoved.add(entry.getKey());
+					}
+				}
+
+				for (String endpoint : tobeRemoved) {
+					ZMQSender responder = this.responderRegistry.remove(endpoint);
+					if (responder != null) {
+						getLogger().debug("Stoping responder for endpoint {} because of idle more than {} minutes",
+								endpoint, this.getConfig().getResponderMaxIdleMinutes());
+						try {
+							responder.stop();
+						} catch (Exception ex) {
+							getLogger().error("Cannot stop responder for endpoint {}", endpoint);
+						}
+					}
+				}
+			} finally {
+				responderCleanBarrier.unlockIncrement();
+			}
+		}
+	}
+
+	private ZMQSender getResponder(String endpoint) {
+		if (endpoint != null) {
+			this.responderCleanBarrier.incrementAndGet(shuttingDownFlag);
+			try {
+				ZMQSender responder = this.responderRegistry.get(endpoint);
+
+				if (responder == null) {
+					responder = new DisruptorZMQSender();
+					ZMQSender old = this.responderRegistry.putIfAbsent(endpoint, responder);
+					if (old != null) {
+						responder = old;
+					}
+				}
+
+				if (!responder.isRunning()) {
+					if (!responder.isInitialized()) {
+						responder.init(getSocketRegistry(), extractSenderConfig(endpoint, getConfig()));
+					}
+					responder.start();
+					getLogger().debug("Responder for {} started...", endpoint);
+				}
+
+				return responder;
+			} finally {
+				this.responderCleanBarrier.decrementAndGet(shuttingDownFlag);
+			}
+		}
+		return null;
 	}
 
 	protected void extractReceivedPayload(ZMQEvent event) {
@@ -54,10 +125,6 @@ public class ZMQRPCConsumer extends ZMQTaskConsumer {
 			if (puArray.size() > 2) {
 				event.setMessageId(puArray.getRaw(0));
 				String responseEndpoint = puArray.getString(1);
-				if (!responderRegistry.containsKey(responseEndpoint)) {
-					ZMQSender sender = new DisruptorZMQSender();
-					responderRegistry.put(responseEndpoint, sender);
-				}
 
 				event.setResponseEndpoint(responseEndpoint);
 				PuValue value = puArray.get(2);
@@ -103,7 +170,7 @@ public class ZMQRPCConsumer extends ZMQTaskConsumer {
 				.endpoint(endpoint) //
 				.socketType(config.getSendSocketType()) //
 				.socketOptions(config.getSendSocketOptions()) //
-				.payloadBuilder(this.responsePayloadBuilder) //
+				.payloadBuilder(this::buildResponsePayload) //
 				.sendingDoneHandler(ZMQSendingDoneHandler.DEFAULT) //
 				.socketWriter(config.getSocketWriter()) //
 				.sentCountEnabled(config.isRespondedCountEnabled()) //
@@ -122,20 +189,8 @@ public class ZMQRPCConsumer extends ZMQTaskConsumer {
 	protected void onProcessComplete(ZMQResult result) {
 		String responseEndpoint = result.getResponseEndpoint();
 		if (responseEndpoint != null) {
-			ZMQSender responder = this.responderRegistry.get(responseEndpoint);
+			ZMQSender responder = this.getResponder(responseEndpoint);
 			if (responder != null) {
-				if (!responder.isRunning()) {
-					synchronized (responder) {
-						if (!responder.isRunning()) {
-							if (!responder.isInitialized()) {
-								responder.init(getSocketRegistry(), extractSenderConfig(responseEndpoint, getConfig()));
-							}
-							responder.start();
-							getLogger().debug("Responder for {} started...", responseEndpoint);
-						}
-					}
-				}
-
 				final PuResult dummyResult;
 				if (result.isSuccess()) {
 					dummyResult = new PuResult(result.getMessageId(), result.getResult());
@@ -160,12 +215,20 @@ public class ZMQRPCConsumer extends ZMQTaskConsumer {
 						}
 					}
 				});
+			} else {
+				getLogger().error("Responder cannot be create for endpoint: " + responseEndpoint,
+						new NullPointerException("Null responder, may endpoint is unmalformed"));
 			}
 		}
 	}
 
 	@Override
 	protected void onStop() {
+		this.shuttingDownFlag.set(true);
+		if (this.idleResponderCleaner != null) {
+			this.idleResponderCleaner.interrupt();
+		}
+
 		for (ZMQSender responder : this.responderRegistry.values()) {
 			responder.stop();
 		}

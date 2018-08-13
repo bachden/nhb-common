@@ -1,6 +1,7 @@
 package com.nhb.messaging.zmq;
 
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.LockSupport;
 import java.util.function.Supplier;
@@ -173,8 +174,6 @@ public class DisruptorZMQSender implements ZMQSender, Loggable {
 		if (this.runningCheckpoint.compareAndSet(false, true)) {
 			this.disruptor.start();
 			this.running = true;
-		} else {
-			throw new IllegalStateException("Sender has been started");
 		}
 	}
 
@@ -188,11 +187,39 @@ public class DisruptorZMQSender implements ZMQSender, Loggable {
 	}
 
 	@Override
+	public double getIdleTime(TimeUnit unit) {
+		double result = System.nanoTime() - lastSentTime;
+		if (unit != null) {
+			switch (unit) {
+			case DAYS:
+				return result / 86400e9;
+			case HOURS:
+				return result / 3600e9;
+			case MINUTES:
+				return result / 60e9;
+			case SECONDS:
+				return result / 1e9;
+			case MILLISECONDS:
+				return result / 1e6;
+			case MICROSECONDS:
+				return result / 1e3;
+			case NANOSECONDS:
+				return result;
+			}
+		}
+		return result;
+	}
+
+	private volatile long lastSentTime = System.nanoTime();
+
+	@Override
 	public ZMQFuture send(final PuElement data) {
 		final DefaultZMQFuture future = (DefaultZMQFuture) this.futureSupplier.get();
 		if (future == null) {
 			throw new NullPointerException("ZMQFuture cannot be null");
 		}
+
+		lastSentTime = System.nanoTime();
 
 		disruptor.publishEvent((event, sequence) -> {
 			event.clear();

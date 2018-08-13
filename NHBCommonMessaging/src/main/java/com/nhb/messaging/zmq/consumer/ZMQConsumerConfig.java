@@ -27,6 +27,7 @@ public class ZMQConsumerConfig {
 	private ZMQSocketType sendSocketType = ZMQSocketType.PUSH_CONNECT;
 	private ZMQSocketWriter socketWriter = ZMQSocketWriter.newDefaultWriter();
 	private boolean respondedCountEnabled = false;
+	private long responderMaxIdleMinutes = 0; // 0 mean forever
 
 	private String receiveEndpoint;
 	private int receiveWorkerSize = 1;

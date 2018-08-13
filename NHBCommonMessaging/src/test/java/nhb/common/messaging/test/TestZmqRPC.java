@@ -132,7 +132,7 @@ public class TestZmqRPC {
 
 		log.info("Stop sending/receiving...");
 		producer.stop();
-		consumer.stop();
+		// consumer.stop();
 	}
 
 	private static ZMQRPCConsumer initConsumer(ZMQSocketRegistry socketRegistry, int numSenders, int messageSize) {
@@ -149,6 +149,7 @@ public class TestZmqRPC {
 		config.setRespondedCountEnabled(true);
 		config.setReceivedCountEnabled(true);
 		config.setReceiveWaitStrategy(new BlockingWaitStrategy());
+		config.setResponderMaxIdleMinutes(1);
 
 		ZMQRPCConsumer consumer = new ZMQRPCConsumer();
 		consumer.init(config);
