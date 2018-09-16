@@ -1,5 +1,6 @@
 package com.nhb.messaging.kafka.consumer;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -185,7 +186,7 @@ public class KafkaMessageConsumer extends BaseEventDispatcher {
 					}
 					while (!closer.get()) {
 						try {
-							ConsumerRecords<byte[], PuElement> records = consumer.poll(pollTimeout);
+							ConsumerRecords<byte[], PuElement> records = consumer.poll(Duration.ofMillis(pollTimeout));
 							if (!records.isEmpty()) {
 								KafkaEvent event = KafkaEvent.newInstance(records);
 								dispatchEvent(event);
