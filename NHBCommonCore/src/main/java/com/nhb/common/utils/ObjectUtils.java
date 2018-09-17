@@ -74,7 +74,7 @@ public final class ObjectUtils {
 	}
 
 	public static class Setter {
-		boolean isMethod = false;
+		boolean usingMethod = false;
 		Field field;
 		Method method;
 		private Class<?> paramType;
@@ -83,7 +83,18 @@ public final class ObjectUtils {
 		public Setter(Field field) {
 			this.field = field;
 			this.setParamType(field.getType());
-			this.isMethod = false;
+			this.usingMethod = false;
+		}
+
+		public boolean isUsingMethod() {
+			return usingMethod;
+		}
+
+		@Override
+		public String toString() {
+			return "{SETTER: "
+					+ (usingMethod ? "[method] - " + this.method.getName() : "[field] - " + this.field.getName())
+					+ (!usingMethod ? "" : "(" + this.getParamType().getName() + ")") + "}";
 		}
 
 		public Setter(Method method) {
@@ -115,15 +126,15 @@ public final class ObjectUtils {
 			// System.out.println("setter created with method " +
 			// method.getName() + ", param type: " + paramType
 			// + " component type: " + componentType);
-			this.isMethod = true;
+			this.usingMethod = true;
 		}
 
-		public Object set(Object obj, Object value) {
+		public void set(Object obj, Object value) {
 			try {
-				if (this.isMethod) {
-					return this.method.invoke(obj, value);
+				if (this.usingMethod) {
+					this.method.invoke(obj, value);
 				} else {
-					return field.get(obj);
+					field.set(obj, value);
 				}
 			} catch (Exception ex) {
 				throw new RuntimeException(ex);

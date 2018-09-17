@@ -21,7 +21,7 @@ class DBPoolDataSourceCreator extends BaseLoggable implements DataSourceCreator 
 				String refName = (String) keyObj;
 				String refValue = (String) props.get(refName);
 				if (refName.equalsIgnoreCase("description")) {
-					ds.setDriverClassName(refValue);
+					ds.setDescription(refValue);
 					getLogger().trace("Set DataSource description: " + refValue);
 				} else if ((refName.equalsIgnoreCase("user")) || (refName.equalsIgnoreCase("username"))) {
 					ds.setUser(refValue);

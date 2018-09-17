@@ -37,8 +37,8 @@ public class SQLDataSourceConfig extends BaseLoggable {
 		this.name = name;
 	}
 
-	public void setProperties(PuObject initParams) {
-		for (Entry<String, PuValue> entry : initParams) {
+	public void setProperties(PuObject props) {
+		for (Entry<String, PuValue> entry : props) {
 			this.properties.setProperty(entry.getKey(), entry.getValue().getString());
 		}
 	}

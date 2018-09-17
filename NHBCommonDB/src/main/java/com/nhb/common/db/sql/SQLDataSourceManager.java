@@ -105,8 +105,14 @@ public class SQLDataSourceManager extends BaseLoggable {
 		if (props == null) {
 			return null;
 		}
-		if (props.contains("dataSourceCreatorClass")) {
-			return this.datasourceCreatorByName.get(props.get("dataSourceCreatorClass")).createDataSource(props);
+		if (props.containsKey("dataSourceCreatorClass")) {
+			String clazz = (String) props.get("dataSourceCreatorClass");
+			DataSourceCreator dataSourceCreator = this.datasourceCreatorByName.get(clazz);
+			if (dataSourceCreator == null) {
+				dataSourceCreator = (DataSourceCreator) Class.forName(clazz).newInstance();
+				this.registerDataSourceCreator(dataSourceCreator);
+			}
+			return dataSourceCreator.createDataSource(props);
 		}
 		return this.datasourceCreatorByName.get("default").createDataSource(props);
 	}
