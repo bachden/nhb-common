@@ -157,17 +157,9 @@ public final class AESEncryptor {
 
 	public synchronized byte[] encryptSimple(byte[] data) {
 		try {
-			System.out.println("------- start encryption -------");
-			long startTime = System.currentTimeMillis();
 			IvParameterSpec iv = randomIV();
-			System.out.println("Create iv time: " + (System.currentTimeMillis() - startTime) + "ms");
-			startTime = System.currentTimeMillis();
 			encryptionCipher.init(Cipher.ENCRYPT_MODE, getSecretKey(), iv);
-			System.out.println("Init cipher time: " + (System.currentTimeMillis() - startTime) + "ms");
-			startTime = System.currentTimeMillis();
 			byte[] encryptedData = encryptionCipher.doFinal(data);
-			System.out.println("Encryption time: " + (System.currentTimeMillis() - startTime) + "ms");
-			startTime = System.currentTimeMillis();
 			ByteArrayOutputStream out = null;
 			try {
 				out = new ByteArrayOutputStream();
@@ -175,11 +167,9 @@ public final class AESEncryptor {
 				out.write(encryptedData);
 				return out.toByteArray();
 			} finally {
-				System.out.println("Create output time: " + (System.currentTimeMillis() - startTime) + "ms");
 				if (out != null) {
 					out.close();
 				}
-				System.out.println("--------------------------------");
 			}
 		} catch (Exception ex) {
 			throw new RuntimeException(ex);

@@ -1,5 +1,6 @@
 package com.nhb.common.utils;
 
+import java.math.BigInteger;
 import java.net.Inet4Address;
 import java.net.Inet6Address;
 import java.net.InetAddress;
@@ -187,5 +188,17 @@ public class InetAddressUtils {
 			result |= ip << (i * 8);
 		}
 		return result;
+	}
+
+	public static String longToIpv4(long ip) {
+		return ((ip >> 24) & 0xFF) + "." + ((ip >> 16) & 0xFF) + "." + ((ip >> 8) & 0xFF) + "." + (ip & 0xFF);
+	}
+
+	public static BigInteger ipv6ToLong(String ipv6) {
+		try {
+			return new BigInteger(InetAddress.getByName(ipv6).getAddress());
+		} catch (UnknownHostException e) {
+			throw new RuntimeException("Invalid ipv6", e);
+		}
 	}
 }

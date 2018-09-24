@@ -12,10 +12,6 @@ import com.mongodb.ReadPreference;
 import com.mongodb.ServerAddress;
 import com.mongodb.Tag;
 import com.mongodb.TagSet;
-import com.mongodb.async.client.MongoClientSettings;
-import com.mongodb.async.client.MongoClientSettings.Builder;
-import com.mongodb.async.client.MongoClients;
-import com.mongodb.connection.ClusterSettings;
 import com.nhb.common.BaseLoggable;
 import com.nhb.common.db.mongodb.config.MongoDBConfig;
 import com.nhb.common.db.mongodb.config.MongoDBCredentialConfig;
@@ -25,7 +21,6 @@ public class MongoDBSourceManager extends BaseLoggable {
 
 	private Map<String, MongoDBConfig> configs;
 	private Map<String, MongoClient> mongoClients;
-	private Map<String, com.mongodb.async.client.MongoClient> asyncMongoClients;
 
 	public MongoDBSourceManager() {
 		this.configs = new HashMap<String, MongoDBConfig>();
@@ -72,46 +67,6 @@ public class MongoDBSourceManager extends BaseLoggable {
 
 	public MongoDBConfig getConfig(String name) {
 		return this.configs.get(name);
-	}
-
-	public com.mongodb.async.client.MongoClient getAsyncMongoClient(String name) {
-		if (name != null) {
-			if (!this.asyncMongoClients.containsKey(name)) {
-				MongoDBConfig config = this.getConfig(name);
-				if (config != null) {
-					List<ServerAddress> serverAddresses = new ArrayList<ServerAddress>();
-					for (HostAndPort networkConfig : config.getEndpoints()) {
-						serverAddresses.add(new ServerAddress(networkConfig.getHost(), networkConfig.getPort()));
-					}
-					List<MongoCredential> credentials = new ArrayList<MongoCredential>();
-					for (MongoDBCredentialConfig credentialConfig : config.getCredentialConfigs()) {
-						credentials.add(MongoCredential.createCredential(credentialConfig.getUserName(),
-								credentialConfig.getAuthDB(), credentialConfig.getPassword().toCharArray()));
-					}
-					Builder builder = MongoClientSettings.builder();
-					if (credentials.size() > 0) {
-						builder.credentialList(credentials);
-					}
-					com.mongodb.connection.ClusterSettings.Builder clusterSettingsBuilder = ClusterSettings.builder();
-					clusterSettingsBuilder.hosts(serverAddresses);
-
-					builder.clusterSettings(clusterSettingsBuilder.build());
-					com.mongodb.async.client.MongoClient mongoClient = MongoClients.create(builder.build());
-					if (config.getReadPreference() != null) {
-						getLogger().warn("Read preference doesn't support for async mongo client");
-					}
-					this.asyncMongoClients.put(config.getName(), mongoClient);
-
-				} else {
-					throw new RuntimeException("Unable to get understand why the config for name " + name
-							+ " was null, please check the code's logic");
-				}
-			}
-			return this.asyncMongoClients.get(name);
-		} else {
-			getLogger().warn("name of the MongoClient instance never been null");
-		}
-		return null;
 	}
 
 	@SuppressWarnings("deprecation")
