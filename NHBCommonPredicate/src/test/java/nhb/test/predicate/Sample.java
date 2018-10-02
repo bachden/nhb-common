@@ -1,5 +1,6 @@
 package nhb.test.predicate;
 
+import java.text.DecimalFormat;
 import java.util.Arrays;
 import java.util.Collection;
 
@@ -75,20 +76,26 @@ public class Sample {
 		Foo foo = new Foo();
 		foo.setValue(27);
 		foo.setName("bachden");
-		foo.setCollection(Arrays.asList("bachden", "quybu", "tombeo"));
+		foo.setCollection(Arrays.asList("bachden", "ok bây bê", "nothing to do"));
 		foo.setCollection1(Arrays.asList(23, 45, 80));
 
 		Bar bar = new Bar();
 		bar.setFoo(foo);
 
 		userVO.setBar(bar);
-		boolean validUser = predicate.apply(userVO);
+		// warm up
+		predicate.apply(userVO);
 
 		TimeWatcher timeWatcher = new TimeWatcher();
 		timeWatcher.reset();
-		validUser = predicate.apply(userVO);
+		int loop = (int) 1e6;
+		for (int i=0; i<loop; i++) {
+			predicate.apply(userVO);
+		}
+			
 		double time = timeWatcher.endLapMicro();
-		System.out.println("Is valid user: " + validUser + " --> time: " + time + " microseconds");
+		DecimalFormat decimalFormat = new DecimalFormat("###,###.##");
+		System.out.println("Ops: " + decimalFormat.format(loop / (time / 1e6)) + ", avg time: " + decimalFormat.format(time / loop) + " microseconds");
 	}
 
 }
