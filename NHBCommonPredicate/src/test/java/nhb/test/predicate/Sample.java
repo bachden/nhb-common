@@ -56,7 +56,8 @@ public class Sample {
 				+ "and bar IS NOT NULL " //
 				+ "and (name in ('noname', -1, bar.foo.name) " //
 				+ "or bar.foo.name like '[Ms]ario.*') " //
-				+ "and (sqrt bar.foo.value >= 4)";
+				//+ "and (sqrt bar.foo.value >= 4)"//
+				;
 
 		// sql = "time >= 10 And age = 7";
 
@@ -92,10 +93,10 @@ public class Sample {
 		for (int i=0; i<loop; i++) {
 			predicate.apply(userVO);
 		}
-			
-		double time = timeWatcher.endLapMicro();
+
+		double time = timeWatcher.endLapNano();
 		DecimalFormat decimalFormat = new DecimalFormat("###,###.##");
-		System.out.println("Ops: " + decimalFormat.format(loop / (time / 1e6)) + ", avg time: " + decimalFormat.format(time / loop) + " microseconds");
+		System.out.println("Ops: " + decimalFormat.format(loop / (Double.valueOf(time) / 1e9)) + ", avg time: " + decimalFormat.format(Double.valueOf(time) / 1e3 / loop) + " microseconds");
 	}
 
 }
