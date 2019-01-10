@@ -99,8 +99,7 @@ public class DisruptorZMQSender implements ZMQSender, Loggable {
 		public void handleEventException(Throwable ex, long sequence, ZMQEvent event) {
 			getLogger().error("Error while handling ZMQEvent: {}", event.getPayload(), ex);
 			if (event.getFuture() != null) {
-				event.getFuture().setFailedCause(ex);
-				event.getFuture().setAndDone(null);
+				event.getFuture().setFailedAndDone(ex);
 			}
 		}
 

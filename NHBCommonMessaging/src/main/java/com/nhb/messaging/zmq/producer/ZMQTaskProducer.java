@@ -125,8 +125,7 @@ public class ZMQTaskProducer extends ZMQProducer {
 		if (message.isSuccess()) {
 			future.setAndDone(PuNull.IGNORE_ME);
 		} else {
-			future.setFailedCause(message.getFailedCause());
-			future.setAndDone(null);
+			future.setFailedAndDone(message.getFailedCause());
 		}
 	}
 }

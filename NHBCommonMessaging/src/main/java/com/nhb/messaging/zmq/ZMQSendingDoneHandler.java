@@ -18,9 +18,8 @@ public interface ZMQSendingDoneHandler extends Loggable {
 						if (event.isSuccess()) {
 							future.setAndDone(PuNull.IGNORE_ME);
 						} else {
-							future.setFailedCause(event.getFailedCause() != null ? event.getFailedCause()
+							future.setFailedAndDone(event.getFailedCause() != null ? event.getFailedCause()
 									: new ZMQException("Unknown error", -1));
-							future.setAndDone(null);
 						}
 					} else {
 						getLogger().warn("Future already done!!!, messageId: {}, responseEndpoint: {}",

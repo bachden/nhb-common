@@ -78,8 +78,7 @@ public class ZMQRPCProducer extends ZMQTaskProducer {
 	protected void onSendingDone(ZMQEvent event) {
 		if (!event.isSuccess()) {
 			DefaultZMQFuture future = this.futureRegistry.remove(event.getMessageId());
-			future.setFailedCause(event.getFailedCause());
-			future.setAndDone(null);
+			future.setFailedAndDone(event.getFailedCause());
 		}
 	}
 
@@ -95,8 +94,7 @@ public class ZMQRPCProducer extends ZMQTaskProducer {
 			if (event.isSuccess()) {
 				future.setAndDone(event.getData());
 			} else {
-				future.setFailedCause(event.getFailedCause());
-				future.setAndDone(null);
+				future.setFailedAndDone(event.getFailedCause());
 			}
 		} else {
 			getLogger().error("Error while handling received socket data",

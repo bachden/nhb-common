@@ -20,104 +20,89 @@ import com.rabbitmq.client.Envelope;
 
 public class RabbitMQRPCProducer extends RabbitMQProducer<RPCFuture<PuElement>> {
 
-	private String replyQueueName;
-	private Consumer consumer;
+    private String replyQueueName;
+    private Consumer consumer;
 
-	private Map<String, BaseRPCFuture<PuElement>> futures = new ConcurrentHashMap<>();
+    private Map<String, BaseRPCFuture<PuElement>> futures = new ConcurrentHashMap<>();
 
-	public RabbitMQRPCProducer(RabbitMQConnection connection, RabbitMQQueueConfig queueConfig) {
-		super(connection, queueConfig);
-	}
+    public RabbitMQRPCProducer(RabbitMQConnection connection, RabbitMQQueueConfig queueConfig) {
+        super(connection, queueConfig);
+    }
 
-	public RabbitMQRPCProducer(RabbitMQConnectionPool connectionPool, RabbitMQQueueConfig queueConfig) {
-		super(connectionPool, queueConfig);
-	}
+    public RabbitMQRPCProducer(RabbitMQConnectionPool connectionPool, RabbitMQQueueConfig queueConfig) {
+        super(connectionPool, queueConfig);
+    }
 
-	@Override
-	public RPCFuture<PuElement> publish(PuElement data) {
-		if (this.getChannel() == null) {
-			throw new RuntimeException("RabbitMQ Brocker has not been connected yet, please start before publish");
-		}
-		return this.publish(data.toBytes());
-	}
+    @Override
+    public RPCFuture<PuElement> publish(PuElement data) {
+        if (this.getChannel() == null) {
+            throw new RuntimeException("RabbitMQ Brocker has not been connected yet, please start before publish");
+        }
+        return this.publish(data.toBytes());
+    }
 
-	public BaseRPCFuture<PuElement> publish(byte[] data) {
-		String corrId = UUID.randomUUID().toString();
-		BasicProperties properties = new BasicProperties.Builder().correlationId(corrId).replyTo(replyQueueName)
-				.build();
-		return this.publish(properties, data);
-	}
+    public BaseRPCFuture<PuElement> publish(byte[] data) {
+        String corrId = UUID.randomUUID().toString();
+        BasicProperties properties = new BasicProperties.Builder().correlationId(corrId).replyTo(replyQueueName).build();
+        return this.publish(properties, data);
+    }
 
-	private BaseRPCFuture<PuElement> publish(BasicProperties properties, byte[] data) {
-		try {
-			BaseRPCFuture<PuElement> future = new BaseRPCFuture<PuElement>();
-			this.futures.put(properties.getCorrelationId(), future);
-			getChannel().basicPublish("", getQueueConfig().getQueueName(), properties, data);
-			return future;
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
-	}
+    private BaseRPCFuture<PuElement> publish(BasicProperties properties, byte[] data) {
+        try {
+            BaseRPCFuture<PuElement> future = new BaseRPCFuture<PuElement>();
+            this.futures.put(properties.getCorrelationId(), future);
+            getChannel().basicPublish("", getQueueConfig().getQueueName(), properties, data);
+            return future;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
-	@Override
-	protected void onChannelReady(Channel channel) throws IOException {
-		this.replyQueueName = channel.queueDeclare().getQueue();
-		this.consumer = new DefaultConsumer(channel) {
+    @Override
+    protected void onChannelReady(Channel channel) throws IOException {
+        this.replyQueueName = channel.queueDeclare().getQueue();
+        this.consumer = new DefaultConsumer(channel) {
 
-			@Override
-			public void handleDelivery(String consumerTag, Envelope envelope, BasicProperties properties, byte[] body)
-					throws IOException {
-				String corrId = properties.getCorrelationId();
-				BaseRPCFuture<PuElement> future = futures.get(corrId);
-				if (future != null) {
-					try {
-						PuElement response = null;
+            @Override
+            public void handleDelivery(String consumerTag, Envelope envelope, BasicProperties properties, byte[] body) throws IOException {
+                String corrId = properties.getCorrelationId();
+                BaseRPCFuture<PuElement> future = futures.get(corrId);
+                if (future != null) {
+                    try {
+                        try {
+                            future.setAndDone(PuElementTemplate.getInstance().read(body));
+                        } catch (Exception e) {
+                            getLogger().error("Error while deserialize response data, queue name: " + getQueueConfig().getQueueName(), e);
+                            future.setFailedAndDone(e);
+                        }
+                    } finally {
+                        RabbitMQRPCProducer.this.futures.remove(corrId);
+                    }
+                } else {
+                    getLogger().error("RPCFuture cannot be found for corrId: " + corrId + ", queue: " + getQueueConfig().getQueueName());
+                }
+            }
+        };
+        channel.basicConsume(replyQueueName, true, this.consumer);
+    }
 
-						try {
-							response = PuElementTemplate.getInstance().read(body);
-						} catch (Exception e) {
-							getLogger().error("Error while deserialize response data, queue name: "
-									+ getQueueConfig().getQueueName(), e);
-							future.setFailedCause(e);
-							response = null;
-						}
+    @Override
+    public RPCFuture<PuElement> forward(byte[] data, BasicProperties properties, String routingKey) {
+        if (properties == null) {
+            return this.publish(data);
+        }
+        return this.publish(properties, data);
+    }
 
-						try {
-							future.setAndDone(response);
-						} catch (Exception e) {
-							getLogger().error("Error while setAndDone RPC future " + getQueueConfig().getQueueName(),
-									e);
-						}
+    @Override
+    protected void _start() {
+        getLogger().info("RabbitMQRPCProducer has started successfully!!!");
+    }
 
-					} finally {
-						RabbitMQRPCProducer.this.futures.remove(corrId);
-					}
-				} else {
-					getLogger().error("RPCFuture cannot be found for corrId: " + corrId + ", queue: "
-							+ getQueueConfig().getQueueName());
-				}
-			}
-		};
-		channel.basicConsume(replyQueueName, true, this.consumer);
-	}
-
-	@Override
-	public RPCFuture<PuElement> forward(byte[] data, BasicProperties properties, String routingKey) {
-		if (properties == null) {
-			return this.publish(data);
-		}
-		return this.publish(properties, data);
-	}
-
-	@Override
-	protected void _start() {
-		getLogger().info("RabbitMQRPCProducer has started successfully!!!");
-	}
-
-	@Override
-	protected void _stop() {
-		for (BaseRPCFuture<?> future : this.futures.values()) {
-			future.cancel(true);
-		}
-	}
+    @Override
+    protected void _stop() {
+        for (BaseRPCFuture<?> future : this.futures.values()) {
+            future.cancel(true);
+        }
+    }
 }
