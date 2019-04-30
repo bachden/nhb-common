@@ -35,175 +35,170 @@ import com.nhb.common.data.PuXmlHelper;
 
 public class HttpClientHelper extends BaseLoggable implements Closeable {
 
-	private CloseableHttpClient httpClient;
-	private CloseableHttpAsyncClient httpAsyncClient;
-	private boolean usingMultipath = true;
-	private boolean followRedirect = true;
+    private CloseableHttpClient httpClient;
+    private CloseableHttpAsyncClient httpAsyncClient;
+    private boolean usingMultipath = true;
+    private boolean followRedirect = true;
 
-	private HttpClient getSyncClient() {
-		if (this.httpClient == null) {
-			synchronized (this) {
-				if (this.httpClient == null) {
-					if (this.isFollowRedirect()) {
-						this.httpClient = HttpClientBuilder.create().setRedirectStrategy(new LaxRedirectStrategy())
-								.build();
-					} else {
-						this.httpClient = HttpClients.createDefault();
-					}
-				}
-			}
-		}
-		return this.httpClient;
-	}
+    private HttpClient getSyncClient() {
+        if (this.httpClient == null) {
+            synchronized (this) {
+                if (this.httpClient == null) {
+                    if (this.isFollowRedirect()) {
+                        this.httpClient = HttpClientBuilder.create().setRedirectStrategy(new LaxRedirectStrategy()).build();
+                    } else {
+                        this.httpClient = HttpClients.createDefault();
+                    }
+                }
+            }
+        }
+        return this.httpClient;
+    }
 
-	private HttpAsyncClient getAsyncClient() {
-		if (this.httpAsyncClient == null) {
-			synchronized (this) {
-				if (this.httpAsyncClient == null) {
-					if (this.isFollowRedirect()) {
-						this.httpAsyncClient = HttpAsyncClientBuilder.create()
-								.setRedirectStrategy(new LaxRedirectStrategy()).build();
-					} else {
-						this.httpAsyncClient = HttpAsyncClients.createDefault();
-					}
-					((CloseableHttpAsyncClient) this.httpAsyncClient).start();
-				}
-			}
-		}
-		return this.httpAsyncClient;
-	}
+    private HttpAsyncClient getAsyncClient() {
+        if (this.httpAsyncClient == null) {
+            synchronized (this) {
+                if (this.httpAsyncClient == null) {
+                    if (this.isFollowRedirect()) {
+                        this.httpAsyncClient = HttpAsyncClientBuilder.create().setRedirectStrategy(new LaxRedirectStrategy()).build();
+                    } else {
+                        this.httpAsyncClient = HttpAsyncClients.createDefault();
+                    }
+                    ((CloseableHttpAsyncClient) this.httpAsyncClient).start();
+                }
+            }
+        }
+        return this.httpAsyncClient;
+    }
 
-	public HttpAsyncFuture executeAsync(RequestBuilder builder, PuObjectRO params) {
-		if (params != null) {
-			if (builder.getMethod().equalsIgnoreCase("get") || this.isUsingMultipath()) {
-				for (Entry<String, PuValue> entry : params) {
-					builder.addParameter(entry.getKey(), entry.getValue().getString());
-				}
-			} else {
-				String json = params.toJSON();
-				getLogger().debug("Sending using Json body");
-				builder.setEntity(new StringEntity(json, Charset.forName("UTF-8")));
-				builder.addHeader("Content-Type", "application/json");
-			}
-		}
-		getLogger().debug("\n------- " + builder.getMethod() + " -------\nURI: {}\nPARAMS: {}\n-----------------------",
-				builder.getUri().toString(), params != null ? params : params);
+    public HttpAsyncFuture executeAsync(RequestBuilder builder, PuObjectRO params) {
+        if (params != null) {
+            if (builder.getMethod().equalsIgnoreCase("get") || this.isUsingMultipath()) {
+                for (Entry<String, PuValue> entry : params) {
+                    builder.addParameter(entry.getKey(), entry.getValue().getString());
+                }
+            } else {
+                String json = params.toJSON();
+                getLogger().debug("Sending using Json body");
+                builder.setEntity(new StringEntity(json, Charset.forName("UTF-8")));
+                builder.addHeader("Content-Type", "application/json");
+            }
+        }
+        getLogger().debug("\n------- " + builder.getMethod() + " -------\nURI: {}\nPARAMS: {}\n-----------------------", builder.getUri().toString(),
+                params != null ? params : params);
 
-		HttpAsyncFutureImpl future = new HttpAsyncFutureImpl();
-		future.setContext(new BasicHttpContext());
-		future.setRequest(builder.build());
-		Future<HttpResponse> cancelFuture = getAsyncClient().execute(future.getRequest(), future.getContext(), future);
-		future.setCancelFuture(cancelFuture);
-		return future;
-	}
+        HttpAsyncFutureImpl future = new HttpAsyncFutureImpl(builder.build(), new BasicHttpContext());
+        Future<HttpResponse> srcFuture = getAsyncClient().execute(future.getRequest(), future.getContext(), future.getFutureCallback());
+        future.setCancelFuture(srcFuture);
+        return future;
+    }
 
-	public HttpResponse execute(RequestBuilder builder, PuObjectRO params) {
-		try {
-			if (params != null) {
-				if (builder.getMethod().equalsIgnoreCase("get") || this.isUsingMultipath()) {
-					for (Entry<String, PuValue> entry : params) {
-						builder.addParameter(entry.getKey(), entry.getValue().getString());
-					}
-				} else {
-					String json = params.toJSON();
-					try {
-						builder.setEntity(new StringEntity(json));
-					} catch (UnsupportedEncodingException e) {
-						throw new RuntimeException("Unable to send data", e);
-					}
-				}
-			}
-			getLogger().info("\n------- REQUEST -------\nURI: {}\nPARAMS: {}\n-----------------------",
-					builder.getUri().toString(), params);
-			return getSyncClient().execute(builder.build());
-		} catch (Exception ex) {
-			throw new RuntimeException(ex);
-		}
-	}
+    public HttpResponse execute(RequestBuilder builder, PuObjectRO params) {
+        try {
+            if (params != null) {
+                if (builder.getMethod().equalsIgnoreCase("get") || this.isUsingMultipath()) {
+                    for (Entry<String, PuValue> entry : params) {
+                        builder.addParameter(entry.getKey(), entry.getValue().getString());
+                    }
+                } else {
+                    String json = params.toJSON();
+                    try {
+                        builder.setEntity(new StringEntity(json));
+                    } catch (UnsupportedEncodingException e) {
+                        throw new RuntimeException("Unable to send data", e);
+                    }
+                }
+            }
+            getLogger().info("\n------- REQUEST -------\nURI: {}\nPARAMS: {}\n-----------------------", builder.getUri().toString(), params);
+            return getSyncClient().execute(builder.build());
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
+    }
 
-	public HttpResponse executeGet(String uri, PuObjectRO params) {
-		try {
-			return execute(RequestBuilder.get().setUri(new URI(uri)), params);
-		} catch (URISyntaxException e) {
-			throw new RuntimeException("Error while creating URI instance", e);
-		}
-	}
+    public HttpResponse executeGet(String uri, PuObjectRO params) {
+        try {
+            return execute(RequestBuilder.get().setUri(new URI(uri)), params);
+        } catch (URISyntaxException e) {
+            throw new RuntimeException("Error while creating URI instance", e);
+        }
+    }
 
-	public HttpResponse executePost(String uri, PuObjectRO params) {
-		try {
-			return execute(RequestBuilder.post().setUri(new URI(uri)), params);
-		} catch (URISyntaxException e) {
-			throw new RuntimeException("Error while creating URI instance", e);
-		}
-	}
+    public HttpResponse executePost(String uri, PuObjectRO params) {
+        try {
+            return execute(RequestBuilder.post().setUri(new URI(uri)), params);
+        } catch (URISyntaxException e) {
+            throw new RuntimeException("Error while creating URI instance", e);
+        }
+    }
 
-	public HttpAsyncFuture executeAsyncGet(String uri, PuObjectRO params) {
-		try {
-			return executeAsync(RequestBuilder.get().setUri(new URI(uri)), params);
-		} catch (URISyntaxException e) {
-			throw new RuntimeException("Error while creating URI instance", e);
-		}
-	}
+    public HttpAsyncFuture executeAsyncGet(String uri, PuObjectRO params) {
+        try {
+            return executeAsync(RequestBuilder.get().setUri(new URI(uri)), params);
+        } catch (URISyntaxException e) {
+            throw new RuntimeException("Error while creating URI instance", e);
+        }
+    }
 
-	public HttpAsyncFuture executeAsyncPost(String uri, PuObjectRO params) {
-		try {
-			return executeAsync(RequestBuilder.post().setUri(new URI(uri)), params);
-		} catch (URISyntaxException e) {
-			throw new RuntimeException("Error while creating URI instance", e);
-		}
-	}
+    public HttpAsyncFuture executeAsyncPost(String uri, PuObjectRO params) {
+        try {
+            return executeAsync(RequestBuilder.post().setUri(new URI(uri)), params);
+        } catch (URISyntaxException e) {
+            throw new RuntimeException("Error while creating URI instance", e);
+        }
+    }
 
-	public static PuElement handleResponse(HttpResponse response) {
-		PuElement result = null;
-		if (response != null) {
-			try {
-				String responseText = EntityUtils.toString(response.getEntity(), "utf-8");
-				if (responseText != null) {
-					responseText = responseText.trim();
-					try {
-						if (responseText.startsWith("[")) {
-							result = PuArrayList.fromJSON(responseText);
-						} else if (responseText.startsWith("{")) {
-							result = PuObject.fromJSON(responseText);
-						} else if (responseText.startsWith("<")) {
-							result = PuXmlHelper.parseXml(responseText);
-						} else {
-							result = new PuValue(responseText, PuDataType.STRING);
-						}
-					} catch (Exception ex) {
-						result = new PuValue(responseText, PuDataType.STRING);
-					}
-				}
-			} catch (IOException e) {
-				throw new RuntimeException("Error while consuming response entity", e);
-			}
-		}
-		return result;
-	}
+    public static PuElement handleResponse(HttpResponse response) {
+        PuElement result = null;
+        if (response != null) {
+            try {
+                String responseText = EntityUtils.toString(response.getEntity(), "utf-8");
+                if (responseText != null) {
+                    responseText = responseText.trim();
+                    try {
+                        if (responseText.startsWith("[")) {
+                            result = PuArrayList.fromJSON(responseText);
+                        } else if (responseText.startsWith("{")) {
+                            result = PuObject.fromJSON(responseText);
+                        } else if (responseText.startsWith("<")) {
+                            result = PuXmlHelper.parseXml(responseText);
+                        } else {
+                            result = new PuValue(responseText, PuDataType.STRING);
+                        }
+                    } catch (Exception ex) {
+                        result = new PuValue(responseText, PuDataType.STRING);
+                    }
+                }
+            } catch (IOException e) {
+                throw new RuntimeException("Error while consuming response entity", e);
+            }
+        }
+        return result;
+    }
 
-	@Override
-	public void close() throws IOException {
-		if (this.httpAsyncClient != null && this.httpAsyncClient instanceof Closeable) {
-			((Closeable) this.httpAsyncClient).close();
-		}
-		if (this.httpClient != null) {
-			((Closeable) this.httpClient).close();
-		}
-	}
+    @Override
+    public void close() throws IOException {
+        if (this.httpAsyncClient != null && this.httpAsyncClient instanceof Closeable) {
+            ((Closeable) this.httpAsyncClient).close();
+        }
+        if (this.httpClient != null) {
+            ((Closeable) this.httpClient).close();
+        }
+    }
 
-	public boolean isUsingMultipath() {
-		return usingMultipath;
-	}
+    public boolean isUsingMultipath() {
+        return usingMultipath;
+    }
 
-	public void setUsingMultipath(boolean usingMultipath) {
-		this.usingMultipath = usingMultipath;
-	}
+    public void setUsingMultipath(boolean usingMultipath) {
+        this.usingMultipath = usingMultipath;
+    }
 
-	public boolean isFollowRedirect() {
-		return followRedirect;
-	}
+    public boolean isFollowRedirect() {
+        return followRedirect;
+    }
 
-	public void setFollowRedirect(boolean followRedirect) {
-		this.followRedirect = followRedirect;
-	}
+    public void setFollowRedirect(boolean followRedirect) {
+        this.followRedirect = followRedirect;
+    }
 }

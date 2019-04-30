@@ -136,15 +136,17 @@ public class BaseRPCFuture<V> extends BaseEventDispatcher implements RPCFuture<V
     public V get() throws InterruptedException, ExecutionException {
         if (!this.isDone()) {
             this.doneSignal.await();
-            if (timeoutFlag.get() && this.getFailedCause() == null) {
-                synchronized (this) {
-                    if (timeoutFlag.get() && this.getFailedCause() == null) {
-                        this.setFailedCause(new TimeoutException());
+            if (timeoutFlag.get()) {
+                if (this.getFailedCause() == null) {
+                    synchronized (this) {
+                        if (this.getFailedCause() == null) {
+                            this.setFailedCause(new TimeoutException());
+                        }
                     }
                 }
-            }
-            if (timeoutFlag.get() || this.isCancelled()) {
-                return null;
+                if (this.isCancelled()) {
+                    return null;
+                }
             }
         }
         return this.value;

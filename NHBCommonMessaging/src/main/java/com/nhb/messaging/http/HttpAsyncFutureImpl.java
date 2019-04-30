@@ -17,31 +17,42 @@ import com.nhb.common.data.PuObject;
 import com.nhb.common.data.PuValue;
 import com.nhb.common.data.PuXmlHelper;
 
+import lombok.AccessLevel;
 import lombok.Getter;
-import lombok.Setter;
 
-class HttpAsyncFutureImpl extends BaseRPCFuture<HttpResponse> implements HttpAsyncFuture, FutureCallback<HttpResponse> {
+class HttpAsyncFutureImpl extends BaseRPCFuture<HttpResponse> implements HttpAsyncFuture {
 
-    @Setter
     @Getter
-    private HttpUriRequest request;
+    private final HttpUriRequest request;
 
-    @Setter
     @Getter
-    private HttpContext context;
+    private final HttpContext context;
 
-    @Override
-    public void cancelled() {
-        this.cancel(false);
+    @Getter(AccessLevel.PACKAGE)
+    private final FutureCallback<HttpResponse> futureCallback = new FutureCallback<HttpResponse>() {
+
+        @Override
+        public void failed(Exception ex) {
+            HttpAsyncFutureImpl.this.failed(ex);
+        }
+
+        @Override
+        public void completed(HttpResponse result) {
+            HttpAsyncFutureImpl.this.setAndDone(result);
+        }
+
+        @Override
+        public void cancelled() {
+            // do nothing.
+        }
+    };
+
+    HttpAsyncFutureImpl(HttpUriRequest request, HttpContext context) {
+        this.request = request;
+        this.context = context;
     }
 
-    @Override
-    public void completed(HttpResponse httpResponse) {
-        this.setAndDone(httpResponse);
-    }
-
-    @Override
-    public void failed(Exception exception) {
+    private void failed(Exception exception) {
         this.setFailedAndDone(exception);
     }
 
