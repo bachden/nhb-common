@@ -53,7 +53,7 @@ public class BaseRPCFuture<V> extends BaseEventDispatcher implements RPCFuture<V
 	private Future<?> cancelFuture;
 
 	@Getter
-	private Throwable failedCause;
+	private volatile Throwable failedCause;
 
 	@Getter
 	private volatile Callback<V> callback;
@@ -137,10 +137,10 @@ public class BaseRPCFuture<V> extends BaseEventDispatcher implements RPCFuture<V
 		if (!this.isDone()) {
 			this.doneSignal.await();
 			if (timeoutFlag.get()) {
-				if (this.getFailedCause() == null) {
+				if (this.failedCause == null) {
 					synchronized (this) {
-						if (this.getFailedCause() == null) {
-							this.setFailedCause(new TimeoutException());
+						if (this.failedCause == null) {
+							this.failedCause = new TimeoutException();
 						}
 					}
 				}
