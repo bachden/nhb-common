@@ -128,7 +128,7 @@ public class BaseRPCFuture<V> extends BaseEventDispatcher implements RPCFuture<V
 		if (this.done.compareAndSet(false, true)) {
 			this.doComplete(value);
 		} else {
-			throw new IllegalStateException("Future were done or in-done-progress");
+			getLogger().warn("invalid state", new IllegalStateException("Future were done or in-done-progress"));
 		}
 	}
 
@@ -136,9 +136,10 @@ public class BaseRPCFuture<V> extends BaseEventDispatcher implements RPCFuture<V
 	@Deprecated
 	public void setFailedCause(Throwable cause) {
 		if (this.isDone() || this.isCancelled()) {
-			throw new IllegalStateException("Cannot set failedCause for done or cancelled future");
+			getLogger().warn("invalid state", new IllegalStateException("Future were done or in-done-progress"));
+		} else {
+			this.failedCause = cause;
 		}
-		this.failedCause = cause;
 	}
 
 	@Override
@@ -147,7 +148,7 @@ public class BaseRPCFuture<V> extends BaseEventDispatcher implements RPCFuture<V
 			this.failedCause = cause;
 			this.doComplete(null);
 		} else {
-			throw new IllegalStateException("Future were done or in-done-progress");
+			getLogger().warn("invalid state", new IllegalStateException("Future were done or in-done-progress"));
 		}
 	}
 
