@@ -83,7 +83,6 @@ public class DisruptorZMQSender implements ZMQSender, Loggable {
 	private volatile boolean running = false;
 	private final AtomicBoolean runningCheckpoint = new AtomicBoolean(false);
 
-	@Getter
 	private volatile boolean initialized = false;
 	private final AtomicBoolean initializedCheckpoint = new AtomicBoolean(false);
 
@@ -92,6 +91,13 @@ public class DisruptorZMQSender implements ZMQSender, Loggable {
 	private ZMQPayloadBuilder payloadBuilder;
 
 	private volatile boolean sentCountEnabled = false;
+
+	public boolean isInitialized() {
+		while (!Thread.currentThread().isInterrupted() && (initialized ^ initializedCheckpoint.get())) {
+			LockSupport.parkNanos(50);
+		}
+		return this.initialized;
+	}
 
 	private ExceptionHandler<ZMQEvent> exceptionHandler = new ExceptionHandler<ZMQEvent>() {
 
